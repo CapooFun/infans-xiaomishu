@@ -1,0 +1,27 @@
+/* 工作台阅读层次：正文稳定，外围通透；保持主题与既有画布。 */
+:root .app-shell .home-dashboard .museum-card:is(.home-lead,.home-quiet,.home-aux){background:var(--surface-2);border-color:var(--line);box-shadow:0 3px 12px var(--shadow-soft);backdrop-filter:none}
+:root .app-shell .home-dashboard .museum-card.home-lead{border-top:3px solid var(--teal);background:linear-gradient(125deg,var(--surface-2),color-mix(in srgb,var(--teal) 7%,var(--surface-2)));box-shadow:0 6px 20px var(--shadow-soft)}
+:root .app-shell .home-dashboard .museum-card.home-project-window{border-top:3px solid var(--gold);background:var(--surface-2)}
+:root .app-shell .home-dashboard .museum-card.home-aux{background:color-mix(in srgb,var(--surface-2) 94%,transparent);box-shadow:none;border-color:var(--line)}
+.home-dashboard .jp-source-ledger>div,.home-dashboard .jp-source-ledger>a{border:0;border-radius:0;border-top:1px solid var(--line);background:transparent;box-shadow:none}
+.home-dashboard .home-map-bookmarks span{border:0;background:transparent;padding-inline:0;margin-right:10px}
+.home-dashboard .home-aux .home-card-heading h2{color:var(--muted)}
+:root .app-shell .museum-card:is(.schedule-todo-board,.exploration-hero,.course-progress-card,.exploration-ladder,.exploration-log){background:var(--surface-2);backdrop-filter:none;box-shadow:0 3px 12px var(--shadow-soft)}
+
+/* 封面负责图像，独立底栏负责作品信息。 */
+.collection-item.kind-game.has-cover{aspect-ratio:auto;box-shadow:0 3px 10px var(--shadow-soft);border-color:var(--line);transform-style:flat}
+.collection-item.kind-game.has-cover .collection-cover{position:relative;inset:auto;aspect-ratio:4/5;height:auto;width:100%;object-fit:cover;flex:none}
+.collection-item.kind-game.has-cover .collection-card-body{min-height:112px;height:auto;flex:1;padding:10px 12px;gap:6px;justify-content:flex-start;background:var(--surface-2)}
+.collection-item.kind-game.has-cover .collection-top,.collection-item.kind-game.has-cover .collection-top small,.collection-item.kind-game.has-cover footer{color:var(--muted);letter-spacing:0}
+.collection-item.kind-game.has-cover .collection-copy h3{color:var(--ink);text-shadow:none}
+.collection-item.kind-game.has-cover footer{margin-top:auto;padding-top:6px;border-top-color:var(--line);gap:8px}
+
+/* 说明按需展开，练习入口先于统计。 */
+.schedule-todo-help{grid-column:1/-1;color:var(--muted);font-size:var(--text-meta)}.schedule-todo-help>summary,.learning-evidence-help>summary{width:fit-content;min-height:36px;align-content:center;cursor:pointer;color:var(--muted)}.schedule-todo-help p,.learning-evidence-help p{margin:6px 0 10px;max-width:70ch;line-height:1.7;color:var(--muted)}
+.app-shell .schedule-todo-board{min-height:0;height:auto;align-self:start}.schedule-quadrant-grid{align-items:start}.schedule-quadrant.is-empty .schedule-quadrant-empty{padding-block:9px;margin:0}
+.exploration-start{padding:20px 24px;display:grid;grid-template-columns:minmax(200px,.8fr) minmax(0,1.2fr);align-items:center;gap:16px;border:1px solid var(--line-strong);border-top:3px solid var(--teal);border-radius:14px;background:var(--surface-2)}.exploration-start h2{margin:6px 0;font:500 var(--text-title)/1.3 var(--font-title);color:var(--ink)}.exploration-start p{margin:0;color:var(--muted);font-size:var(--text-meta);line-height:1.6}.exploration-start .exploration-hero-actions{margin:0;display:flex;flex-wrap:wrap;gap:8px}.exploration-start .exam-chip{min-height:44px}.exploration-start .exploration-level-panel{margin-top:12px}.learning-evidence-help{font-size:var(--text-meta);max-width:360px}.learning-evidence-help p{font-size:var(--text-meta)}
+.exploration-course-summary .exploration-ability-grid>div,.exploration-jlpt-summary>div{box-shadow:none;border:0;border-left:1px solid var(--line);border-radius:0;background:transparent}
+@media(max-width:680px){.sidebar nav.sidebar-nav-mobile{grid-template-columns:repeat(7,minmax(0,1fr))}.sidebar nav.sidebar-nav-mobile a span,.sidebar nav.sidebar-nav-mobile button.nav-more span{display:none}.sidebar nav.sidebar-nav-mobile a svg,.sidebar nav.sidebar-nav-mobile button.nav-more svg{width:20px;height:20px}.sidebar nav.sidebar-nav-mobile a,.sidebar nav.sidebar-nav-mobile button.nav-more{min-height:50px;padding:0}}
+@media(max-width:680px){
+.exploration-start{padding:16px;grid-template-columns:1fr}.exploration-start .exploration-hero-actions{gap:6px}.exploration-start .exam-chip{flex:1;justify-content:center;padding-inline:10px}.schedule-todo-help>summary,.learning-evidence-help>summary{min-height:44px}.learning-evidence-help{max-width:100%}
+}

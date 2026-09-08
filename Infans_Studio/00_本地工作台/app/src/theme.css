@@ -1,0 +1,812 @@
+/* 梅凝双主题：玄夜仙境 / 晴岚仙境。布局不随主题变化。 */
+
+.sidebar-footer {
+  margin-top: auto;
+  display: grid;
+  gap: 8px;
+}
+
+.sidebar-footer .profile { margin-top: 0; }
+
+.theme-switch {
+  width: 100%;
+  min-height: 46px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+  color: var(--quiet);
+  background: color-mix(in srgb,var(--surface-2) 1.8%,transparent);
+}
+
+.theme-switch .theme-choice {
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: color .22s ease, background-color .22s ease, box-shadow .22s ease;
+}
+
+.theme-switch .theme-choice em {
+  font: normal 500 var(--text-meta)/1 var(--serif);
+  letter-spacing: .06em;
+}
+
+.theme-switch .theme-choice.active {
+  color: var(--gold);
+  background: var(--gold-soft);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.theme-switch .theme-choice:disabled { cursor: wait; opacity: .7; }
+
+.theme-reload-ring {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--quiet) 66%, transparent);
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.theme-reload-ring::before {
+  content: "";
+  position: absolute;
+  width: 27px;
+  height: 27px;
+  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface-2) 36%, transparent);
+  box-shadow: none;
+  transition: border-color .16s ease, background-color .16s ease;
+}
+.theme-reload-ring svg { position: relative; z-index: 1; pointer-events: none; }
+.theme-reload-ring svg.is-spinning { animation:theme-refresh-spin .72s linear infinite; }
+@keyframes theme-refresh-spin { to { transform:rotate(360deg); } }
+.theme-reload-ring:hover::before,
+.theme-reload-ring:focus-visible::before {
+  border-color: color-mix(in srgb, var(--line-strong) 78%, transparent);
+  background: color-mix(in srgb, var(--surface-2) 56%, transparent);
+}
+.theme-reload-ring:hover,
+.theme-reload-ring:focus-visible { color: var(--muted); }
+.theme-reload-ring:disabled { cursor: wait; opacity: .55; }
+
+.app-shell.is-ready .workspace-backdrop-scene,
+.app-shell.is-ready .workspace-backdrop-veil,
+.app-shell.is-ready .workspace-backdrop-fireflies {
+  transition: opacity .22s ease, filter .36s ease, background-image .01s linear .18s;
+}
+
+.app-shell.is-booting .workspace-backdrop-scene,
+.app-shell.is-booting .workspace-backdrop-veil,
+.app-shell.is-booting .workspace-backdrop-fireflies,
+.app-shell.is-booting .workspace-backdrop-fireflies::before,
+.app-shell.is-booting .workspace-backdrop-fireflies::after {
+  transition:none !important;
+  animation:none !important;
+  transform:none !important;
+}
+
+:root[data-theme="day"] {
+  color-scheme: light;
+  /* Generated theme roles. Edit workbench-theme-tokens.mjs / workbench-appearance.mjs. */
+  --bg: #eef3f0;
+  --bg-2: #e2ebe8;
+  --surface: rgba(251,252,251,0.9);
+  --surface-2: #fbfcfb;
+  --line: rgba(24,48,47,0.14);
+  --line-strong: rgba(128,97,45,0.3);
+  --ink: #18302f;
+  --muted: #536564;
+  --quiet: #586968;
+  --text-disabled: #879493;
+  --text-placeholder: #5c6d6c;
+  --control-bg: #fbfcfb;
+  --control-bg-hover: #eef3f2;
+  --control-border: rgba(24,48,47,0.2);
+  --control-border-focus: #276d66;
+  --focus-ring: rgba(39,109,102,0.22);
+  --shadow-soft: rgba(45, 73, 67, .10);
+  --book-cover-paper: #fbfcfb;
+  --writing-cover-paper: #fbfcfb;
+  --progress-track: #e0e4e3;
+  --progress-idle: #8e9a99;
+  --recovery-cell-bg: #fbfcfb;
+  --recovery-water: linear-gradient(180deg,#a0bfbb,#ccddda);
+  --recovery-wave: #276d66;
+  --recovery-wave-opacity: .9;
+  --media-card-bg: #fbfcfb;
+  --record-body: conic-gradient(from 42deg,#d2e2da,#f8faf1,#abc9bf,#e8eee1,#d2e2da);
+  --record-groove: rgba(45,95,80,.12);
+  --record-label: radial-gradient(circle at 35% 25%,#fcfcf2,#c5d9cb 78%);
+  --record-ring: #af9c7b;
+  --record-shadow: rgba(45,73,67,.18);
+  --investment-scope-bg: linear-gradient(120deg,#fbfcfb,#e6eeec);
+  --investment-account-surface: #e2ebe9;
+  --investment-overview-bg: #fbfcfb;
+  --on-accent: #f8fbf9;
+  --usage-primary: #235c94;
+  --usage-secondary: #98631a;
+  --gold: #80612d;
+  --gold-soft: rgba(128,97,45,0.11);
+  --teal: #276d66;
+  --teal-soft: rgba(39,109,102,0.1);
+  --mist-blue: #57778a;
+  --mist-blue-soft: rgba(87, 119, 138, .10);
+  --red: #9f493c;
+  --action-bg: #f0e8d6;
+  --action-ink: #80612d;
+  --action-border: #c7b585;
+  --slider-thumb: #fbfdfb;
+  --image-caption-ink: #ffffff;
+  --image-caption-shade: rgba(0,0,0,.68);
+  --shadow-ink: #29473f;
+  --media-stage-bg: #030709;
+  --chart-blue: #376a9e;
+  --chart-rose: #99566d;
+  --chart-violet: #76558d;
+  --chart-green: #4a7451;
+  --chart-amber: #8a672e;
+  --highlight-ink: #ffffff;
+  --mark: #8061a1;
+  --mark-soft: rgba(128,97,161,0.12);
+  --mark-ink: #ffffff;
+  --attention-bg: var(--mark);
+  --attention-border: var(--mark);
+  --attention-ink: var(--mark-ink);
+  --raised-edge: rgba(38,75,72,.22);
+  --raised-glint: rgba(255,255,255,.92);
+  --raised-contact: rgba(35,66,57,.16);
+  --raised-shadow: rgba(35,66,57,.22);
+}
+
+:root[data-theme="day"],
+:root[data-theme="day"] body {
+  background: var(--bg);
+}
+
+:root[data-theme="day"] body {
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 82% -8%, color-mix(in srgb,var(--mist-blue) 17%,transparent), transparent 36%),
+    radial-gradient(circle at 14% 100%, color-mix(in srgb,var(--gold) 8%,transparent), transparent 40%),
+    var(--bg);
+}
+
+:root[data-theme="day"] ::selection { color: var(--on-accent); background: var(--teal); }
+
+:root[data-theme="day"] .workspace { background: var(--bg); }
+
+:root[data-theme="day"] .workspace-backdrop-veil {
+  background-image:
+    var(--page-scene-shade),
+    linear-gradient(180deg, color-mix(in srgb,var(--bg) 16%,transparent) 0%, color-mix(in srgb,var(--bg) 2%,transparent) 48%, color-mix(in srgb,var(--surface-2) 58%,transparent) 100%);
+}
+
+:root[data-theme="day"] .workspace-backdrop-scene {
+  filter: saturate(.88) contrast(.94) brightness(1.03);
+}
+
+:root[data-theme="day"] .workspace-backdrop-fireflies {
+  opacity: .16;
+  mix-blend-mode: multiply;
+  filter: sepia(.15) saturate(.75);
+}
+
+:root[data-theme="day"] .sidebar {
+  background: color-mix(in srgb,var(--surface-2) 90%,transparent);
+  border-color: var(--line);
+  box-shadow: 18px 0 50px color-mix(in srgb,var(--ink) 10%,transparent);
+}
+
+:root[data-theme="day"] .brand > .brand-pet {
+  background: color-mix(in srgb,var(--teal) 8%,transparent);
+  box-shadow: 0 0 24px color-mix(in srgb,var(--teal) 10%,transparent);
+}
+
+:root[data-theme="day"] .brand-pet img {
+  filter: drop-shadow(0 4px 7px rgba(43, 67, 61, .20)) saturate(.92) brightness(1.04);
+}
+
+:root[data-theme="day"] .sidebar nav a:hover,
+:root[data-theme="day"] .top-actions button:hover {
+  background: color-mix(in srgb,var(--teal) 5.5%,transparent);
+}
+
+:root[data-theme="day"] .sidebar nav a.active {
+  color: var(--gold);
+  background: linear-gradient(90deg, var(--gold-soft), transparent);
+}
+
+:root[data-theme="day"] .avatar,
+:root[data-theme="day"] .avatar-face { background: var(--surface-2); }
+
+:root[data-theme="day"] .theme-switch {
+  background: color-mix(in srgb,var(--surface-2) 54%,transparent);
+  box-shadow: inset 0 1px color-mix(in srgb,var(--surface-2) 68%,transparent);
+}
+
+:root[data-theme="day"] .theme-switch .theme-choice.active {
+  color: var(--teal);
+  background: var(--teal-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--teal) 18%,transparent);
+}
+
+:root[data-theme="day"] .topbar {
+  background: linear-gradient(90deg, color-mix(in srgb,var(--surface-2) 96%,transparent), color-mix(in srgb,var(--surface-2) 80%,transparent));
+  border-color: var(--line);
+  box-shadow: 0 8px 30px color-mix(in srgb,var(--ink) 7%,transparent);
+}
+
+:root[data-theme="day"] .home-intro h2 { text-shadow: 0 4px 24px color-mix(in srgb,var(--surface-2) 72%,transparent); }
+
+:root[data-theme="day"] .top-actions button {
+  background: color-mix(in srgb,var(--surface-2) 58%,transparent);
+  box-shadow: inset 0 1px color-mix(in srgb,var(--surface-2) 75%,transparent);
+}
+
+:root[data-theme="day"] .top-actions .ai-button,
+:root[data-theme="day"] .gold-button,
+:root[data-theme="day"] .health-file-button.primary,
+:root[data-theme="day"] .asset-unlock-form > button,
+:root[data-theme="day"] .asset-unlock-card > button,
+:root[data-theme="day"] .ai-composer-row > .ai-send-button {
+  color: var(--on-accent);
+  border-color: var(--teal);
+  background: var(--teal);
+  box-shadow: 0 7px 18px color-mix(in srgb,var(--teal) 18%,transparent);
+}
+
+:root[data-theme="day"] .museum-card,
+:root[data-theme="day"] .health-deck-card,
+:root[data-theme="day"] .health-cell,
+:root[data-theme="day"] .health-deck-inset {
+  border-color: var(--line);
+  background: linear-gradient(145deg, color-mix(in srgb,var(--surface-2) 88%,transparent), color-mix(in srgb,var(--surface-2) 75%,transparent));
+  box-shadow: 0 12px 36px color-mix(in srgb,var(--ink) 9%,transparent), inset 0 1px color-mix(in srgb,var(--surface-2) 82%,transparent);
+  backdrop-filter: blur(16px) saturate(.9);
+}
+
+:root[data-theme="day"] .game-analytics-hero {
+  background:
+    radial-gradient(circle at 76% 24%, color-mix(in srgb,var(--teal) 12%,transparent), transparent 36%),
+    linear-gradient(135deg, color-mix(in srgb,var(--surface-2) 94%,transparent), color-mix(in srgb,var(--surface-2) 90%,transparent));
+}
+:root[data-theme="day"] .game-analytics-segment,
+:root[data-theme="day"] .game-analytics-loop dl > div,
+:root[data-theme="day"] .game-analytics-income dl > div { background:color-mix(in srgb,var(--surface-2) 46%,transparent); }
+
+:root[data-theme="day"] .museum-card::after {
+  background: linear-gradient(155deg, color-mix(in srgb,var(--surface-2) 26%,transparent), transparent 46%);
+}
+
+:root[data-theme="day"] .interactive-card:hover {
+  border-color: var(--line-strong);
+  background: linear-gradient(145deg, color-mix(in srgb,var(--surface-2) 96%,transparent), color-mix(in srgb,var(--surface-2) 88%,transparent));
+  box-shadow: 0 16px 40px color-mix(in srgb,var(--ink) 13%,transparent);
+}
+
+:root[data-theme="day"] .agenda-todo-card.home-lead {
+  border-color: color-mix(in srgb,var(--teal) 24%,transparent);
+  background:
+    radial-gradient(circle at 12% 18%, color-mix(in srgb,var(--teal) 10%,transparent), transparent 36%),
+    linear-gradient(145deg, color-mix(in srgb,var(--surface-2) 94%,transparent), color-mix(in srgb,var(--surface-2) 87%,transparent));
+  box-shadow: 0 13px 34px color-mix(in srgb,var(--ink) 12%,transparent);
+}
+
+:root[data-theme="day"] .topics-pin-card.home-quiet,
+:root[data-theme="day"] .home-signal-grid .home-quiet,
+:root[data-theme="day"] .home-finance-grid .home-quiet {
+  border-color: var(--line);
+  background: linear-gradient(145deg, color-mix(in srgb,var(--surface-2) 82%,transparent), color-mix(in srgb,var(--surface-2) 72%,transparent));
+}
+
+:root[data-theme="day"] .topics-pin-card.home-quiet .home-card-heading h2,
+:root[data-theme="day"] .home-signal-grid .home-quiet .home-card-heading h2,
+:root[data-theme="day"] .home-finance-grid .home-quiet .home-card-heading h2 { color: var(--ink); }
+
+:root[data-theme="day"] .home-map-current strong,
+:root[data-theme="day"] .jp-source-ledger strong { color: var(--ink); }
+
+/* 手机截图小修：内容落在云白纸面上，保留卡片外的山水，不让暗底混灰。 */
+:root[data-theme="day"] .agenda-todo-card.home-lead,
+:root[data-theme="day"] .topics-pin-card.home-quiet,
+:root[data-theme="day"] .exploration-course-hero {
+  background: linear-gradient(145deg, color-mix(in srgb,var(--surface-2) 97%,transparent), color-mix(in srgb,var(--surface-2) 94%,transparent));
+}
+:root[data-theme="day"] .exploration-ability-grid > div {
+  background: var(--surface-2);
+}
+:root[data-theme="day"] .schedule-ai-queue {
+  border-color: color-mix(in srgb, var(--teal) 24%, transparent);
+  background: var(--surface-2);
+}
+:root[data-theme="day"] .schedule-ai-queue > header {
+  background: var(--teal-soft);
+  border-bottom-color: var(--line);
+}
+:root[data-theme="day"] .schedule-ai-queue > div > button,
+:root[data-theme="day"] .schedule-ai-queue > div > div {
+  border-top-color: var(--line);
+}
+:root[data-theme="day"] .schedule-quadrant { --quadrant-accent: var(--quiet); }
+:root[data-theme="day"] .schedule-quadrant.tone-s { --quadrant-accent: var(--red); }
+:root[data-theme="day"] .schedule-quadrant.tone-a { --quadrant-accent: var(--gold); }
+:root[data-theme="day"] .schedule-quadrant.tone-b { --quadrant-accent: var(--mist-blue); }
+:root[data-theme="day"] .schedule-quadrant[class*="tone-"] {
+  border-color: color-mix(in srgb, var(--quadrant-accent) 28%, transparent);
+  background: var(--surface-2);
+}
+:root[data-theme="day"] .schedule-quadrant[class*="tone-"]:hover {
+  border-color: color-mix(in srgb, var(--quadrant-accent) 55%, transparent);
+  background: var(--control-bg-hover);
+}
+:root[data-theme="day"] .schedule-quadrant[class*="tone-"].is-focused {
+  border-color: var(--quadrant-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--quadrant-accent) 24%, transparent);
+}
+:root[data-theme="day"] .schedule-quadrant[class*="tone-"] > .schedule-quadrant-head {
+  border-bottom-color: var(--line);
+  background: color-mix(in srgb, var(--quadrant-accent) 8%, var(--surface-2));
+}
+:root[data-theme="day"] .schedule-quadrant[class*="tone-"] > .schedule-quadrant-head span {
+  color: var(--quadrant-accent);
+}
+:root[data-theme="day"] .home-map-bookmarks span { color: var(--muted); }
+:root[data-theme="day"] .jp-source-ledger > * {
+  border-color: var(--line);
+  background: color-mix(in srgb,var(--surface-2) 44%,transparent);
+}
+:root[data-theme="day"] .home-finance-grid .home-aux p,
+:root[data-theme="day"] .home-finance-grid .home-aux .market-top-events li,
+:root[data-theme="day"] .home-finance-grid .home-aux .market-ai-hotspots li { color: var(--ink); }
+:root[data-theme="day"] .home-finance-grid .home-aux .home-card-meta,
+:root[data-theme="day"] .home-finance-grid .home-aux .live-meta em { color: var(--quiet); }
+:root[data-theme="day"] .home-finance-grid .home-aux .market-top-events .market-signal-tag {
+  border-color: var(--line-strong);
+  color: var(--gold);
+}
+:root[data-theme="day"] .home-finance-grid .home-aux .market-ai-hotspots .market-hotspot-tag {
+  border-color: color-mix(in srgb, var(--teal) 32%, transparent);
+  color: var(--teal);
+}
+
+:root[data-theme="day"] .project-hero,
+:root[data-theme="day"] .market-pulse,
+:root[data-theme="day"] .asset-entry,
+:root[data-theme="day"] .asset-hero {
+  background:
+    radial-gradient(circle at 80% 18%, color-mix(in srgb,var(--gold) 9%,transparent), transparent 32%),
+    linear-gradient(145deg, color-mix(in srgb,var(--surface-2) 91%,transparent), color-mix(in srgb,var(--surface-2) 80%,transparent));
+}
+
+:root[data-theme="day"] .market-main > .museum-card,
+:root[data-theme="day"] .market-main .market-event,
+:root[data-theme="day"] .market-main > .market-hero {
+  background:
+    radial-gradient(circle at 84% 18%, color-mix(in srgb,var(--gold) 6%,transparent), transparent 30%),
+    linear-gradient(150deg, color-mix(in srgb,var(--surface-2) 76%,transparent), color-mix(in srgb,var(--surface-2) 62%,transparent));
+  box-shadow: inset 0 1px color-mix(in srgb,var(--surface-2) 70%,transparent), 0 10px 28px color-mix(in srgb,var(--ink) 7%,transparent);
+}
+
+:root[data-theme="day"] .progress-ring {
+  background: conic-gradient(var(--teal) var(--progress), color-mix(in srgb,var(--teal) 11%,transparent) 0);
+}
+
+:root[data-theme="day"] .progress-ring::before { background: var(--surface-2); }
+
+:root[data-theme="day"] .language-primary-tabs button {
+  background: linear-gradient(145deg, color-mix(in srgb,var(--surface-2) 76%,transparent), color-mix(in srgb,var(--surface-2) 66%,transparent));
+}
+
+:root[data-theme="day"] .language-primary-tabs button.active {
+  border-color: color-mix(in srgb,var(--gold) 34%,transparent);
+  background: linear-gradient(145deg, color-mix(in srgb,var(--gold) 10%,transparent), color-mix(in srgb,var(--surface-2) 72%,transparent));
+}
+
+:root[data-theme="day"] .language-hero {
+  border-color: var(--line);
+  background:
+    linear-gradient(90deg, color-mix(in srgb,var(--surface-2) 94%,transparent) 0%, color-mix(in srgb,var(--surface-2) 77%,transparent) 48%, color-mix(in srgb,var(--surface-2) 22%,transparent) 78%, transparent 100%),
+    radial-gradient(circle at 18% 80%, color-mix(in srgb,var(--gold) 8%,transparent), transparent 34%);
+}
+
+:root[data-theme="day"] .culture-reflections,
+:root[data-theme="day"] .culture-reflection-card,
+:root[data-theme="day"] .screen-work-card,
+:root[data-theme="day"] .screen-work-reflection {
+  border-color: var(--line);
+  background: linear-gradient(145deg, color-mix(in srgb,var(--surface-2) 88%,transparent), color-mix(in srgb,var(--surface-2) 76%,transparent));
+  box-shadow: inset 0 1px color-mix(in srgb,var(--surface-2) 74%,transparent);
+}
+
+:root[data-theme="day"] .health-import-stats div {
+  background: color-mix(in srgb,var(--surface-2) 48%,transparent);
+}
+
+:root[data-theme="day"] .route-skeleton i {
+  background: linear-gradient(100deg, color-mix(in srgb,var(--surface-2) 72%,transparent) 25%, color-mix(in srgb,var(--surface-2) 95%,transparent) 42%, color-mix(in srgb,var(--surface-2) 72%,transparent) 60%);
+}
+
+:root[data-theme="day"] .route-error button,
+:root[data-theme="day"] .route-stale button { background: color-mix(in srgb,var(--surface-2) 88%,transparent); }
+
+:root[data-theme="day"] input,
+:root[data-theme="day"] textarea,
+:root[data-theme="day"] select {
+  color: var(--ink);
+  background-color: var(--control-bg);
+  border-color: var(--control-border);
+  accent-color: var(--teal);
+}
+
+/* 复合搜索框共用主题语义令牌，后续主题不再逐页修黑底。 */
+.lr-search,
+.grammar-search,
+.library-search {
+  color: var(--muted);
+  border-color: var(--control-border);
+  background: var(--control-bg);
+  box-shadow: 0 5px 16px var(--shadow-soft);
+}
+
+.lr-search:focus-within,
+.grammar-search:focus-within,
+.library-search:focus-within {
+  border-color: var(--control-border-focus);
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 5px 16px var(--shadow-soft);
+}
+
+.lr-search input,
+.grammar-search input,
+.library-search input { color: var(--ink); background: transparent; }
+
+@media (hover: hover) {
+  .lr-search:hover,
+  .grammar-search:hover,
+  .library-search:hover { background: var(--control-bg-hover); }
+}
+
+/* 不可选月份仍应看得见，只用字重与颜色区分是否有快照。 */
+:root[data-theme="day"] .asset-month-cal-nav button:disabled { opacity: .52; }
+:root[data-theme="day"] .asset-month-cal-grid button.no-snap { color: var(--text-disabled); }
+:root[data-theme="day"] .asset-month-cal-grid button.has-snap { color: var(--quiet); }
+:root[data-theme="day"] .asset-month-cal-grid button.has-snap:hover {
+  color: var(--ink);
+  background: color-mix(in srgb,var(--teal) 7%,transparent);
+}
+:root[data-theme="day"] .asset-month-cal-grid button.active {
+  color: var(--ink);
+  background: color-mix(in srgb,var(--gold) 13%,transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--gold) 25%,transparent);
+}
+
+/* 馆藏工具栏直接落在场景上，晴岚下用实色文字避免被人物高光冲淡。 */
+:root[data-theme="day"] .category-scroll button,
+:root[data-theme="day"] .library-toolbar > span,
+:root[data-theme="day"] .library-tabs strong { color: var(--muted); }
+:root[data-theme="day"] .library-tabs {
+  border: 1px solid color-mix(in srgb,var(--ink) 13%,transparent);
+  border-radius: 12px;
+  overflow: hidden;
+  background: color-mix(in srgb,var(--surface-2) 76%,transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb,var(--ink) 5.5%,transparent);
+  backdrop-filter: blur(14px);
+}
+:root[data-theme="day"] .library-tabs button.active { background: color-mix(in srgb,var(--gold) 7.5%,transparent); }
+:root[data-theme="day"] .library-toolbar {
+  min-height: 58px;
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb,var(--ink) 13%,transparent);
+  border-radius: 12px;
+  background: linear-gradient(90deg, color-mix(in srgb,var(--surface-2) 91%,transparent), color-mix(in srgb,var(--surface-2) 82%,transparent));
+  box-shadow: 0 8px 24px color-mix(in srgb,var(--ink) 5.5%,transparent);
+  backdrop-filter: blur(14px);
+}
+:root[data-theme="day"] .category-scroll button:hover {
+  color: var(--ink);
+  background: color-mix(in srgb,var(--surface-2) 58%,transparent);
+}
+:root[data-theme="day"] .category-scroll button.active {
+  color: var(--ink);
+  border-color: color-mix(in srgb,var(--ink) 16%,transparent);
+  background: color-mix(in srgb,var(--surface-2) 88%,transparent);
+}
+
+/* 晴岚馆藏：书籍是浅色布面精装，写作是带细横线的个人手稿。 */
+:root[data-theme="day"] .collection-item.kind-book,
+:root[data-theme="day"] .collection-item.kind-writing {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--cover-accent) 38%, color-mix(in srgb,var(--ink) 16%,transparent));
+  background:
+    radial-gradient(circle at 82% 8%, color-mix(in srgb, var(--cover-accent) 13%, transparent), transparent 34%),
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--cover) 12%, var(--surface-2)),
+      color-mix(in srgb, var(--cover) 22%, var(--surface-2)));
+  box-shadow: 4px 7px 0 color-mix(in srgb,var(--shadow-ink) 12%,transparent), 0 17px 34px color-mix(in srgb,var(--ink) 12%,transparent);
+}
+
+:root[data-theme="day"] .collection-item.kind-book::after {
+  background:
+    repeating-linear-gradient(120deg, color-mix(in srgb,var(--ink) 2.5%,transparent) 0 1px, transparent 1px 6px),
+    linear-gradient(90deg, color-mix(in srgb,var(--surface-2) 36%,transparent), transparent 28%);
+}
+
+:root[data-theme="day"] .collection-item.kind-writing {
+  border-radius: 6px 12px 12px 6px;
+  background:
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--cover-accent) 10%, transparent), transparent 32%),
+    linear-gradient(155deg, var(--writing-cover-paper), color-mix(in srgb, var(--cover) 13%, var(--surface-2)));
+  box-shadow: 3px 5px 0 color-mix(in srgb,var(--shadow-ink) 10%,transparent), 0 14px 28px color-mix(in srgb,var(--ink) 10%,transparent);
+}
+
+:root[data-theme="day"] .collection-item.kind-writing::after {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 30px, color-mix(in srgb,var(--teal) 6.5%,transparent) 30px 31px),
+    linear-gradient(90deg, color-mix(in srgb,var(--surface-2) 38%,transparent), transparent 36%);
+}
+
+:root[data-theme="day"] .collection-item.kind-book .card-spine,
+:root[data-theme="day"] .collection-item.kind-writing .card-spine {
+  width: 10px;
+  border-right-color: color-mix(in srgb, var(--cover-accent) 34%, color-mix(in srgb,var(--ink) 20%,transparent));
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--cover) 45%, var(--surface-2)),
+    color-mix(in srgb, var(--cover-accent) 20%, var(--surface-2)));
+}
+
+:root[data-theme="day"] .collection-item.kind-writing .card-spine { width: 6px; }
+:root[data-theme="day"] .collection-item.kind-book .collection-top,
+:root[data-theme="day"] .collection-item.kind-writing .collection-top {
+  color: color-mix(in srgb, var(--cover-accent) 58%, var(--mist-blue));
+}
+:root[data-theme="day"] .collection-item.kind-book .collection-top small,
+:root[data-theme="day"] .collection-item.kind-writing .collection-top small,
+:root[data-theme="day"] .collection-item.kind-book footer,
+:root[data-theme="day"] .collection-item.kind-writing footer { color: var(--muted); }
+:root[data-theme="day"] .collection-item.kind-book .collection-copy h3,
+:root[data-theme="day"] .collection-item.kind-writing .collection-copy h3 { color: var(--ink); }
+:root[data-theme="day"] .collection-item.kind-book .collection-copy p,
+:root[data-theme="day"] .collection-item.kind-writing .collection-copy p { color: var(--muted); }
+:root[data-theme="day"] .collection-item.kind-book footer,
+:root[data-theme="day"] .collection-item.kind-writing footer { border-top-color: color-mix(in srgb,var(--ink) 14%,transparent); }
+
+:root[data-theme="day"] .modal-backdrop,
+:root[data-theme="day"] .more-sheet-backdrop {
+  background: color-mix(in srgb,var(--surface-2) 28%,transparent);
+  backdrop-filter: blur(12px) saturate(.82);
+}
+
+:root[data-theme="day"] .editor-modal,
+:root[data-theme="day"] .capture-modal,
+:root[data-theme="day"] .preview-modal,
+:root[data-theme="day"] .asset-unlock-card,
+:root[data-theme="day"] .more-sheet {
+  color: var(--ink);
+  background: color-mix(in srgb,var(--surface-2) 97%,transparent);
+  border-color: var(--line-strong);
+  box-shadow: 0 28px 90px color-mix(in srgb,var(--ink) 22%,transparent);
+}
+
+:root[data-theme="day"] .identity-overlay:not(.past) {
+  color: var(--ink);
+  background: radial-gradient(circle at 74% 12%, color-mix(in srgb,var(--teal) 11%,transparent), transparent 30%), var(--surface-2);
+}
+
+:root[data-theme="day"] .identity-overlay:not(.past) > header,
+:root[data-theme="day"] .identity-overlay:not(.past) > footer,
+:root[data-theme="day"] .identity-overlay:not(.past) main section,
+:root[data-theme="day"] .identity-overlay:not(.past) main section > div { border-color: color-mix(in srgb,var(--ink) 13%,transparent); }
+
+:root[data-theme="day"] .identity-overlay:not(.past) main > div > p { color: var(--muted); }
+:root[data-theme="day"] .identity-overlay:not(.past) .identity-era { color: color-mix(in srgb,var(--ink) 5.5%,transparent); }
+:root[data-theme="day"] .identity-overlay:not(.past) > footer { color: var(--quiet); }
+:root[data-theme="day"] .identity-overlay:not(.past) > header button.active { color: var(--on-accent); background: var(--teal); }
+
+:root[data-theme="day"] .ai-panel,
+:root[data-theme="day"] .ai-panel-main,
+:root[data-theme="day"] .ai-archive-panel {
+  color: var(--ink);
+  background: var(--surface-2);
+  box-shadow: -30px 0 80px color-mix(in srgb,var(--ink) 18%,transparent);
+}
+
+:root[data-theme="day"] .ai-bubble {
+  background: color-mix(in srgb,var(--surface-2) 62%,transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb,var(--ink) 6%,transparent);
+}
+
+:root[data-theme="day"] .ai-bubble.user { background: color-mix(in srgb,var(--gold) 8%,transparent); }
+:root[data-theme="day"] .ai-bubble.assistant { background: color-mix(in srgb,var(--teal) 5.5%,transparent); }
+:root[data-theme="day"] .ai-panel-main > footer,
+:root[data-theme="day"] .ai-archive-panel { background-color: color-mix(in srgb,var(--surface-2) 96%,transparent); }
+:root[data-theme="day"] .ai-hold-talk,
+:root[data-theme="day"] .ai-panel .ai-composer-row textarea { background: color-mix(in srgb,var(--surface-2) 94%,transparent); }
+
+:root[data-theme="day"] .toast {
+  color: var(--ink);
+  background: color-mix(in srgb,var(--surface-2) 96%,transparent);
+  border-color: var(--line-strong);
+  box-shadow: 0 18px 55px color-mix(in srgb,var(--ink) 18%,transparent);
+}
+
+/* 首页行情卡在玄夜主题中刻意使用浅字，晴岚主题需要恢复墨色层级。 */
+:root[data-theme="day"] .market-pulse .home-card-heading h2,
+:root[data-theme="day"] .market-pulse .card-title h2,
+:root[data-theme="day"] .market-pulse h3,
+:root[data-theme="day"] .market-pulse li,
+:root[data-theme="day"] .market-pulse strong { color: var(--ink); }
+:root[data-theme="day"] .market-pulse p { color: var(--muted); }
+
+/* 甘特图同时承担表格和时间轴，亮色下整组重置，避免留下深色表头。 */
+:root[data-theme="day"] .gantt-frame { background: color-mix(in srgb,var(--surface-2) 66%,transparent); }
+:root[data-theme="day"] .gantt-head-pair,
+:root[data-theme="day"] .gantt-week-head { background: color-mix(in srgb,var(--surface-2) 97%,transparent); }
+:root[data-theme="day"] .gantt-sidebar,
+:root[data-theme="day"] .gantt-corner { background: color-mix(in srgb,var(--surface-2) 90%,transparent); }
+
+:root[data-theme="day"] .gantt-lane-head,
+:root[data-theme="day"] .gantt-task-row,
+:root[data-theme="day"] .gantt-task-empty,
+:root[data-theme="day"] .gantt-lane-spacer { border-color: color-mix(in srgb,var(--ink) 7.5%,transparent); }
+:root[data-theme="day"] .gantt-lane-head:hover { background: color-mix(in srgb,var(--teal) 4.5%,transparent); }
+:root[data-theme="day"] .gantt-lane-dot { box-shadow: 0 0 0 3px color-mix(in srgb,var(--ink) 5.5%,transparent); }
+
+:root[data-theme="day"] .gantt-week-col {
+  background: color-mix(in srgb,var(--surface-2) 26%,transparent);
+  box-shadow: inset 1px 0 0 color-mix(in srgb,var(--ink) 11%,transparent);
+}
+:root[data-theme="day"] .gantt-week-col:nth-child(even) { background: color-mix(in srgb,var(--teal) 3.5%,transparent); }
+:root[data-theme="day"] .gantt-day-ticks { box-shadow: inset 0 1px 0 color-mix(in srgb,var(--ink) 9%,transparent); }
+:root[data-theme="day"] .gantt-day-ticks span { box-shadow: inset 1px 0 0 color-mix(in srgb,var(--ink) 7.5%,transparent); }
+:root[data-theme="day"] .gantt-day-ticks span.weekend { color: color-mix(in srgb,var(--quiet) 75%,transparent); }
+:root[data-theme="day"] .gantt-lane-spacer {
+  background: linear-gradient(90deg, color-mix(in srgb,var(--teal) 3.5%,transparent), transparent 28%);
+}
+:root[data-theme="day"] .gantt-bar-row {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent calc(var(--gantt-day-width) - 1px),
+      color-mix(in srgb,var(--ink) 5.5%,transparent) calc(var(--gantt-day-width) - 1px),
+      color-mix(in srgb,var(--ink) 5.5%,transparent) var(--gantt-day-width)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent calc(var(--gantt-week-width) - 1px),
+      color-mix(in srgb,var(--ink) 13%,transparent) calc(var(--gantt-week-width) - 1px),
+      color-mix(in srgb,var(--ink) 13%,transparent) var(--gantt-week-width)
+    );
+}
+
+:root[data-theme="day"] .gantt-milestone i { background: color-mix(in srgb,var(--surface-2) 96%,transparent); }
+:root[data-theme="day"] .gantt-milestone span { text-shadow: 0 1px 8px color-mix(in srgb,var(--surface-2) 72%,transparent); }
+:root[data-theme="day"] .gantt-bar.family-mist.visual-active,
+:root[data-theme="day"] .gantt-bar.family-mist.visual-overdue { color: var(--on-accent); }
+
+:root[data-theme="day"] .recharts-cartesian-axis-tick-value { fill: var(--muted) !important; }
+:root[data-theme="day"] .recharts-cartesian-grid line { stroke: var(--line) !important; }
+
+@media (max-width: 900px) {
+  .sidebar-footer { display: none; }
+
+  :root[data-theme="day"] .workspace-backdrop-veil {
+    background-image:
+      linear-gradient(90deg, color-mix(in srgb,var(--bg) 94%,transparent), color-mix(in srgb,var(--bg) 67%,transparent)),
+      linear-gradient(180deg, color-mix(in srgb,var(--bg) 18%,transparent), color-mix(in srgb,var(--surface-2) 82%,transparent));
+  }
+
+  :root[data-theme="day"] .sidebar {
+    background: color-mix(in srgb,var(--surface-2) 98.5%,transparent);
+    box-shadow: 0 -12px 36px color-mix(in srgb,var(--ink) 11%,transparent);
+  }
+
+  :root[data-theme="day"] .more-sheet-grid a,
+  :root[data-theme="day"] .more-sheet-actions button { background: color-mix(in srgb,var(--surface-2) 54%,transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-backdrop-scene,
+  .workspace-backdrop-veil,
+  .workspace-backdrop-fireflies,
+  .theme-switch button,
+  .theme-reload-ring::before { transition: none !important; }
+  .theme-reload-ring svg.is-spinning { animation: none; }
+
+}
+
+/* 山窗小景：桌面侧栏只露一截静景，手机端展开同一幅竖向壁纸。 */
+:root {
+  --workbench-mountain-window: url("/theme/workbench-mountain-window-night.v1.avif");
+}
+
+:root[data-theme="day"] {
+  --workbench-mountain-window: url("/theme/workbench-mountain-window-day.v1.avif");
+}
+
+@media (min-width: 901px) and (min-height: 840px) {
+  .sidebar > .brand,
+  .sidebar > .sidebar-mode-switch,
+  .sidebar > nav,
+  .sidebar > .sidebar-footer {
+    position: relative;
+    z-index: 1;
+  }
+
+  .sidebar::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    right: 4px;
+    bottom: 132px;
+    left: 4px;
+    height: clamp(132px, 17vh, 168px);
+    pointer-events: none;
+    background-image: var(--workbench-mountain-window);
+    background-position: 72% 72%;
+    background-size: 116% auto;
+    background-repeat: no-repeat;
+    opacity: .52;
+    filter: saturate(.72) contrast(.92) brightness(1.14);
+    -webkit-mask-image: radial-gradient(ellipse 68% 84% at 50% 50%, #000 12%, rgba(0,0,0,.82) 30%, rgba(0,0,0,.35) 48%, transparent 60%);
+    mask-image: radial-gradient(ellipse 68% 84% at 50% 50%, #000 12%, rgba(0,0,0,.82) 30%, rgba(0,0,0,.35) 48%, transparent 60%);
+  }
+
+  :root[data-theme="day"] .sidebar::after {
+    background-image: var(--workbench-mountain-window);
+    opacity: .58;
+    filter: saturate(.62) contrast(.82) brightness(1.08);
+  }
+}
+
+@media (max-width: 900px) {
+  .workspace-backdrop-scene {
+    background-image: var(--workbench-mountain-window);
+    background-position: center center;
+    filter: saturate(.82) contrast(.94) brightness(.88);
+  }
+
+  .workspace-backdrop-veil {
+    background-image:
+      linear-gradient(180deg, color-mix(in srgb,var(--surface-2) 20%,transparent) 0%, color-mix(in srgb,var(--surface-2) 6%,transparent) 34%, color-mix(in srgb,var(--surface-2) 50%,transparent) 100%),
+      linear-gradient(90deg, color-mix(in srgb,var(--surface-2) 34%,transparent), color-mix(in srgb,var(--surface-2) 8%,transparent));
+  }
+
+  .workspace-backdrop-fireflies { opacity: .42; }
+
+  :root[data-theme="day"] .workspace-backdrop-scene {
+    background-image: var(--workbench-mountain-window);
+    background-position: center center;
+    filter: saturate(.74) contrast(.90) brightness(1.01);
+  }
+
+  :root[data-theme="day"] .workspace-backdrop-veil {
+    background-image:
+      linear-gradient(180deg, color-mix(in srgb,var(--bg) 16%,transparent) 0%, color-mix(in srgb,var(--bg) 4%,transparent) 42%, color-mix(in srgb,var(--surface-2) 46%,transparent) 100%),
+      linear-gradient(90deg, color-mix(in srgb,var(--bg) 48%,transparent), color-mix(in srgb,var(--bg) 16%,transparent));
+  }
+
+  :root[data-theme="day"] .workspace-backdrop-fireflies { opacity: .10; }
+}

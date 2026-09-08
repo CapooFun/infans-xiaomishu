@@ -1,0 +1,42 @@
+@import url("/fonts/wenkai/font.css");
+.archive-reader { --letter-paper: color-mix(in srgb, var(--image-caption-ink) 90%, var(--gold)); --letter-ink: var(--media-stage-bg); --letter-muted: color-mix(in srgb, var(--letter-ink) 68%, var(--letter-paper)); --letter-line: color-mix(in srgb, var(--letter-ink) 16%, transparent); position: fixed; inset: 0; margin: auto; width: 100%; max-width: none; height: 100dvh; max-height: none; padding: 0; border: 0; color: var(--ink); background: color-mix(in srgb, var(--bg) 93%, transparent); overflow: hidden; }
+.archive-reader::backdrop { background: color-mix(in srgb, var(--shadow-ink) 70%, transparent); }
+.archive-reader[open] { display: grid; grid-template-rows: auto minmax(0,1fr); animation: archive-reader-in .2s ease both; }
+.archive-reader button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 44px; min-height: 44px; padding: 8px 12px; color: inherit; background: transparent; border: 1px solid var(--line-strong); border-radius: 6px; cursor: pointer; font: inherit; }
+.archive-reader button:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+.archive-reader button:hover { background: var(--gold-soft); }
+.archive-reader__tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-right,0px) + 4vw) 16px calc(env(safe-area-inset-left,0px) + 4vw); border-bottom: 1px solid var(--line); font-size: var(--text-meta); }
+.archive-reader__tools > div { display: flex; gap: 8px; }
+.archive-reader__scroll { overflow-y: auto; overscroll-behavior: contain; padding: 36px calc(env(safe-area-inset-right,0px) + 22px) calc(env(safe-area-inset-bottom,0px) + 64px) calc(env(safe-area-inset-left,0px) + 22px); perspective: 1400px; }
+.archive-reader__paper { position: relative; margin: 0 auto; width: min(100%, 820px); padding: clamp(28px,6vw,80px); color: var(--letter-ink); background: var(--letter-paper); box-shadow: 0 18px 70px var(--shadow-soft); overflow-wrap: anywhere; }
+.archive-reader--letter .archive-reader__paper { min-height: 65svh; transform-origin: 50% 12%; animation: letter-unfold .65s cubic-bezier(.16,.7,.24,1) both; }
+.archive-reader__fold { position: absolute; inset: 47% 0 auto; height: 12px; pointer-events: none; background: linear-gradient(180deg, transparent, var(--letter-line), transparent); opacity: .15; }
+.archive-reader__eyebrow { color: var(--letter-muted); font: var(--text-meta)/1.7 var(--serif); letter-spacing: .12em; margin: 0 0 22px; }
+.archive-reader h2 { font: 400 clamp(var(--text-title-sm),3vw,var(--text-display))/1.5 var(--serif); margin: 0 0 32px; }
+.archive-reader__body { position: relative; font: var(--text-body)/2.05 var(--serif); }
+.archive-reader--letter .archive-reader__body { font-family: "Workbench WenKai", var(--serif); }
+.archive-reader.is-plain .archive-reader__body { font-family: system-ui,sans-serif; }
+.archive-reader.is-large .archive-reader__body { font-size: var(--text-title-sm); }
+.archive-reader__body p { margin: 0 0 1.25em; white-space: pre-line; }
+.archive-reader__body blockquote { margin: 1.5em 0; padding-left: 1em; border-left: 2px solid var(--letter-line); }
+.archive-reader__body details { margin: 24px 0; font-size: var(--text-meta); color: var(--letter-muted); }
+.archive-reader__body summary { min-height: 44px; cursor: pointer; }
+.archive-reader__body a { color: inherit; text-underline-offset: 4px; }
+.archive-reader__body time, .archive-reader__signature { display: block; text-align: right; color: var(--letter-muted); }
+.archive-reader__end { display: block; margin-top: 48px; text-align: center; font: var(--text-title)/1 var(--serif); color: var(--letter-muted); }
+.archive-reader.is-closing { animation: archive-reader-in .18s ease reverse both; }
+:root[data-theme="night"] .archive-reader:not(.archive-reader--letter) { --letter-paper: var(--surface-2); --letter-ink: var(--ink); }
+@keyframes archive-reader-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes letter-unfold { from { opacity: 0; transform: translateY(36px) rotateX(18deg) scale(.96); } to { opacity: 1; transform: none; } }
+@media (max-width: 600px) { .archive-reader__scroll { padding: 16px calc(env(safe-area-inset-right,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 24px) calc(env(safe-area-inset-left,0px) + 12px); } .archive-reader__paper { padding: 30px 22px; } .archive-reader__tools { padding-inline: calc(env(safe-area-inset-left,0px) + 12px) calc(env(safe-area-inset-right,0px) + 12px); } }
+@media (prefers-reduced-motion: reduce) { .archive-reader[open], .archive-reader--letter .archive-reader__paper, .archive-reader.is-closing { animation: none; } }
+
+.archive-reader:not(.archive-reader--letter) .archive-reader__fold { display: none; }
+
+.archive-reader.is-night { --letter-paper: color-mix(in srgb, var(--media-stage-bg) 94%, var(--image-caption-ink)); --letter-ink: color-mix(in srgb, var(--image-caption-ink) 94%, var(--gold)); }
+.archive-reader__opening-envelope { position:fixed; z-index:1; pointer-events:none; left:50%; top:35%; width:min(600px,75vw); height:220px; background:var(--letter-paper); box-shadow:0 22px 70px var(--shadow-soft); animation: letter-envelope-arrive .7s ease both; perspective:800px; }
+.archive-reader__opening-envelope > span { position:absolute; inset:0 0 auto; height:130px; background:color-mix(in srgb,var(--gold) 20%,var(--letter-paper)); clip-path:polygon(0 0,100% 0,50% 100%); transform-origin:50% 0; animation: letter-flap-open .45s .05s ease both; }
+.archive-reader--letter .archive-reader__paper { animation-delay:.18s; }
+@keyframes letter-envelope-arrive { 0% { opacity:0; transform:translate(-50%,40px) scale(.88); } 20%,55% { opacity:1; transform:translate(-50%,0); } 100% { opacity:0; transform:translate(-50%,60px); } }
+@keyframes letter-flap-open { from { transform:rotateX(0); } to { transform:rotateX(175deg); } }
+@media (prefers-reduced-motion:reduce) { .archive-reader__opening-envelope { display:none; } }

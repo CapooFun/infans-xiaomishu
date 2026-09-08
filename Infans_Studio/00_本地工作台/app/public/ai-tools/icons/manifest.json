@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-09-06T00:00:00.000Z",
+  "catalogCount": 4,
+  "iconCount": 4,
+  "entries": [
+    {
+      "id": "example-notes",
+      "name": "示例笔记",
+      "sourceUrl": "https://notes.example.com/",
+      "fallback": true
+    },
+    {
+      "id": "example-palette",
+      "name": "示例调色盘",
+      "sourceUrl": "https://palette.example.com/",
+      "fallback": true
+    },
+    {
+      "id": "example-reading",
+      "name": "示例阅读",
+      "sourceUrl": "https://reading.example.com/",
+      "fallback": true
+    },
+    {
+      "id": "example-course",
+      "name": "示例公开课",
+      "sourceUrl": "https://course.example.com/",
+      "fallback": true
+    }
+  ]
+}

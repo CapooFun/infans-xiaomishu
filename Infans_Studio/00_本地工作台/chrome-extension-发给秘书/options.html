@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>一键发给秘书 · 本机配对</title>
+  <link rel="icon" href="icons/yingning-32.png">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <main class="settings-shell">
+    <header>
+      <span class="eyebrow">INFANS · 本机私有来件 · v<span id="extension-version">…</span></span>
+      <div class="extension-title"><img src="icons/yingning-48.png" alt=""><h1>一键发给秘书</h1></div>
+      <p>扩展只连接这台 Mac 的回环地址。默认端口 5173，可改成与 INFANS_PORT 一致。令牌只保存在当前 Chrome 资料的本地扩展存储，不使用 Chrome 同步。</p>
+    </header>
+
+    <section class="connection-panel" aria-labelledby="connection-title">
+      <div>
+        <strong id="connection-title">Chrome 本机通道</strong>
+        <span id="connection-state" class="connection-state">正在检查 Chrome 权限和小秘书服务…</span>
+      </div>
+      <button id="check-connection" class="quiet compact" type="button">重新检查</button>
+    </section>
+
+    <section class="panel" aria-labelledby="pair-title">
+      <div class="section-heading">
+        <div>
+          <span class="step">01</span>
+          <h2 id="pair-title">配对这台 Mac</h2>
+        </div>
+        <span id="pair-state" class="state-pill">正在读取</span>
+      </div>
+      <label>
+        <span>设备令牌</span>
+        <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="直接粘贴剪贴板中的完整令牌">
+        <small>已配对时可留空；只有需要替换令牌时再输入。</small>
+      </label>
+      <label>
+        <span>本机端口</span>
+        <input id="workbench-port" type="number" min="1" max="65535" value="5173">
+        <small>必须与启动工作台时的 INFANS_PORT 一致。</small>
+      </label>
+      <label>
+        <span>设备名称</span>
+        <input id="device-name" type="text" maxlength="120" value="Mac Chrome">
+      </label>
+      <div class="actions">
+        <button id="save" class="primary" type="button">保存并立即重试</button>
+        <button id="clear" class="quiet" type="button">取消配对</button>
+      </div>
+      <p id="form-message" class="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="queue-title">
+      <div class="section-heading">
+        <div>
+          <span class="step">02</span>
+          <h2 id="queue-title">可靠队列</h2>
+        </div>
+        <button id="retry" class="quiet compact" type="button">现在重试</button>
+      </div>
+      <dl class="status-grid">
+        <div><dt>待送达</dt><dd id="queued">0</dd></div>
+        <div><dt>正在发送</dt><dd id="sending">0</dd></div>
+        <div><dt>失败待重试</dt><dd id="failed">0</dd></div>
+      </dl>
+      <p id="last-error" class="queue-detail">当前没有失败记录。</p>
+      <p id="last-delivered" class="delivery-detail">尚无 Mac 持久化回执。</p>
+    </section>
+
+    <aside class="boundary">
+      <strong>真实送达边界</strong>
+      <p>工具栏徽标只有在服务端返回 <code>deliveryBoundary: mac_persisted</code> 后才显示绿色勾。队列为空、请求已发出或 HTTP 200 都不能单独算已送达。</p>
+    </aside>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

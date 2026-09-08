@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#060d10" />
+    <meta name="description" content="小秘书：本地优先个人工作系统" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="小秘书" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <script>
+      (() => {
+        try {
+          const nested = window.self !== window.top;
+          const phoneMacView = /iPhone|iPod/u.test(navigator.userAgent || "")
+            && localStorage.getItem("infans-phone-mac-view-v1") === "on";
+          if (phoneMacView) document.documentElement.dataset[nested ? "phoneMacView" : "phoneMacHost"] = "on";
+          const stored = localStorage.getItem("infans-workbench-theme");
+          const theme = stored && /^[a-z0-9-]{1,32}$/.test(stored) ? stored : "night";
+          const storedScheme = localStorage.getItem("infans-workbench-theme-scheme");
+          const legacyLightTheme = theme === "day";
+          const scheme = storedScheme === "light" || storedScheme === "dark" ? storedScheme : legacyLightTheme ? "light" : "dark";
+          const color = localStorage.getItem("infans-workbench-theme-color") || (legacyLightTheme ? "#eef3f0" : "#060d10");
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = scheme;
+          document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
+        } catch {
+          document.documentElement.dataset.theme = "night";
+        }
+      })();
+    </script>
+    <link rel="manifest" href="/site.webmanifest?v=a6c885f31fe3" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=a6c885f31fe3" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png?v=a6c885f31fe3" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=a6c885f31fe3" />
+    <title>小秘书</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/boot.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+.project-asset-relations { min-width: 0; margin-block: 12px; }
+.project-object-links { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.project-object-links > span { display: inline-flex; gap: 5px; align-items: center; color: var(--muted); font-size: var(--text-meta); margin-right: 4px; }
+.project-object-links button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 9px; color: inherit; background: transparent; cursor: pointer; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.project-object-links button[aria-expanded="true"] { background: var(--teal-soft); border-color: var(--teal); }
+.project-object-links small { font-size: var(--text-micro); opacity: .7; flex-shrink: 0; }
+.project-related-panel { margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.project-related-panel > header, .project-related-card > header { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+.project-related-panel > header > div { display: grid; gap: 4px; }
+.project-related-panel small { font-size: var(--text-micro); opacity: .75; }
+.project-related-panel button { min-height: 36px; cursor: pointer; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.project-related-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 10px; margin-top: 12px; }
+.project-related-card { min-width: 0; padding: 12px; background: var(--surface); border-radius: 9px; overflow-wrap: anywhere; }
+.project-related-card > header { flex-direction: column; margin-bottom: 8px; }
+.project-related-card strong { font-size: var(--text-ui); }
+.project-related-card p, .project-related-card dd { font-size: var(--text-ui); line-height: 1.6; white-space: pre-wrap; margin: 5px 0; }
+.project-related-card img { width: 100%; max-height: 180px; object-fit: contain; border-radius: 6px; }
+.project-related-card audio, .project-related-card video { width: 100%; max-height: 240px; }
+.project-related-card a { display: inline-flex; align-items: center; gap: 4px; color: inherit; font-size: var(--text-ui); }
+.project-related-card > a:has(img) { display: block; }
+.project-related-values { display: grid; gap: 8px; margin: 0; }
+.project-related-values dt { font-size: var(--text-micro); opacity: .7; }
+.project-related-roles { display: flex; gap: 5px; flex-wrap: wrap; margin-block: 8px; }
+.project-related-roles span { font-size: var(--text-micro); color: var(--muted); }
+.project-related-card details { font-size: var(--text-micro); opacity: .75; }
+.project-related-card summary { cursor: pointer; padding-block: 7px; }
+.project-related-card code { display: block; overflow-wrap: anywhere; margin-block: 5px; white-space: pre-wrap; }
+.project-related-more { display: block; margin: 12px auto 0; }
+.project-relations-error { color: var(--red); font-size: var(--text-meta); }
+.project-related-panel > p { display: flex; gap: 8px; align-items: center; font-size: var(--text-meta); }
+@media (max-width: 720px) { .project-object-links button, .project-related-panel button { min-height: 44px; } .project-related-panel { padding: 9px; } }
+
+.project-asset-relations :is(button,a,summary):focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }

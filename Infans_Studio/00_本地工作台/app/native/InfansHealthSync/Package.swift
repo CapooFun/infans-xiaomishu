@@ -1,0 +1,75 @@
+// swift-tools-version: 6.0
+import PackageDescription
+
+let package = Package(
+    name: "InfansHealthSyncSchedule",
+    platforms: [.macOS(.v13)],
+    products: [
+        .library(name: "HealthSyncScheduleCore", targets: ["HealthSyncScheduleCore"]),
+    ],
+    targets: [
+        .target(
+            name: "HealthSyncScheduleCore",
+            path: "InfansHealthSync",
+            exclude: [
+                "Assets.xcassets",
+                "ContentView.swift",
+                "CodexCommandSettings.swift",
+                "CodexCommandTokenKeychain.swift",
+                "HealthKitReader.swift",
+                "InfansHealthSync.entitlements",
+                "InfansHealthSyncApp.swift",
+                "PhoneCommandBridge.swift",
+                "QuickPhotoInbox.swift",
+                "SecretarySharedConfiguration.swift",
+                "SecretaryChatRootView.swift",
+                "SecretaryChatActionConfirmationView.swift",
+                "SecretaryChatStore.swift",
+                "SecretaryAttachmentCache.swift",
+                "SecretaryAttachmentView.swift",
+                "SecretaryChatExperience.swift",
+                "SecretaryCharacterPhotos.swift",
+                "SecretaryConversationListView.swift",
+                "SecretaryConversationInspectorView.swift",
+                "SecretaryConversationView.swift",
+                "InfansProductIdentity.swift",
+                "SecretaryMessageComposer.swift",
+                "SecretaryVoiceInputStore.swift",
+                "SecretaryVoiceRecorder.swift",
+                "SecretarySettingsView.swift",
+                "Info.plist",
+                "SettingsStore.swift",
+                "SyncCoordinator.swift",
+                "UnifiedReminderAuthorizationStore.swift",
+                "UnifiedReminderExecutor.swift",
+                "YingningIntakeClient.swift",
+                "YingningIntakeCoordinator.swift",
+            ],
+            sources: [
+                "HealthSyncModels.swift",
+                "HealthSyncSchedule.swift",
+                "HealthSyncToken.swift",
+                "CodexCommandModels.swift",
+                "PendingCodexCommandStore.swift",
+                "RawVoiceModels.swift",
+                "PendingRawVoiceRecordingStore.swift",
+                "PhoneRawVoicePipeline.swift",
+                "PendingYingningIntakeStore.swift",
+                "UnifiedReminderModels.swift",
+                "YingningIntakeModels.swift",
+                "SecretaryAttachmentDraftStore.swift",
+                "SecretaryChatModels.swift",
+                "SecretarySpeechCaptions.swift",
+                "SecretaryBundledArt.swift",
+                "SecretaryChatPersistence.swift",
+                "SecretaryChatClient.swift",
+                "SecretaryVoiceTranscriptionClient.swift",
+            ]
+        ),
+        .testTarget(
+            name: "HealthSyncScheduleCoreTests",
+            dependencies: ["HealthSyncScheduleCore"],
+            path: "Tests/HealthSyncScheduleCoreTests"
+        ),
+    ]
+)

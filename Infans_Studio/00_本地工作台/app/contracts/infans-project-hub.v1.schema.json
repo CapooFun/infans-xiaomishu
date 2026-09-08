@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infans.local/contracts/project-hub.v1.schema.json",
+  "title": "Infans project hub thin contract v1",
+  "description": "只约束工作台读取所需的稳定 ID、关系、状态、原件引用和安全字段；不约束详细设计正文。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "project", "worklines"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "project": { "$ref": "#/$defs/project" },
+    "worklines": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/workline" }
+    },
+    "featureTrees": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/featureTree" },
+      "default": []
+    },
+    "taskLinks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/taskLink" },
+      "default": []
+    },
+    "recentLinks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/recentLink" },
+      "default": []
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "status": {
+      "enum": ["planned", "active", "blocked", "testing", "waiting_acceptance", "paused", "stable", "done"]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "项目根内的 Markdown/JSON/YAML 相对路径。不得使用绝对路径、反斜杠、..、符号链接逃逸或敏感/缓存/日志路径。"
+        },
+        "label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "status", "summary"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "summary": { "type": "string" },
+        "defaultView": { "enum": ["home", "featureTree"], "default": "home" }
+      }
+    },
+    "workline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "status", "summary"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "summary": { "type": "string" },
+        "source": { "$ref": "#/$defs/source" },
+        "hiddenInDisplayMode": { "type": "boolean", "default": false },
+        "view": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind"],
+              "properties": { "kind": { "const": "overview" } }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "treeId"],
+              "properties": {
+                "kind": { "const": "featureTree" },
+                "treeId": { "$ref": "#/$defs/id" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "featureNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "summary": { "type": "string" },
+        "source": { "$ref": "#/$defs/source" },
+        "hiddenInDisplayMode": { "type": "boolean", "default": false },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/featureNode" },
+          "default": []
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "status", "features"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "summary": { "type": "string" },
+        "source": { "$ref": "#/$defs/source" },
+        "hiddenInDisplayMode": { "type": "boolean", "default": false },
+        "features": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/featureNode" }
+        }
+      }
+    },
+    "featureTree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "worklineId", "name", "modules"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "worklineId": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string" },
+        "source": { "$ref": "#/$defs/source" },
+        "modules": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/module" }
+        }
+      }
+    },
+    "taskLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taskId", "worklineId"],
+      "properties": {
+        "taskId": { "$ref": "#/$defs/id" },
+        "worklineId": { "$ref": "#/$defs/id" },
+        "moduleId": { "$ref": "#/$defs/id" },
+        "featureId": { "$ref": "#/$defs/id" }
+      }
+    },
+    "recentLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recentId", "worklineId"],
+      "properties": {
+        "recentId": { "$ref": "#/$defs/id" },
+        "worklineId": { "$ref": "#/$defs/id" },
+        "moduleId": { "$ref": "#/$defs/id" },
+        "featureId": { "$ref": "#/$defs/id" }
+      }
+    }
+  }
+}

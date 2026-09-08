@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infans.local/schemas/market-event-topic.schema.json",
+  "title": "Infans 金融重大事件专题",
+  "type": "object",
+  "required": ["schemaVersion", "id", "title", "eventDate", "status", "latestConclusion", "missingEvidence", "updatedAt", "nodes"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "eventDate": { "type": "string", "pattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}$" },
+    "eventTime": { "type": "string" },
+    "region": { "type": "string" },
+    "category": { "type": "string" },
+    "status": { "enum": ["preview", "published", "tracking", "closed"] },
+    "latestConclusion": { "type": "string", "minLength": 1 },
+    "missingEvidence": { "type": "array", "items": { "type": "string" } },
+    "updatedAt": { "type": "string", "minLength": 1 },
+    "closeRule": { "type": "string" },
+    "sample": { "type": "boolean" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["phase", "status", "conclusion"],
+        "properties": {
+          "phase": { "enum": ["preview", "release", "d1", "tracking", "d3", "d5", "closed"] },
+          "status": { "enum": ["recorded", "current", "pending"] },
+          "observedAt": { "type": "string" },
+          "conclusion": { "type": "string" },
+          "facts": { "type": "array", "items": { "type": "string" } },
+          "candidateJudgments": { "type": "array", "items": { "type": "string" } },
+          "missingEvidence": { "type": "array", "items": { "type": "string" } },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["title", "url"],
+              "properties": {
+                "title": { "type": "string" },
+                "url": { "type": "string", "pattern": "^https://" },
+                "type": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

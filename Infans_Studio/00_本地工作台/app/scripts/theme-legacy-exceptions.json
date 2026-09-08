@@ -1,0 +1,2575 @@
+{
+  "description": "已审阅的独立画面例外。按具体声明锁定，不允许通过重建清单接纳新的普通UI硬编码。新增例外需说明画面用途并人工审阅。",
+  "reasons": {
+    "reference": "原生设计参考画布，固定尺寸和色板用于比对；不作为实际应用控件。",
+    "art": "人物、历史纸张、年代水印或萤火装饰，属于画面内容。",
+    "physiology": "肌肉恢复图的固定数据图例色，配套文字标签共同表达状态。"
+  },
+  "entries": [
+    {
+      "key": "1437ed6dffba3541d1fb",
+      "file": "src/muscle-map.ts",
+      "selector": "",
+      "property": "color",
+      "value": "#e0786e",
+      "count": 1,
+      "reason": "physiology"
+    },
+    {
+      "key": "fcf716f44520c03fb1cc",
+      "file": "src/muscle-map.ts",
+      "selector": "",
+      "property": "color",
+      "value": "#7ec9c0",
+      "count": 1,
+      "reason": "physiology"
+    },
+    {
+      "key": "b3e149d682895f8b345b",
+      "file": "src/muscle-map.ts",
+      "selector": "",
+      "property": "color",
+      "value": "#e2c76a",
+      "count": 1,
+      "reason": "physiology"
+    },
+    {
+      "key": "085858457a117b3d086f",
+      "file": "src/muscle-map.ts",
+      "selector": "",
+      "property": "color",
+      "value": "#edf2ef",
+      "count": 1,
+      "reason": "physiology"
+    },
+    {
+      "key": "628613756e883f35953a",
+      "file": "src/muscle-map.ts",
+      "selector": "",
+      "property": "color",
+      "value": "#5a6c6e",
+      "count": 1,
+      "reason": "physiology"
+    },
+    {
+      "key": "2e57bf1a2e872a5779ee",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".native-ui-design-lab",
+      "property": "--nud-tool-ink",
+      "value": "#1f2b33",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0f214f0d7d91e84e2279",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".native-ui-design-lab",
+      "property": "--nud-tool-muted",
+      "value": "#69777e",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b738e34287b435bbbaaa",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".native-ui-design-lab",
+      "property": "--nud-tool-line",
+      "value": "color-mix(in srgb,var(--line) 82%,#829098)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "f14996d7cb205a3f904c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-lab-header",
+      "property": "background",
+      "value": "linear-gradient(115deg,color-mix(in srgb,var(--surface) 94%,#dce7eb),color-mix(in srgb,var(--surface) 96%,transparent))",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "efe8d8cb5e4d06dcb535",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-lab-header",
+      "property": "box-shadow",
+      "value": "0 14px 34px color-mix(in srgb,#17242b 8%,transparent)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4ab90472930e76333e70",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-eyebrow",
+      "property": "color",
+      "value": "#637983",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d1a06096d057e9ad256f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-eyebrow",
+      "property": "font",
+      "value": "700 10px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4d6becbbbb644b4adfaa",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-lab-header h1",
+      "property": "font",
+      "value": "600 clamp(24px,2.2vw,36px)/1.12 var(--serif)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "960a771a1704fc54a2cd",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-lab-header p",
+      "property": "font-size",
+      "value": "13px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "288d47c5d5508a32e8cb",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-baseline-mark",
+      "property": "border-left",
+      "value": "2px solid #6e9289",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "e1c40fba1bc5eac222a8",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-baseline-mark",
+      "property": "color",
+      "value": "#43655d",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "cf275787dfbc9f1f765e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-baseline-mark span",
+      "property": "font",
+      "value": "700 9px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "8f8a10a9a4abc7454d53",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-baseline-mark strong",
+      "property": "font",
+      "value": "600 13px/1.3 var(--serif)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7c03ae0fcfc9bc7f6d2f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-baseline-mark small",
+      "property": "font-size",
+      "value": "9px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "bbd653b48efa04d6dcfb",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-control-panel",
+      "property": "background",
+      "value": "color-mix(in srgb,var(--surface) 96%,#eef2f3)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4f3951684fa20fe817d4",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-control-panel",
+      "property": "box-shadow",
+      "value": "0 10px 28px color-mix(in srgb,#17242b 7%,transparent)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4c6762e373a0440866b3",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-control-heading > span",
+      "property": "font",
+      "value": "700 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "6d51fdedb09d7e3be85d",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-control-heading small",
+      "property": "font-size",
+      "value": "9px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "2e0a671b41fdde9487dc",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-mode-switch button,.nud-segmented button",
+      "property": "font",
+      "value": "600 10px/1 var(--sans)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "97ab0bcd16fb6bb67b3e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-mode-switch button.is-active,.nud-segmented button.is-active",
+      "property": "box-shadow",
+      "value": "0 1px 5px color-mix(in srgb,#17242b 13%,transparent)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "115e53beba28b4b52837",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-name-field,.nud-select-field",
+      "property": "font-size",
+      "value": "10px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "1dc8b382abdfd52cd290",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-name-field input,.nud-select-field select",
+      "property": "font",
+      "value": "500 10px/1 var(--sans)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4d6298ac9ce08ca243b8",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-action-row button",
+      "property": "font",
+      "value": "600 10px/1 var(--sans)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "de9d0852d9cd66cc5bf7",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-action-row button:hover",
+      "property": "border-color",
+      "value": "#78909a",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "bbfd08ff8328d8db30a7",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-action-row button:hover",
+      "property": "background",
+      "value": "color-mix(in srgb,var(--surface) 86%,#dce8eb)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c9d670056cff031fd077",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-feedback",
+      "property": "font-size",
+      "value": "9px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4d902235f1928eed81dd",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-toggles button",
+      "property": "font",
+      "value": "500 10px/1.2 var(--sans)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b2f80343cf51aa3c8b6d",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-toggles button i",
+      "property": "border",
+      "value": "1px solid #92a0a5",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "eb3dcf84399f3a3f83b0",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-toggles button.is-active",
+      "property": "border-color",
+      "value": "color-mix(in srgb,#637f89 32%,var(--line))",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "353b43a606da2a251b6f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-toggles button.is-active",
+      "property": "background",
+      "value": "color-mix(in srgb,#dfe9ec 52%,transparent)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c732b40b7493ef849558",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-toggles button.is-active i",
+      "property": "border-color",
+      "value": "#587b84",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7f12ce739848c46a91a9",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-toggles button.is-active i",
+      "property": "background",
+      "value": "#587b84",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9925b4aac716ec6c4934",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-toggles button.is-active i",
+      "property": "box-shadow",
+      "value": "inset 0 0 0 2px #eef5f6",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9387a88d29545db23de6",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-check",
+      "property": "font-size",
+      "value": "10px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "cd166c02775b065bc725",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-check input",
+      "property": "accent-color",
+      "value": "#587b84",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "e497d28792f513ddc047",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-range-control > span",
+      "property": "font-size",
+      "value": "9px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b4465a567d1ef7124992",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-range-control input",
+      "property": "accent-color",
+      "value": "#587b84",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b8019901ea7b831e7c63",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-color-row label",
+      "property": "font-size",
+      "value": "9px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "a2fa2d0e022fcc28f087",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage",
+      "property": "background",
+      "value": "#e8ecec",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "439fe855e08aba7b0f7a",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage",
+      "property": "box-shadow",
+      "value": "0 10px 28px color-mix(in srgb,#17242b 7%,transparent)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "82eb5c791e9dc431ba7e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler",
+      "property": "border-bottom",
+      "value": "1px solid #c9d0d1",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d9462e48a9dd8d24fcad",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler",
+      "property": "color",
+      "value": "#536169",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d0e15f504b8f95cc7d73",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler",
+      "property": "background",
+      "value": "#f5f7f7",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7eebf025dcbb78d10375",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler",
+      "property": "font",
+      "value": "700 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "302c196214f05accfb68",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler i",
+      "property": "background",
+      "value": "repeating-linear-gradient(90deg,transparent 0 11px,#9da9ad 11px 12px)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "14557a9a9087aecee862",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler small",
+      "property": "color",
+      "value": "#748187",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c192373dec311ba81f5f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler small",
+      "property": "font",
+      "value": "500 9px/1 var(--sans)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c68933c85a601d16a296",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler button",
+      "property": "border",
+      "value": "1px solid #b8c2c4",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "3156a0b256c8459a4a62",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler button",
+      "property": "color",
+      "value": "#41545c",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "924442c8664643b2386f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler button",
+      "property": "background",
+      "value": "#fff",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "a51fd0f2f4334c82142c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage-ruler button",
+      "property": "font",
+      "value": "700 9px/1 var(--sans)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "047bf150e608fe92fc43",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-row",
+      "property": "background-color",
+      "value": "#e7ebeb",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "93dbccd81ff0d1c305d8",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-row",
+      "property": "background-image",
+      "value": "linear-gradient(#dce1e1 1px,transparent 1px),linear-gradient(90deg,#dce1e1 1px,transparent 1px)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "f8c4448c3918f64fc5d5",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage > footer",
+      "property": "border-top",
+      "value": "1px solid #c9d0d1",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "40c575c127fdbd2f0574",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage > footer",
+      "property": "color",
+      "value": "#6d787d",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "1ac77ac85e55e0345cd1",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage > footer",
+      "property": "background",
+      "value": "#f5f7f7",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "287fb11eadba105caa3b",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-stage > footer",
+      "property": "font-size",
+      "value": "9px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b2ee79d92a4c84c5c15a",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card",
+      "property": "color",
+      "value": "#29343a",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0449b0389581c7aa6fbf",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card > header strong",
+      "property": "color",
+      "value": "#2e3b41",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7ca3a144b96178a565bf",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card > header strong",
+      "property": "font",
+      "value": "700 11px/1.2 var(--sans)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d8b909829019639d2644",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card > header small",
+      "property": "color",
+      "value": "#718086",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4da64621ec080b99c2d3",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card > header small",
+      "property": "font",
+      "value": "500 9px/1.2 var(--sans)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "90e0e3fd61f3615369ff",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card > header > b,.nud-device-card > header > button",
+      "property": "border",
+      "value": "1px solid #bac4c6",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "78fd43c620db0d9d5bff",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card > header > b,.nud-device-card > header > button",
+      "property": "color",
+      "value": "#65757b",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "35d3867be51723285cec",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card > header > b,.nud-device-card > header > button",
+      "property": "background",
+      "value": "#f2f5f5",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "442ccbc8b14b880dc6f9",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card > header > b,.nud-device-card > header > button",
+      "property": "font",
+      "value": "700 8px/1 var(--sans)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d12331fb6fc323e207f6",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-shell",
+      "property": "background",
+      "value": "#111719",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c3f9651a4e27823eb5e8",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-shell",
+      "property": "box-shadow",
+      "value": "0 18px 35px rgba(25,35,39,.24),inset 0 0 0 1px #485055",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4af913a0a087ca39a95a",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card.is-iphone15 .nud-device-shell::before",
+      "property": "background",
+      "value": "#050708",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "14cc7fbc41545e36baf5",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card.is-watchS10 .nud-device-shell::after",
+      "property": "background",
+      "value": "#30383b",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0716aca15f06600c0538",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-device-card.is-watchS10 .nud-device-shell::after",
+      "property": "box-shadow",
+      "value": "0 43px 0 -1px #30383b",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "f6f23eca2772892e995b",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-measure-top",
+      "property": "border-top",
+      "value": "1px solid #99a6a9",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "624a9da747c8bca2db09",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-measure-top",
+      "property": "color",
+      "value": "#718084",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d5a6e8fa41f4c2b00b03",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-measure-top",
+      "property": "font",
+      "value": "600 8px/14px ui-monospace,SFMono-Regular,Menlo,monospace",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "be95b80bb139deb55656",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-measure-top::before,.nud-measure-top::after",
+      "property": "background",
+      "value": "#99a6a9",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "2c5bdab410035ca2f25b",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-measure-side",
+      "property": "border-left",
+      "value": "1px solid #99a6a9",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "1c8c626112e9f6e9066c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-measure-side",
+      "property": "color",
+      "value": "#718084",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4baf1261a7bc4bdc2c37",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-measure-side",
+      "property": "font",
+      "value": "600 8px/16px ui-monospace,SFMono-Regular,Menlo,monospace",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "8651aa91692fb8decf6c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-safe-area",
+      "property": "border",
+      "value": "1px dashed color-mix(in srgb,var(--nud-accent) 76%,#fff)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0ac648c86b3546a2d9a2",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-safe-area",
+      "property": "box-shadow",
+      "value": "0 0 0 1px rgba(255,255,255,.18)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "6f4d1aa3f5b3627298e3",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-phone-screen,.nud-ipad-screen,.nud-watch-screen",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "a2db5b82217f7f42b20d",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-phone-screen",
+      "property": "font-size",
+      "value": "9px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "55b67c005763c4273059",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-screen",
+      "property": "font-size",
+      "value": "10px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "20ce2bb45565c4547d04",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-statusbar",
+      "property": "color",
+      "value": "#fff",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c4790673721b0b1c7f98",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-statusbar",
+      "property": "background",
+      "value": "#061a17",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "626c51ee607474313b41",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-chat",
+      "property": "background",
+      "value": "#061713",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "861ec417193052c2e3c2",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-header",
+      "property": "border-bottom",
+      "value": "1px solid rgba(115,212,179,.22)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "1468fbbdf06da1b946e7",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-header",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4776544aee10f03fdb9e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-header",
+      "property": "background",
+      "value": "rgba(84,77,73,.84)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "1ac9ffcd091c1d5cda6e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-icon-button",
+      "property": "color",
+      "value": "#e5e9df",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b84a86e13a9f14f6466c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-icon-button",
+      "property": "background",
+      "value": "rgba(255,255,255,.075)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "2106d6b18f656cc92b3b",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-secretary-avatar",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.28)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "5738d7004efbe24e385c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-secretary-avatar",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "6843f12c69e1cc3bb4bc",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-secretary-avatar",
+      "property": "background",
+      "value": "linear-gradient(145deg,#61c6a7,#126153 72%)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "a1b3f28ab16a230106cf",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-secretary-avatar",
+      "property": "box-shadow",
+      "value": "inset 0 1px 0 rgba(255,255,255,.28)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "37f7887e2c4e416d361a",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-title small",
+      "property": "color",
+      "value": "rgba(237,242,227,.57)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "fc7c813c0f0ed769f0f6",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-connection",
+      "property": "color",
+      "value": "rgba(237,242,227,.55)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "782243caebff52dbd50c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-connection i",
+      "property": "background",
+      "value": "#f24952",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "f2a3d237e467b68fcad4",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-phone-header",
+      "property": "border-bottom",
+      "value": "1px solid rgba(237,242,227,.11)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "fe271b3f57278c7e3aa8",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-phone-header",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9f11aa23f903f7873907",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-phone-header",
+      "property": "background",
+      "value": "rgba(70,65,62,.88)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "1994830156b47ceddc47",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-more",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7e64c726fe3f478aa9ad",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-chat-body",
+      "property": "background-color",
+      "value": "#80736d",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d2b1d16d6d5a1bb5c3be",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-chat-body",
+      "property": "background-image",
+      "value": "linear-gradient(rgba(8,19,17,.23),rgba(8,19,17,.23)),var(--nud-chat-art)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "5289f289f713f66c3c16",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-chat-body::after",
+      "property": "background",
+      "value": "linear-gradient(180deg,rgba(4,18,15,.05),rgba(4,18,15,.18))",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "544a208b7734cce1be77",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-token-warning",
+      "property": "color",
+      "value": "#f0b061",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "e290455aba8e720eae63",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-token-warning",
+      "property": "background",
+      "value": "rgba(22,20,18,.76)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "a3f3f0a2cd973e2e980b",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-empty",
+      "property": "text-shadow",
+      "value": "0 2px 10px rgba(0,0,0,.42)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "934fca988d05f8f93bf2",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-empty p",
+      "property": "color",
+      "value": "rgba(237,242,227,.73)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "aff599345e1e5589a0c1",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-message span",
+      "property": "color",
+      "value": "#c7dacf",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "493b0abc4864f1f94482",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-message p",
+      "property": "border",
+      "value": "1px solid rgba(115,212,179,.24)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "2e3a9dad0210c4c8834a",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-message p",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "af5a786cdabc6b9bf102",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-message p",
+      "property": "background",
+      "value": "rgba(15,58,49,.9)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "04c132e9e4c566d15db5",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-message p",
+      "property": "box-shadow",
+      "value": "0 6px 18px rgba(0,0,0,.16)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c7b61573592fef8d0ed5",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-message.is-user p",
+      "property": "color",
+      "value": "#0d3129",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0706442e4f6190026cc4",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-message.is-user p",
+      "property": "background",
+      "value": "linear-gradient(145deg,#8fe0c4,#58b89b)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "04de49f912e23d8f6a97",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-message.is-user small",
+      "property": "color",
+      "value": "rgba(237,242,227,.75)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "5a920fed86155b599c02",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-composer",
+      "property": "border-top",
+      "value": "1px solid rgba(237,242,227,.14)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "74ed651cdf04a0301d5f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-composer",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "ee4769485e5331f06859",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-composer",
+      "property": "background",
+      "value": "rgba(46,43,43,.88)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "844986f4da7d782ed89d",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-attachments > span",
+      "property": "color",
+      "value": "rgba(237,242,227,.65)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "afc1b62b9639f9a94d56",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-compose-row > div",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.17)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9bd4d2cdbbc1817b7772",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-compose-row > div",
+      "property": "color",
+      "value": "rgba(237,242,227,.38)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "8e8c045147fa44762573",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-compose-row > div",
+      "property": "background",
+      "value": "rgba(12,16,15,.5)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "6ddb935ba2989a2efee9",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-compose-row .nud-native-icon-button",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.14)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c8c32a94c340b201757f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-send",
+      "property": "color",
+      "value": "#071916",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "aacee608036986cf6582",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-send",
+      "property": "background",
+      "value": "color-mix(in srgb,var(--nud-accent) 72%,#295e52)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "09d43d36efaeb29738aa",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-composer",
+      "property": "border-top",
+      "value": "1px solid rgba(237,242,227,.12)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d6f6a1c72d3428534810",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-composer",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "aad1709e09ec243a8489",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-composer",
+      "property": "background",
+      "value": "rgba(43,41,41,.96)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b3c697af6d4a66534b91",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-compose-row .nud-native-icon-button,.nud-candidate-more",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "20cfd5d3b43c0bb43788",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-input",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.13)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "95aa8bb3904c8145a6b4",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-input",
+      "property": "color",
+      "value": "rgba(237,242,227,.4)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0a52c2d988965a73d9b9",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-input",
+      "property": "background",
+      "value": "rgba(9,13,12,.55)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "89fc846875c7fb9aaeba",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-hold-to-talk",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.16)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b274355f8fcb3ad0721d",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-hold-to-talk",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4ee451a3d0bc0c4352bd",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-hold-to-talk",
+      "property": "background",
+      "value": "rgba(255,255,255,.07)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b66133e1b52635d8f859",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-hold-to-talk:active",
+      "property": "background",
+      "value": "rgba(115,212,179,.16)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "396b823899b3864540b1",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-composer.is-open .nud-candidate-more",
+      "property": "background",
+      "value": "rgba(255,255,255,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "aa8a7cad7cd6b8202057",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-action-tray",
+      "property": "border-top",
+      "value": "1px solid rgba(237,242,227,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "59586a34fda137bcd231",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-action-tray button",
+      "property": "color",
+      "value": "rgba(237,242,227,.66)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d913e79901fa1675d529",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-action-tray button > span",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.11)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b074e5599f1d7bece2c2",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-action-tray button > span",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "8c2032cb44d2cdefb425",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-action-tray button > span",
+      "property": "background",
+      "value": "rgba(255,255,255,.07)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7ba95ed73addab4bb03d",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-home-indicator",
+      "property": "background",
+      "value": "rgba(237,242,227,.78)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "2e8a1359ab314e87056e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-sheet",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9e31ecef498b320be526",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-sheet",
+      "property": "background",
+      "value": "#101918",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "2fc363b1f053af17d3d4",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-sheet",
+      "property": "box-shadow",
+      "value": "0 -12px 40px rgba(0,0,0,.36)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b61bb4b417337d009d1f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-conversation-sheet > header",
+      "property": "border-bottom",
+      "value": "1px solid rgba(237,242,227,.1)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "2651848746eeea142ecf",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-conversation-sheet > header small",
+      "property": "color",
+      "value": "rgba(237,242,227,.5)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b3f19738837da5065c39",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-search",
+      "property": "color",
+      "value": "rgba(237,242,227,.46)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0ef29eff71ed73c8ba7f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-search",
+      "property": "background",
+      "value": "rgba(255,255,255,.07)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9d84b8973d4a130d61b9",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-thread-list article",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.09)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "1a044aed79b5db2ccb98",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-thread-list article",
+      "property": "background",
+      "value": "rgba(255,255,255,.035)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "78a775acd3ce0b7ace3c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-thread-list article.is-current",
+      "property": "border-color",
+      "value": "rgba(115,212,179,.36)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "196a9b56eba82d49e601",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-thread-list article.is-current",
+      "property": "background",
+      "value": "rgba(18,69,59,.7)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0689dbf9a20c1ff3c377",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-thread-list small",
+      "property": "color",
+      "value": "rgba(237,242,227,.62)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "bfeb99f4f4fda44be939",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-thread-list em",
+      "property": "color",
+      "value": "rgba(237,242,227,.42)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "07f7c7cb9e712b09d36f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-list-empty p",
+      "property": "color",
+      "value": "rgba(237,242,227,.48)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "2bf263bb3a95ccd1e8cb",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-conversation-sheet > footer",
+      "property": "border-top",
+      "value": "1px solid rgba(237,242,227,.1)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "48f544b2aaeb04886f6b",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-conversation-sheet > footer button",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.13)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "6e1bc76760a7216f4379",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-conversation-sheet > footer button",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "66d837c09360139f163a",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-conversation-sheet > footer button",
+      "property": "background",
+      "value": "rgba(255,255,255,.04)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7c1f9e93ae9104f3dbbd",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-conversation-sheet > footer button:last-child",
+      "property": "color",
+      "value": "#ef9b94",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "8ade00434d0c5469176f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar-layer",
+      "property": "background",
+      "value": "rgba(0,0,0,.46)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "26a7f202d478e18e6e9c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "72f4145e91005ffe7fc3",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar",
+      "property": "background",
+      "value": "linear-gradient(180deg,#17201f,#0e1615)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c76defa05eac994d0da7",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar",
+      "property": "box-shadow",
+      "value": "14px 0 34px rgba(0,0,0,.36)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4a9dca896a10e793f0cb",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar > header",
+      "property": "border-bottom",
+      "value": "1px solid rgba(237,242,227,.09)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "de36065ebbd12f332579",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar > header small",
+      "property": "color",
+      "value": "rgba(237,242,227,.46)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7841da3f0c32182192b5",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar .nud-native-thread-list article > svg",
+      "property": "color",
+      "value": "rgba(237,242,227,.3)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "8d5d94c79d05ca9d93d5",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar-bottom",
+      "property": "border-top",
+      "value": "1px solid rgba(237,242,227,.09)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c5b3cc8a60381a2b6514",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar-bottom > button",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.1)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "ad2b455f9cc82148281f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar-bottom > button",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "fb29729a2df1af059279",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar-bottom > button",
+      "property": "background",
+      "value": "rgba(255,255,255,.045)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "420b99be44b0c23e8283",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar-bottom > button > svg",
+      "property": "color",
+      "value": "rgba(237,242,227,.72)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "ada0ad4af7614a3be6a6",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar-bottom small",
+      "property": "color",
+      "value": "rgba(237,242,227,.45)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4096763d1ec10acadebd",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-candidate-sidebar-bottom small i",
+      "property": "background",
+      "value": "#f0b061",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "cf1c73cedb28f4fe0309",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-settings",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "90c6dad07a57640f4bc9",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-settings",
+      "property": "background",
+      "value": "linear-gradient(180deg,rgba(20,30,29,.99),rgba(8,17,15,.995))",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d92b0089a177249cd290",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-settings > header",
+      "property": "border-bottom",
+      "value": "1px solid rgba(237,242,227,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "8fac5a2581db3bcfa6d9",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-settings > header > button",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "be0f26b52ed8c3c64c34",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-member-grid button",
+      "property": "color",
+      "value": "rgba(237,242,227,.42)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b727a9aa462c5df9f04c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-avatar",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.16)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "ca4efaa6216533ade7f0",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-avatar",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "a91b85f945aca5f2154f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-avatar",
+      "property": "background",
+      "value": "linear-gradient(145deg,#3c4a46,#151d1b)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "99007eadf9e6d55c6fdf",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-avatar",
+      "property": "box-shadow",
+      "value": "inset 0 1px 0 rgba(255,255,255,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0d4b4675f8bff7987326",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-member-action .nud-group-avatar",
+      "property": "background",
+      "value": "rgba(255,255,255,.045)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4fef2303a52005abb2ec",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-member-grid button[aria-pressed=\"true\"]",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "bf7b3b0acd3c16130efc",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-member-grid button[aria-pressed=\"true\"] .nud-group-avatar",
+      "property": "border-color",
+      "value": "rgba(115,212,179,.72)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "98fcbcceeb95c2c9ce83",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-member-grid button[aria-pressed=\"true\"] .nud-group-avatar",
+      "property": "background",
+      "value": "linear-gradient(145deg,#58b99d,#155c50)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b5d0eed028598e6f894c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-member-grid button[aria-pressed=\"true\"] .nud-group-avatar",
+      "property": "box-shadow",
+      "value": "0 0 0 3px rgba(115,212,179,.13),0 .7em 1.5em rgba(0,0,0,.22)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "cf66196d3df26c34ba7a",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-options",
+      "property": "background",
+      "value": "rgba(255,255,255,.055)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "e84597ccd142f1b4a445",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-options > button",
+      "property": "border-bottom",
+      "value": "1px solid rgba(237,242,227,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7ea4a128929327e1e0e0",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-options > button",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "5795a9a4e10e1698842f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-options small",
+      "property": "color",
+      "value": "rgba(237,242,227,.48)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "e64464cbf39d8228c776",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-options svg",
+      "property": "color",
+      "value": "rgba(237,242,227,.36)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0bce968719885199b483",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-group-done",
+      "property": "color",
+      "value": "#082019",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "dff05a2b9d0dcf3a94b7",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-settings-sheet",
+      "property": "background",
+      "value": "#0d1515",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "840870b20b81e7223e00",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-settings-sheet > header",
+      "property": "border-bottom",
+      "value": "1px solid rgba(237,242,227,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "23994966691702c9dc7a",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-settings-sheet > header",
+      "property": "background",
+      "value": "#15201f",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "44d20bac70857b0d16be",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-form h3",
+      "property": "color",
+      "value": "rgba(237,242,227,.58)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "f6d0730ef341aee02172",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-form section > div",
+      "property": "background",
+      "value": "rgba(255,255,255,.055)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "28fcd9e3f77e64b040de",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-form p",
+      "property": "border-bottom",
+      "value": "1px solid rgba(237,242,227,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "5f37cd5a0efad4e06dbe",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-form p small",
+      "property": "color",
+      "value": "rgba(237,242,227,.53)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b3f69f9eb3fe9d719aea",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-native-form section > small",
+      "property": "color",
+      "value": "rgba(237,242,227,.45)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "61838901d8e10731bcf1",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-workspace",
+      "property": "background",
+      "value": "#17201e",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d1ece0c6cf3e5f4b042c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-workspace::before",
+      "property": "background",
+      "value": "rgba(237,242,227,.72)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "3ea59b8099de666d8e24",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-workspace::after",
+      "property": "background-image",
+      "value": "linear-gradient(90deg,rgba(5,21,18,.18),rgba(5,21,18,.02)),var(--nud-chat-art)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "6f214d576930e4c9b2c5",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-chat-pane",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.2)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d3e03bd6e181041f50f6",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-chat-pane",
+      "property": "background",
+      "value": "rgba(7,21,18,.62)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "7fda6f9449439cc45df8",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-chat-pane",
+      "property": "box-shadow",
+      "value": "0 2.2em 4.8em rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9907e6cef47398a5c883",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-floating-panel",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.2)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "bab0bc7e5c5278c30e97",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-floating-panel",
+      "property": "background",
+      "value": "rgba(9,22,20,.78)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "81c2652990924ff46a6e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-floating-panel",
+      "property": "box-shadow",
+      "value": "0 2.2em 4.8em rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9c065503774ad51902d3",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-private-chat",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "dc2664117859276d8dc9",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-private-chat .nud-candidate-phone-header",
+      "property": "background",
+      "value": "rgba(52,49,47,.72)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4b6f46558e9399a9e00f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-private-body",
+      "property": "background",
+      "value": "rgba(7,21,18,.26)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "eb3a73d357ea5ddbd6d7",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-private-thread",
+      "property": "border",
+      "value": "1px solid rgba(237,242,227,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "e2a09dba9d2ba038b4a7",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-private-thread",
+      "property": "background",
+      "value": "linear-gradient(180deg,rgba(5,17,15,.08),rgba(5,17,15,.38))",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "ae137f66f5594ae7f2e9",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-private-thread .nud-native-message span button",
+      "property": "color",
+      "value": "rgba(199,218,207,.72)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "423bede9bac3c8e694dd",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-voice-progress",
+      "property": "border",
+      "value": "1px solid rgba(115,212,179,.28)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "3988b6153eaf341364d6",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-voice-progress",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d60cb1886c601a4ef91b",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-voice-progress",
+      "property": "background",
+      "value": "rgba(11,42,35,.88)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "73006300588e24a98bde",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-voice-progress span i",
+      "property": "background",
+      "value": "rgba(237,242,227,.16)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "95b95de2c813eea74688",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-voice-progress small",
+      "property": "color",
+      "value": "rgba(237,242,227,.5)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "e22c37a8a4589c0d8635",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-private-chat .nud-candidate-composer",
+      "property": "background",
+      "value": "rgba(36,35,35,.86)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "38e0f434f405944360fe",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-chat-pane .nud-candidate-phone-header",
+      "property": "background",
+      "value": "rgba(40,39,38,.64)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "90b6b317ed8cfd5c6777",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-chat-pane .nud-native-chat-body",
+      "property": "background-image",
+      "value": "linear-gradient(180deg,rgba(5,16,14,.02),rgba(5,16,14,.18))",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "ad6af08e13795b5d6881",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-chat-pane .nud-candidate-composer",
+      "property": "background",
+      "value": "rgba(36,35,35,.9)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b6730211cd0d726a19c7",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-floating-panel .nud-candidate-sidebar",
+      "property": "background",
+      "value": "linear-gradient(180deg,rgba(21,34,31,.98),rgba(11,24,21,.98))",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c1bf37e1e46a77ae8c4c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-stage",
+      "property": "background",
+      "value": "rgba(7,21,18,.48)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "777d396816fc8a964d65",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-stage > header",
+      "property": "border-bottom",
+      "value": "1px solid rgba(237,242,227,.09)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "c03fac990e32ac450a0f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-stage > header",
+      "property": "background",
+      "value": "rgba(22,35,32,.88)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b2f195fde79b28eeba3a",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-stage > header small",
+      "property": "color",
+      "value": "rgba(237,242,227,.5)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "992699c19de21a824bfd",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-speaker",
+      "property": "border",
+      "value": "1px solid rgba(240,176,97,.38)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "4af3612fefca8364b262",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-speaker",
+      "property": "box-shadow",
+      "value": "0 1.2em 2.8em rgba(0,0,0,.28)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9589618799abc299b947",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-speaker::after",
+      "property": "background",
+      "value": "linear-gradient(transparent,rgba(5,13,12,.88))",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "ee1b8bb1917578f4cd55",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-stage-members > i",
+      "property": "border",
+      "value": "2px solid rgba(7,21,18,.88)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d33ff89eb37577737de1",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-stage-members > i",
+      "property": "color",
+      "value": "#edf2e3",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "a296310628ee6cdbbb1e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-stage-members > i",
+      "property": "background",
+      "value": "linear-gradient(145deg,#59b99d,#155c50)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "18e777863dc27208bc0c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-stage-members > i",
+      "property": "box-shadow",
+      "value": "0 .4em 1em rgba(0,0,0,.22)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "14bcf591f1366a5bf2fb",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-ipad-candidate-speaker small",
+      "property": "color",
+      "value": "rgba(237,242,227,.68)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "f5f1c4fa716e58010781",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-screen",
+      "property": "color",
+      "value": "#fff",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b21a1eba8c01536e7fdf",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-screen",
+      "property": "background",
+      "value": "#050606",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "3b6db368976b67ba0943",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-screen",
+      "property": "font-size",
+      "value": "10px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "73d770a7d1b42339dca8",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-statusbar.is-watch",
+      "property": "background",
+      "value": "#050606",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0feb2595e9da6bdf247f",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-title",
+      "property": "color",
+      "value": "rgba(255,255,255,.78)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "f1cbb823f966e2a6543e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-secretary-portrait",
+      "property": "border",
+      "value": "2px solid rgba(240,176,97,.68)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "e8e4018f624ae3a494c2",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-secretary-portrait",
+      "property": "box-shadow",
+      "value": "0 0 0 3px rgba(115,212,179,.18)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "b5cdb5607903e5c40ff1",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-portrait-wrap span",
+      "property": "border",
+      "value": "2px solid #050606",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "6803b9022f577fefde8e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-portrait-wrap span",
+      "property": "color",
+      "value": "#071916",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "652abf66adaff09eb5c4",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-home p",
+      "property": "color",
+      "value": "rgba(255,255,255,.62)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "8842d9530a74ffc6ee53",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-home button,.nud-watch-route button,.nud-watch-dictation button",
+      "property": "color",
+      "value": "#071916",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "d28c5b67c113d800a27d",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-home > small",
+      "property": "color",
+      "value": "rgba(255,255,255,.42)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "5d9494a9a1b15d4b6b01",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-reply-card",
+      "property": "border",
+      "value": "1px solid rgba(115,212,179,.25)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "8f8e81866f1bd5fddf1c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-reply-card",
+      "property": "background",
+      "value": "linear-gradient(145deg,rgba(25,82,69,.72),rgba(15,45,39,.78))",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "25c8e79946ede1dcebb6",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-reply-card p",
+      "property": "color",
+      "value": "#fff",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "a1210df01cfac1a3dec7",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-route button",
+      "property": "color",
+      "value": "#fff",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "60c2d3c0a91b579ec913",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-route button",
+      "property": "background",
+      "value": "#242727",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "6d3afc0c5f080bd271e5",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-route button:first-of-type",
+      "property": "color",
+      "value": "#071916",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "6fe25da720a1a1178171",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-route div",
+      "property": "border",
+      "value": "1px solid rgba(115,212,179,.25)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "ab6bcc9ab5212665b7d8",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-route div",
+      "property": "background",
+      "value": "rgba(115,212,179,.08)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "67a3e2b197e28388cce6",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-dictation p",
+      "property": "color",
+      "value": "rgba(255,255,255,.6)",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "5d490772fd380c3b348e",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-dictation button:last-child",
+      "property": "color",
+      "value": "#fff",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "a5e01277b981ce7be35c",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-watch-dictation button:last-child",
+      "property": "background",
+      "value": "#242727",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "f5447d4a335009cd08de",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".nud-wave i",
+      "property": "background",
+      "value": "#ea645d",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "0829b740aeafe4e92d31",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": ".native-ui-design-lab button:focus-visible,.native-ui-design-lab input:focus-visible,.native-ui-design-lab select:focus-visible",
+      "property": "outline",
+      "value": "2px solid #4f7882",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "9d90fdbe60bfff6c9356",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": "@media (min-width:1700px) .nud-phone-screen",
+      "property": "font-size",
+      "value": "10.5px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "ae6a5307e98237116507",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": "@media (min-width:1700px) .nud-ipad-screen",
+      "property": "font-size",
+      "value": "11px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "fe4748fd269e63c566ed",
+      "file": "src/pages/tools/native-ui-design.css",
+      "selector": "@media (min-width:1700px) .nud-watch-screen",
+      "property": "font-size",
+      "value": "12px",
+      "count": 1,
+      "reason": "reference"
+    },
+    {
+      "key": "34c1986b40686a2cffe6",
+      "file": "src/styles.css",
+      "selector": ".identity-overlay.past",
+      "property": "color",
+      "value": "#2a2723",
+      "count": 1,
+      "reason": "art"
+    },
+    {
+      "key": "9bacf63a39d86c47d0e4",
+      "file": "src/styles.css",
+      "selector": ".identity-overlay.past",
+      "property": "background",
+      "value": "radial-gradient(circle at 25% 8%,rgba(145,105,63,.13),transparent 30%),#ded5c5",
+      "count": 1,
+      "reason": "art"
+    },
+    {
+      "key": "55df117fd3c1b07ba7dd",
+      "file": "src/styles.css",
+      "selector": ".identity-overlay.past > header button.active",
+      "property": "color",
+      "value": "#eee8dc",
+      "count": 1,
+      "reason": "art"
+    },
+    {
+      "key": "0249efc64cb9d08c8414",
+      "file": "src/styles.css",
+      "selector": ".identity-overlay.past > header button.active",
+      "property": "background",
+      "value": "#3d3933",
+      "count": 1,
+      "reason": "art"
+    },
+    {
+      "key": "3d69c711b1eb8688c34e",
+      "file": "src/styles.css",
+      "selector": ".identity-era",
+      "property": "font",
+      "value": "clamp(var(--text-metric),14vw,210px)/1 Georgia,serif",
+      "count": 1,
+      "reason": "art"
+    },
+    {
+      "key": "5a124a3c512119959587",
+      "file": "src/styles.css",
+      "selector": ".workspace-backdrop-fireflies",
+      "property": "background",
+      "value": "radial-gradient(circle 2.5px at 8% 12%, rgba(255,245,200,.95), transparent 4px), radial-gradient(circle 2px at 22% 28%, rgba(180,230,210,.9), transparent 3.5px), radial-gradient(circle 3px at 36% 8%, color-mix(in srgb,var(--surface-2) 85%,transparent), transparent 5px), radial-gradient(circle 2px at 48% 34%, rgba(140,210,200,.88), transparent 3.5px), radial-gradient(circle 2.5px at 62% 16%, rgba(255,240,190,.9), transparent 4px), radial-gradient(circle 1.5px at 76% 30%, rgba(170,220,210,.8), transparent 3px), radial-gradient(circle 3px at 90% 10%, rgba(255,248,210,.88), transparent 5px), radial-gradient(circle 2px at 14% 52%, rgba(150,215,200,.85), transparent 3.5px), radial-gradient(circle 2.5px at 30% 66%, rgba(255,236,180,.82), transparent 4px), radial-gradient(circle 1.5px at 44% 48%, rgba(160,225,215,.78), transparent 3px), radial-gradient(circle 2px at 58% 70%, rgba(240,230,190,.75), transparent 3.5px), radial-gradient(circle 2px at 72% 54%, rgba(140,205,195,.8), transparent 3.5px), radial-gradient(circle 2.5px at 86% 68%, rgba(255,245,200,.85), transparent 4px), radial-gradient(circle 2px at 18% 86%, rgba(170,220,210,.8), transparent 3.5px), radial-gradient(circle 3px at 52% 90%, rgba(255,240,190,.82), transparent 5px), radial-gradient(circle 2px at 94% 84%, rgba(150,215,200,.78), transparent 3.5px)",
+      "count": 1,
+      "reason": "art"
+    },
+    {
+      "key": "f54f4f290d185c3f2eb3",
+      "file": "src/styles.css",
+      "selector": ".workspace-backdrop-fireflies::before",
+      "property": "background",
+      "value": "radial-gradient(circle 2px at 4% 38%, rgba(200,235,220,.85), transparent 3.5px), radial-gradient(circle 2.5px at 18% 6%, rgba(255,245,205,.9), transparent 4px), radial-gradient(circle 1.5px at 28% 42%, rgba(160,220,205,.85), transparent 3px), radial-gradient(circle 3px at 42% 18%, rgba(255,250,215,.88), transparent 5px), radial-gradient(circle 2px at 54% 56%, rgba(180,230,215,.82), transparent 3.5px), radial-gradient(circle 2.5px at 68% 4%, rgba(255,240,195,.9), transparent 4px), radial-gradient(circle 1.5px at 82% 40%, rgba(150,215,200,.8), transparent 3px), radial-gradient(circle 2px at 96% 22%, rgba(255,236,185,.78), transparent 3.5px), radial-gradient(circle 2.5px at 10% 72%, rgba(170,225,210,.85), transparent 4px), radial-gradient(circle 2px at 34% 80%, rgba(255,248,210,.8), transparent 3.5px), radial-gradient(circle 1.5px at 48% 74%, rgba(140,210,200,.75), transparent 3px), radial-gradient(circle 2px at 66% 88%, rgba(255,242,200,.82), transparent 3.5px), radial-gradient(circle 2.5px at 80% 76%, rgba(180,230,215,.8), transparent 4px), radial-gradient(circle 2px at 92% 58%, rgba(255,245,205,.85), transparent 3.5px), radial-gradient(circle 1.5px at 24% 94%, rgba(160,220,205,.75), transparent 3px), radial-gradient(circle 2px at 78% 96%, rgba(255,240,195,.78), transparent 3.5px)",
+      "count": 1,
+      "reason": "art"
+    },
+    {
+      "key": "31fcba752d02130175d2",
+      "file": "src/styles.css",
+      "selector": ".workspace-backdrop-fireflies::after",
+      "property": "background",
+      "value": "radial-gradient(circle 1.5px at 12% 22%, color-mix(in srgb,var(--surface-2) 90%,transparent), transparent 3px), radial-gradient(circle 2px at 26% 48%, rgba(150,220,205,.85), transparent 3.5px), radial-gradient(circle 2.5px at 40% 32%, rgba(255,240,190,.88), transparent 4px), radial-gradient(circle 1.5px at 50% 6%, rgba(180,230,215,.8), transparent 3px), radial-gradient(circle 2px at 60% 44%, rgba(255,245,205,.9), transparent 3.5px), radial-gradient(circle 3px at 74% 20%, rgba(160,215,200,.78), transparent 5px), radial-gradient(circle 2px at 88% 36%, rgba(255,236,180,.85), transparent 3.5px), radial-gradient(circle 1.5px at 6% 60%, rgba(170,225,210,.82), transparent 3px), radial-gradient(circle 2.5px at 32% 58%, rgba(255,248,210,.88), transparent 4px), radial-gradient(circle 2px at 46% 86%, rgba(145,210,195,.8), transparent 3.5px), radial-gradient(circle 1.5px at 70% 64%, rgba(255,242,195,.75), transparent 3px), radial-gradient(circle 2px at 84% 90%, rgba(160,220,210,.8), transparent 3.5px), radial-gradient(circle 2.5px at 16% 78%, rgba(255,245,200,.82), transparent 4px), radial-gradient(circle 2px at 56% 96%, rgba(150,215,200,.78), transparent 3.5px), radial-gradient(circle 1.5px at 98% 72%, rgba(255,240,190,.8), transparent 3px), radial-gradient(circle 2px at 38% 98%, rgba(170,220,210,.75), transparent 3.5px)",
+      "count": 1,
+      "reason": "art"
+    },
+    {
+      "key": "0a7528776cb21a375c4c",
+      "file": "src/styles.css",
+      "selector": ".release-watch-hero::after",
+      "property": "font",
+      "value": "500 clamp(var(--text-metric),9vw,104px)/1 Georgia,serif",
+      "count": 1,
+      "reason": "art"
+    }
+  ]
+}

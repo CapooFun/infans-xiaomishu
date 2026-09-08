@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "atlas": "secretary-pet-atlas.png",
+  "cellWidth": 192,
+  "cellHeight": 208,
+  "columns": 16,
+  "rows": 6,
+  "width": 3072,
+  "height": 1248,
+  "animations": [
+    {
+      "id": "idle",
+      "row": 0,
+      "frameCount": 16,
+      "durationsMs": [
+        180,
+        90,
+        90,
+        90,
+        90,
+        90,
+        90,
+        120,
+        90,
+        90,
+        90,
+        90,
+        90,
+        90,
+        180,
+        900
+      ],
+      "loop": true,
+      "fallback": "idle",
+      "pingPong": true,
+      "source": {
+        "kind": "codex-look-row",
+        "row": 10,
+        "frames": 8
+      }
+    },
+    {
+      "id": "hover",
+      "row": 1,
+      "frameCount": 12,
+      "durationsMs": [
+        85,
+        85,
+        85,
+        85,
+        85,
+        85,
+        85,
+        85,
+        85,
+        85,
+        85,
+        260
+      ],
+      "loop": true,
+      "fallback": "idle",
+      "source": {
+        "kind": "codex-row",
+        "row": 8,
+        "frames": 6
+      }
+    },
+    {
+      "id": "launching",
+      "row": 2,
+      "frameCount": 16,
+      "durationsMs": [
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62,
+        62
+      ],
+      "loop": false,
+      "fallback": "idle",
+      "source": {
+        "kind": "codex-row",
+        "row": 4,
+        "frames": 5
+      }
+    },
+    {
+      "id": "talking",
+      "row": 3,
+      "frameCount": 16,
+      "durationsMs": [
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77
+      ],
+      "loop": true,
+      "fallback": "idle",
+      "source": {
+        "kind": "generated-strip",
+        "frames": 8
+      }
+    },
+    {
+      "id": "dragging-right",
+      "row": 4,
+      "frameCount": 12,
+      "durationsMs": [
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        120
+      ],
+      "loop": true,
+      "fallback": "idle",
+      "source": {
+        "kind": "codex-row",
+        "row": 1,
+        "frames": 8
+      }
+    },
+    {
+      "id": "dragging-left",
+      "row": 5,
+      "frameCount": 12,
+      "durationsMs": [
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        67,
+        120
+      ],
+      "loop": true,
+      "fallback": "idle",
+      "source": {
+        "kind": "codex-row",
+        "row": 2,
+        "frames": 8
+      }
+    }
+  ]
+}

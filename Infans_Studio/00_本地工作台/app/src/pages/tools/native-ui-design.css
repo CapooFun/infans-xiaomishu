@@ -1,0 +1,737 @@
+.tools-page:has(.native-ui-design-lab) {
+  width:min(1840px,100%);
+}
+
+.native-ui-design-lab {
+  --nud-tool-ink:#1f2b33;
+  --nud-tool-muted:#69777e;
+  --nud-tool-line:color-mix(in srgb,var(--line) 82%,#829098);
+  display:grid;
+  gap:14px;
+  color:var(--ink);
+  font-family:var(--sans);
+}
+
+.nud-lab-header {
+  min-height:116px;
+  padding:20px 24px;
+  border:1px solid var(--nud-tool-line);
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:28px;
+  background:linear-gradient(115deg,color-mix(in srgb,var(--surface) 94%,#dce7eb),color-mix(in srgb,var(--surface) 96%,transparent));
+  box-shadow:0 14px 34px color-mix(in srgb,#17242b 8%,transparent);
+  box-sizing:border-box;
+}
+.nud-lab-header > div:first-child { max-width:880px; }
+.nud-eyebrow { color:#637983;font:700 10px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.15em; }
+.nud-lab-header h1 { margin:8px 0 6px;color:var(--nud-tool-ink);font:600 clamp(24px,2.2vw,36px)/1.12 var(--serif);letter-spacing:-.025em; }
+.nud-lab-header p { margin:0;color:var(--nud-tool-muted);font-size:13px;line-height:1.55; }
+.nud-baseline-mark {
+  min-width:214px;
+  padding:11px 13px;
+  border-left:2px solid #6e9289;
+  display:grid;
+  gap:3px;
+  color:#43655d;
+}
+.nud-baseline-mark span { color:var(--nud-tool-muted);font:700 9px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em; }
+.nud-baseline-mark strong { font:600 13px/1.3 var(--serif); }
+.nud-baseline-mark small { color:var(--nud-tool-muted);font-size:9px; }
+
+.nud-workbench { display:grid;grid-template-columns:254px minmax(0,1fr);gap:14px;align-items:start; }
+.nud-control-panel {
+  position:sticky;
+  top:16px;
+  border:1px solid var(--nud-tool-line);
+  border-radius:16px;
+  overflow:hidden;
+  display:grid;
+  background:color-mix(in srgb,var(--surface) 96%,#eef2f3);
+  box-shadow:0 10px 28px color-mix(in srgb,#17242b 7%,transparent);
+}
+.nud-control-panel section { padding:13px 14px;border-bottom:1px solid var(--nud-tool-line);display:grid;gap:9px; }
+.nud-control-panel section:last-child { border-bottom:0; }
+.nud-control-heading { min-height:18px;display:flex;align-items:center;justify-content:space-between;color:var(--nud-tool-ink); }
+.nud-control-heading > span { font:700 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em; }
+.nud-control-heading svg { width:15px;height:15px; }
+.nud-control-heading small { color:var(--nud-tool-muted);font-size:9px; }
+.nud-mode-switch,.nud-segmented {
+  padding:2px;
+  border:1px solid var(--nud-tool-line);
+  border-radius:9px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  background:color-mix(in srgb,var(--surface-2) 68%,transparent);
+}
+.nud-mode-switch button,.nud-segmented button {
+  min-height:28px;
+  padding:0 5px;
+  border:0;
+  border-radius:6px;
+  color:var(--nud-tool-muted);
+  background:transparent;
+  font:600 10px/1 var(--sans);
+  cursor:pointer;
+}
+.nud-mode-switch button.is-active,.nud-segmented button.is-active {
+  color:var(--nud-tool-ink);
+  background:var(--surface);
+  box-shadow:0 1px 5px color-mix(in srgb,#17242b 13%,transparent);
+}
+.nud-name-field,.nud-select-field {
+  display:grid;
+  grid-template-columns:58px minmax(0,1fr);
+  align-items:center;
+  gap:7px;
+  color:var(--nud-tool-muted);
+  font-size:10px;
+}
+.nud-name-field input,.nud-select-field select {
+  width:100%;
+  min-width:0;
+  height:31px;
+  padding:0 8px;
+  border:1px solid var(--nud-tool-line);
+  border-radius:8px;
+  color:var(--ink);
+  background:var(--surface);
+  font:500 10px/1 var(--sans);
+  box-sizing:border-box;
+}
+.nud-action-row { display:grid;grid-template-columns:1fr 1fr 32px;gap:6px; }
+.nud-action-row button {
+  min-width:0;
+  height:32px;
+  padding:0 7px;
+  border:1px solid var(--nud-tool-line);
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  color:var(--nud-tool-ink);
+  background:var(--surface);
+  font:600 10px/1 var(--sans);
+  cursor:pointer;
+}
+.nud-action-row svg { width:14px;height:14px; }
+.nud-action-row button:hover { border-color:#78909a;background:color-mix(in srgb,var(--surface) 86%,#dce8eb); }
+.nud-feedback { min-height:14px;margin:0;color:var(--nud-tool-muted);font-size:9px;line-height:1.45; }
+.nud-device-toggles { display:grid;gap:4px; }
+.nud-device-toggles button {
+  min-height:30px;
+  padding:0 8px;
+  border:1px solid transparent;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--nud-tool-muted);
+  background:transparent;
+  text-align:left;
+  font:500 10px/1.2 var(--sans);
+  cursor:pointer;
+}
+.nud-device-toggles button i { width:8px;height:8px;border:1px solid #92a0a5;border-radius:2px;background:var(--surface); }
+.nud-device-toggles button.is-active { border-color:color-mix(in srgb,#637f89 32%,var(--line));color:var(--nud-tool-ink);background:color-mix(in srgb,#dfe9ec 52%,transparent); }
+.nud-device-toggles button.is-active i { border-color:#587b84;background:#587b84;box-shadow:inset 0 0 0 2px #eef5f6; }
+.nud-check { display:flex;align-items:center;gap:8px;color:var(--nud-tool-muted);font-size:10px;cursor:pointer; }
+.nud-check input { accent-color:#587b84; }
+.nud-control-panel fieldset { min-width:0;margin:0;padding:0;border:0;display:grid;gap:8px; }
+.nud-control-panel fieldset:disabled { opacity:.38; }
+.nud-range-control { display:grid;gap:4px; }
+.nud-range-control > span { display:flex;justify-content:space-between;gap:8px;color:var(--nud-tool-muted);font-size:9px; }
+.nud-range-control b { color:var(--nud-tool-ink);font-weight:600; }
+.nud-range-control output { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+.nud-range-control input { width:100%;height:11px;margin:0;accent-color:#587b84; }
+.nud-color-row { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+.nud-color-row label { display:flex;align-items:center;justify-content:space-between;gap:5px;color:var(--nud-tool-muted);font-size:9px; }
+.nud-color-row input { width:28px;height:23px;padding:2px;border:1px solid var(--nud-tool-line);border-radius:6px;background:var(--surface); }
+
+.nud-stage {
+  min-width:0;
+  border:1px solid var(--nud-tool-line);
+  border-radius:16px;
+  overflow:hidden;
+  background:#e8ecec;
+  box-shadow:0 10px 28px color-mix(in srgb,#17242b 7%,transparent);
+}
+.nud-stage-ruler {
+  min-height:38px;
+  padding:0 16px;
+  border-bottom:1px solid #c9d0d1;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#536169;
+  background:#f5f7f7;
+  font:700 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.06em;
+}
+.nud-stage-ruler i { flex:1;height:7px;background:repeating-linear-gradient(90deg,transparent 0 11px,#9da9ad 11px 12px);opacity:.65; }
+.nud-stage-ruler small { color:#748187;font:500 9px/1 var(--sans);letter-spacing:0; }
+.nud-stage-ruler button { min-height:24px;padding:0 8px;border:1px solid #b8c2c4;border-radius:6px;color:#41545c;background:#fff;font:700 9px/1 var(--sans);cursor:pointer; }
+.nud-device-row {
+  min-height:clamp(590px,68vh,760px);
+  padding:25px 26px 34px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  gap:24px;
+  overflow:auto;
+  background-color:#e7ebeb;
+  background-image:linear-gradient(#dce1e1 1px,transparent 1px),linear-gradient(90deg,#dce1e1 1px,transparent 1px);
+  background-size:20px 20px;
+  box-sizing:border-box;
+}
+.nud-stage > footer { padding:10px 14px;border-top:1px solid #c9d0d1;display:flex;justify-content:space-between;gap:16px;color:#6d787d;background:#f5f7f7;font-size:9px;line-height:1.45; }
+
+.nud-device-card { position:relative;flex:0 0 auto;display:grid;justify-items:center;color:#29343a; }
+.nud-device-card > header { width:100%;min-height:38px;margin-bottom:7px;display:flex;align-items:start;justify-content:space-between;gap:12px; }
+.nud-device-card > header > span { display:grid;gap:3px; }
+.nud-device-card > header strong { color:#2e3b41;font:700 11px/1.2 var(--sans); }
+.nud-device-card > header small { color:#718086;font:500 9px/1.2 var(--sans); }
+.nud-device-card > header > b,.nud-device-card > header > button { padding:4px 6px;border:1px solid #bac4c6;border-radius:5px;color:#65757b;background:#f2f5f5;font:700 8px/1 var(--sans); }
+.nud-device-card > header > button { cursor:pointer; }
+.nud-device-shell { position:relative;padding:7px;background:#111719;box-shadow:0 18px 35px rgba(25,35,39,.24),inset 0 0 0 1px #485055;box-sizing:border-box; }
+.nud-screen { position:relative;width:100%;height:100%;overflow:hidden;background:var(--nud-canvas); }
+.nud-device-card.is-iphone15 { width:250px; }
+.nud-device-card.is-iphone15 .nud-device-shell { width:250px;height:542px;border-radius:45px; }
+.nud-device-card.is-iphone15 .nud-screen { border-radius:38px; }
+.nud-device-card.is-iphone15 .nud-device-shell::before { content:"";position:absolute;z-index:20;top:14px;left:50%;width:76px;height:21px;border-radius:999px;transform:translateX(-50%);background:#050708; }
+.nud-device-card.is-ipad129.is-landscape { width:600px; }
+.nud-device-card.is-ipad129.is-landscape .nud-device-shell { width:600px;height:450px;border-radius:27px; }
+.nud-device-card.is-ipad129.is-landscape .nud-screen { border-radius:19px; }
+.nud-device-card.is-ipad129.is-portrait { width:386px; }
+.nud-device-card.is-ipad129.is-portrait .nud-device-shell { width:386px;height:515px;border-radius:27px; }
+.nud-device-card.is-ipad129.is-portrait .nud-screen { border-radius:19px; }
+.nud-device-card.is-watchS10 { width:190px; }
+.nud-device-card.is-watchS10 .nud-device-shell { width:190px;height:226px;padding:5px;border-radius:53px; }
+.nud-device-card.is-watchS10 .nud-screen { border-radius:48px; }
+.nud-device-card.is-watchS10 .nud-device-shell::after { content:"";position:absolute;right:-7px;top:52px;width:6px;height:34px;border-radius:0 7px 7px 0;background:#30383b;box-shadow:0 43px 0 -1px #30383b; }
+.nud-measure-top { position:relative;width:100%;height:16px;margin-bottom:4px;border-top:1px solid #99a6a9;color:#718084;text-align:center;font:600 8px/14px ui-monospace,SFMono-Regular,Menlo,monospace; }
+.nud-measure-top::before,.nud-measure-top::after { content:"";position:absolute;top:-1px;width:1px;height:7px;background:#99a6a9; }
+.nud-measure-top::before { left:0; }
+.nud-measure-top::after { right:0; }
+.nud-measure-side { position:absolute;right:-26px;top:50%;width:18px;border-left:1px solid #99a6a9;color:#718084;writing-mode:vertical-rl;text-align:center;font:600 8px/16px ui-monospace,SFMono-Regular,Menlo,monospace; }
+.is-iphone15 .nud-measure-side { height:542px; }
+.is-ipad129.is-landscape .nud-measure-side { height:450px; }
+.is-ipad129.is-portrait .nud-measure-side { height:515px; }
+.is-watchS10 .nud-measure-side { height:226px; }
+.nud-device-row.is-single .nud-device-card.is-iphone15 { width:360px; }
+.nud-device-row.is-single .nud-device-card.is-iphone15 .nud-device-shell { width:360px;height:780px;border-radius:60px; }
+.nud-device-row.is-single .is-iphone15 .nud-measure-side { height:780px; }
+.nud-device-row.is-single .nud-device-card.is-ipad129.is-landscape { width:920px; }
+.nud-device-row.is-single .nud-device-card.is-ipad129.is-landscape .nud-device-shell { width:920px;height:690px; }
+.nud-device-row.is-single .is-ipad129.is-landscape .nud-measure-side { height:690px; }
+.nud-device-row.is-single .nud-device-card.is-ipad129.is-portrait { width:570px; }
+.nud-device-row.is-single .nud-device-card.is-ipad129.is-portrait .nud-device-shell { width:570px;height:760px; }
+.nud-device-row.is-single .is-ipad129.is-portrait .nud-measure-side { height:760px; }
+.nud-device-row.is-single .nud-device-card.is-watchS10 { width:320px; }
+.nud-device-row.is-single .nud-device-card.is-watchS10 .nud-device-shell { width:320px;height:382px;border-radius:82px; }
+.nud-device-row.is-single .is-watchS10 .nud-measure-side { height:382px; }
+.nud-safe-area { pointer-events:none;position:absolute;z-index:30;inset:5.5% 4% 3.5%;border:1px dashed color-mix(in srgb,var(--nud-accent) 76%,#fff);border-radius:calc(var(--nud-radius) * .8);box-shadow:0 0 0 1px rgba(255,255,255,.18); }
+.is-ipad129 .nud-safe-area { inset:6.8% 2.5% 3%; }
+.is-watchS10 .nud-safe-area { inset:12% 9% 8%;border-radius:35px; }
+
+.nud-phone-screen,.nud-ipad-screen,.nud-watch-screen {
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  color:#edf2e3;
+  background:var(--nud-canvas);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;
+}
+.nud-phone-screen { font-size:9px; }
+.nud-ipad-screen { font-size:10px; }
+.nud-statusbar {
+  position:relative;
+  z-index:12;
+  flex:0 0 5.5%;
+  min-height:24px;
+  padding:7px 6% 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  color:#fff;
+  background:#061a17;
+  font-size:1.05em;
+  font-weight:700;
+  box-sizing:border-box;
+}
+.nud-status-icons { display:flex;align-items:end;gap:4px; }
+.nud-status-icons i { display:block;width:10px;height:6px;border:1px solid currentColor;border-width:0 0 1px 1px;transform:skew(-12deg); }
+.nud-status-icons b { width:15px;height:7px;border:1px solid currentColor;border-radius:2px; }
+.nud-native-app-body { position:relative;flex:1;min-height:0;display:flex; }
+.nud-native-chat { position:relative;flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#061713; }
+.nud-native-header {
+  position:relative;
+  z-index:4;
+  flex:0 0 calc(var(--nud-topbar-height) * .68);
+  min-height:42px;
+  padding:0 3%;
+  border-bottom:1px solid rgba(115,212,179,.22);
+  display:grid;
+  grid-template-columns:auto auto minmax(0,1fr) auto auto auto;
+  align-items:center;
+  gap:2.1%;
+  color:#edf2e3;
+  background:rgba(84,77,73,.84);
+  backdrop-filter:blur(15px);
+  box-sizing:border-box;
+}
+.nud-native-icon-button {
+  width:3.8em;
+  height:3.8em;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:#e5e9df;
+  background:rgba(255,255,255,.075);
+}
+.nud-native-icon-button svg { width:48%;height:48%;stroke-width:2; }
+.nud-secretary-avatar {
+  width:2.35em;
+  height:2.35em;
+  border:1px solid rgba(237,242,227,.28);
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:#edf2e3;
+  background:linear-gradient(145deg,#61c6a7,#126153 72%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28);
+  font:700 1.75em/1 "Songti SC",serif;
+}
+.nud-native-title { min-width:0;display:grid;gap:.2em; }
+.nud-native-title strong { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 1.55em/1.05 "Songti SC",serif; }
+.nud-native-title small { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(237,242,227,.57);font-size:1em; }
+.nud-native-connection { max-width:8em;display:flex;align-items:center;gap:.55em;color:rgba(237,242,227,.55); }
+.nud-native-connection i { flex:0 0 .75em;width:.75em;height:.75em;border-radius:50%;background:#f24952; }
+.nud-native-connection small { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9em; }
+.nud-candidate-phone-header {
+  position:relative;
+  z-index:4;
+  flex:0 0 calc(var(--nud-topbar-height) * .64);
+  min-height:42px;
+  padding:0 3%;
+  border-bottom:1px solid rgba(237,242,227,.11);
+  display:grid;
+  grid-template-columns:3.8em minmax(0,1fr) 3.8em;
+  align-items:center;
+  color:#edf2e3;
+  background:rgba(70,65,62,.88);
+  backdrop-filter:blur(16px);
+  box-sizing:border-box;
+}
+.nud-candidate-phone-header > strong { justify-self:center;font:600 1.62em/1 "Songti SC",serif;letter-spacing:.02em; }
+.nud-group-more { width:3.6em;height:3.6em;padding:0;border:0;border-radius:50%;display:grid;place-items:center;justify-self:end;color:#edf2e3;background:transparent; }
+.nud-group-more svg { width:2em;height:2em;stroke-width:1.8; }
+.nud-native-chat-body {
+  position:relative;
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  display:flex;
+  background-color:#80736d;
+  background-image:linear-gradient(rgba(8,19,17,.23),rgba(8,19,17,.23)),var(--nud-chat-art);
+  background-position:center;
+  background-size:cover;
+}
+.nud-native-chat-body::after { content:"";pointer-events:none;position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,18,15,.05),rgba(4,18,15,.18)); }
+.nud-native-token-warning {
+  position:absolute;
+  z-index:3;
+  top:1.1em;
+  left:50%;
+  max-width:80%;
+  padding:.65em 1.1em;
+  border-radius:999px;
+  transform:translateX(-50%);
+  color:#f0b061;
+  background:rgba(22,20,18,.76);
+  font-size:1em;
+  line-height:1.3;
+  text-align:center;
+  white-space:nowrap;
+}
+.nud-native-empty {
+  position:relative;
+  z-index:2;
+  width:min(72%,34em);
+  margin:auto;
+  padding:4em 0 1.5em;
+  display:grid;
+  justify-items:center;
+  gap:1.15em;
+  text-align:center;
+  text-shadow:0 2px 10px rgba(0,0,0,.42);
+}
+.nud-native-empty .nud-secretary-avatar { width:3em;height:3em;font-size:2.5em; }
+.nud-native-empty h2 { margin:0;font:600 2.2em/1.15 "Songti SC",serif; }
+.nud-native-empty p { margin:0;color:rgba(237,242,227,.73);font-size:1.25em;line-height:1.55; }
+.nud-native-messages {
+  position:relative;
+  z-index:2;
+  flex:1;
+  min-height:0;
+  padding:6em 4% 2em;
+  display:flex;
+  flex-direction:column;
+  gap:1.4em;
+  overflow:hidden;
+}
+.nud-native-messages.is-opening { justify-content:flex-start;padding-top:5.8em; }
+.nud-native-message { max-width:78%;display:flex;align-items:flex-start;gap:.8em; }
+.nud-native-message .nud-secretary-avatar { flex:0 0 2.5em;width:2.5em;height:2.5em;font-size:1.3em; }
+.nud-native-message > div { display:grid;gap:.35em; }
+.nud-native-message span { display:flex;align-items:center;gap:.5em;color:#c7dacf;font-size:.9em; }
+.nud-native-message span svg { width:1.1em;height:1.1em; }
+.nud-native-message p { margin:0;padding:.9em 1.05em;border:1px solid rgba(115,212,179,.24);border-radius:var(--nud-radius);color:#edf2e3;background:rgba(15,58,49,.9);font-size:calc(1.15em * var(--nud-density));line-height:1.55;box-shadow:0 6px 18px rgba(0,0,0,.16); }
+.nud-native-message.is-user { align-self:flex-end;display:grid;justify-items:end; }
+.nud-native-message.is-user p { color:#0d3129;background:linear-gradient(145deg,#8fe0c4,#58b89b); }
+.nud-native-message.is-user small { display:flex;align-items:center;gap:.3em;color:rgba(237,242,227,.75);font-size:.82em; }
+.nud-native-message.is-user small svg { width:1em;height:1em; }
+.nud-native-composer {
+  position:relative;
+  z-index:4;
+  flex:0 0 var(--nud-composer-height);
+  min-height:88px;
+  padding:.85em 3% 1.1em;
+  border-top:1px solid rgba(237,242,227,.14);
+  display:grid;
+  gap:.7em;
+  color:#edf2e3;
+  background:rgba(46,43,43,.88);
+  backdrop-filter:blur(16px);
+  box-sizing:border-box;
+}
+.nud-native-attachments { display:flex;align-items:center;gap:.75em; }
+.nud-native-attachments .nud-native-icon-button { width:3.3em;height:3.3em; }
+.nud-native-attachments > span { color:rgba(237,242,227,.65);font-size:1.05em; }
+.nud-native-compose-row { min-height:3.9em;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:.75em; }
+.nud-native-compose-row > div { height:100%;padding:0 1.15em;border:1px solid rgba(237,242,227,.17);border-radius:calc(var(--nud-radius) * .88);display:flex;align-items:center;color:rgba(237,242,227,.38);background:rgba(12,16,15,.5);font-size:1.18em;box-sizing:border-box; }
+.nud-native-compose-row .nud-native-icon-button { width:4.2em;height:4.2em;border:1px solid rgba(237,242,227,.14); }
+.nud-native-send { width:4.5em;height:4.5em;padding:0;border:0;border-radius:50%;display:grid;place-items:center;color:#071916;background:color-mix(in srgb,var(--nud-accent) 72%,#295e52); }
+.nud-native-send svg { width:48%;height:48%;stroke-width:2.4; }
+.nud-ipad-screen .nud-native-composer { flex-basis:calc(var(--nud-composer-height) * .82);min-height:76px;font-size:.86em; }
+
+.nud-candidate-composer {
+  position:relative;
+  z-index:4;
+  flex:0 0 auto;
+  padding:.85em 3% 0;
+  border-top:1px solid rgba(237,242,227,.12);
+  color:#edf2e3;
+  background:rgba(43,41,41,.96);
+  backdrop-filter:blur(18px);
+  box-sizing:border-box;
+}
+.nud-candidate-compose-row { min-height:4.25em;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:.62em; }
+.nud-candidate-compose-row .nud-native-icon-button,.nud-candidate-more { width:3.6em;height:3.6em;border:0;border-radius:50%;display:grid;place-items:center;color:#edf2e3;background:transparent; }
+.nud-candidate-compose-row .nud-native-icon-button svg,.nud-candidate-more svg { width:58%;height:58%;stroke-width:1.8; }
+.nud-candidate-input { height:3.45em;padding:0 1em;border:1px solid rgba(237,242,227,.13);border-radius:.72em;display:flex;align-items:center;color:rgba(237,242,227,.4);background:rgba(9,13,12,.55);font-size:1.1em;box-sizing:border-box; }
+.nud-candidate-hold-to-talk { height:3.45em;padding:0 1em;border:1px solid rgba(237,242,227,.16);border-radius:.72em;color:#edf2e3;background:rgba(255,255,255,.07);font-size:1.08em;font-weight:650;letter-spacing:.04em; }
+.nud-candidate-hold-to-talk:active { background:rgba(115,212,179,.16);transform:scale(.992); }
+.nud-candidate-more { padding:0;transition:transform .16s ease,background .16s ease; }
+.nud-candidate-composer.is-open .nud-candidate-more { transform:rotate(45deg);background:rgba(255,255,255,.08); }
+.nud-candidate-action-tray { padding:1.35em .15em .85em;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25em;border-top:1px solid rgba(237,242,227,.08); }
+.nud-candidate-action-tray button { padding:0;border:0;display:grid;justify-items:center;gap:.55em;color:rgba(237,242,227,.66);background:transparent;font-size:1em; }
+.nud-candidate-action-tray button > span { width:4.6em;height:4.6em;border:1px solid rgba(237,242,227,.11);border-radius:1.2em;display:grid;place-items:center;color:#edf2e3;background:rgba(255,255,255,.07); }
+.nud-candidate-action-tray svg { width:2em;height:2em;stroke-width:1.7; }
+.nud-candidate-action-tray small { font-size:.92em; }
+.nud-candidate-home-indicator { width:34%;height:3px;margin:1em auto .65em;border-radius:999px;background:rgba(237,242,227,.78); }
+
+.nud-native-sheet {
+  position:absolute;
+  z-index:16;
+  inset:0;
+  color:#edf2e3;
+  background:#101918;
+  box-shadow:0 -12px 40px rgba(0,0,0,.36);
+}
+.nud-conversation-sheet { display:flex;flex-direction:column; }
+.nud-conversation-sheet > header {
+  min-height:5.5em;
+  padding:0 3%;
+  border-bottom:1px solid rgba(237,242,227,.1);
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:1em;
+}
+.nud-conversation-sheet > header > span { display:grid;gap:.15em; }
+.nud-conversation-sheet > header strong { font:600 1.8em/1.1 "Songti SC",serif; }
+.nud-conversation-sheet > header small { color:rgba(237,242,227,.5);font-size:.9em; }
+.nud-native-search { margin:1.1em 3%;min-height:3.7em;padding:0 1em;border-radius:1.2em;display:flex;align-items:center;gap:.75em;color:rgba(237,242,227,.46);background:rgba(255,255,255,.07); }
+.nud-native-search svg { width:1.4em;height:1.4em; }
+.nud-native-search span { font-size:1.05em; }
+.nud-native-thread-list { padding:0 3%;display:grid;gap:.7em; }
+.nud-native-thread-list article { padding:1em;border:1px solid rgba(237,242,227,.09);border-radius:1.3em;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:1em;background:rgba(255,255,255,.035); }
+.nud-native-thread-list article.is-current { border-color:rgba(115,212,179,.36);background:rgba(18,69,59,.7); }
+.nud-native-thread-list article > span { min-width:0;display:grid;gap:.35em; }
+.nud-native-thread-list strong,.nud-native-thread-list small,.nud-native-thread-list em { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.nud-native-thread-list strong { font-size:1.2em; }
+.nud-native-thread-list small { color:rgba(237,242,227,.62);font-size:.95em; }
+.nud-native-thread-list em { color:rgba(237,242,227,.42);font-size:.8em;font-style:normal; }
+.nud-native-list-empty { margin:auto;display:grid;justify-items:center;gap:.7em;text-align:center; }
+.nud-native-list-empty strong { font:600 1.7em/1.2 "Songti SC",serif; }
+.nud-native-list-empty p { margin:0;color:rgba(237,242,227,.48);font-size:1em; }
+.nud-conversation-sheet > footer { margin-top:auto;padding:1em 3%;border-top:1px solid rgba(237,242,227,.1);display:flex;justify-content:flex-end;gap:.7em; }
+.nud-conversation-sheet > footer button { min-height:3.2em;padding:0 1em;border:1px solid rgba(237,242,227,.13);border-radius:.9em;display:flex;align-items:center;gap:.55em;color:#edf2e3;background:rgba(255,255,255,.04);font-size:1em; }
+.nud-conversation-sheet > footer svg { width:1.3em;height:1.3em; }
+.nud-conversation-sheet > footer button:last-child { color:#ef9b94; }
+
+.nud-candidate-sidebar-layer { position:absolute;z-index:18;inset:0;display:flex;background:rgba(0,0,0,.46); }
+.nud-candidate-sidebar { width:86%;min-width:0;display:flex;flex-direction:column;color:#edf2e3;background:linear-gradient(180deg,#17201f,#0e1615);box-shadow:14px 0 34px rgba(0,0,0,.36); }
+.nud-candidate-sidebar > header { min-height:5.4em;padding:0 5%;border-bottom:1px solid rgba(237,242,227,.09);display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:1em; }
+.nud-candidate-sidebar > header > span { display:grid;gap:.18em; }
+.nud-candidate-sidebar > header > .nud-candidate-sidebar-actions { display:flex;align-items:center;justify-content:flex-end;gap:.25em; }
+.nud-candidate-sidebar > header strong { font:600 1.8em/1.1 "Songti SC",serif; }
+.nud-candidate-sidebar > header small { color:rgba(237,242,227,.46);font-size:.9em; }
+.nud-candidate-sidebar .nud-native-search { margin:1.1em 5%; }
+.nud-candidate-sidebar .nud-native-thread-list { padding:0 5%; }
+.nud-candidate-sidebar .nud-native-thread-list article { grid-template-columns:minmax(0,1fr) auto; }
+.nud-candidate-sidebar .nud-native-thread-list article > span { min-width:0;display:grid;gap:.35em; }
+.nud-candidate-sidebar .nud-native-thread-list article > svg { width:1.45em;height:1.45em;color:rgba(237,242,227,.3); }
+.nud-candidate-sidebar-bottom { margin-top:auto;padding:1em 5% 1.5em;border-top:1px solid rgba(237,242,227,.09); }
+.nud-candidate-sidebar-bottom > button { width:100%;min-height:4.8em;padding:0 1em;border:1px solid rgba(237,242,227,.1);border-radius:1.2em;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.85em;color:#edf2e3;background:rgba(255,255,255,.045);text-align:left; }
+.nud-candidate-sidebar-bottom > button > svg { width:1.55em;height:1.55em;color:rgba(237,242,227,.72); }
+.nud-candidate-sidebar-bottom > button > span { display:grid;gap:.3em; }
+.nud-candidate-sidebar-bottom strong { font-size:1.08em; }
+.nud-candidate-sidebar-bottom small { display:flex;align-items:center;gap:.45em;color:rgba(237,242,227,.45);font-size:.82em; }
+.nud-candidate-sidebar-bottom small i { width:.65em;height:.65em;border-radius:50%;background:#f0b061; }
+
+.nud-group-settings { position:absolute;z-index:24;inset:0;padding:0 5% 1.5em;display:flex;flex-direction:column;color:#edf2e3;background:linear-gradient(180deg,rgba(20,30,29,.99),rgba(8,17,15,.995));box-sizing:border-box; }
+.nud-group-settings > header { flex:0 0 5.4em;display:grid;grid-template-columns:3.6em minmax(0,1fr) 3.6em;align-items:center;border-bottom:1px solid rgba(237,242,227,.08); }
+.nud-group-settings > header > button { width:3.6em;height:3.6em;padding:0;border:0;border-radius:50%;display:grid;place-items:center;color:#edf2e3;background:transparent; }
+.nud-group-settings > header > button svg { width:1.7em;height:1.7em; }
+.nud-group-settings > header strong { justify-self:center;font:600 1.42em/1 "Songti SC",serif; }
+.nud-group-member-grid { padding:1.35em .1em 1.15em;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.5em; }
+.nud-group-member-grid button { min-width:0;padding:0;border:0;display:grid;justify-items:center;gap:.55em;color:rgba(237,242,227,.42);background:transparent; }
+.nud-group-avatar { width:3.55em;height:3.55em;border:1px solid rgba(237,242,227,.16);border-radius:50%;display:grid;place-items:center;color:#edf2e3;background:linear-gradient(145deg,#3c4a46,#151d1b);filter:grayscale(1);opacity:.34;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);font:600 1.12em/1 "Songti SC",serif;transition:opacity .16s ease,filter .16s ease,box-shadow .16s ease; }
+.nud-group-member-action .nud-group-avatar { filter:none;opacity:.72;background:rgba(255,255,255,.045); }
+.nud-group-member-action .nud-group-avatar svg { width:1.45em;height:1.45em;stroke-width:1.5; }
+.nud-group-member-grid button[aria-pressed="true"] { color:#edf2e3; }
+.nud-group-member-grid button[aria-pressed="true"] .nud-group-avatar { border-color:rgba(115,212,179,.72);background:linear-gradient(145deg,#58b99d,#155c50);filter:none;opacity:1;box-shadow:0 0 0 3px rgba(115,212,179,.13),0 .7em 1.5em rgba(0,0,0,.22); }
+.nud-group-member-grid small { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82em; }
+.nud-group-options { display:grid;border-radius:1.25em;overflow:hidden;background:rgba(255,255,255,.055); }
+.nud-group-options > button { min-height:4.6em;padding:0 1em;border:0;border-bottom:1px solid rgba(237,242,227,.08);display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:1em;color:#edf2e3;background:transparent;text-align:left; }
+.nud-group-options > button:last-child { border-bottom:0; }
+.nud-group-options > button > span { display:flex;align-items:center;justify-content:space-between;gap:1em; }
+.nud-group-options strong { font-size:1em; }
+.nud-group-options small { color:rgba(237,242,227,.48);font-size:.88em; }
+.nud-group-options svg { width:1.4em;height:1.4em;color:rgba(237,242,227,.36); }
+.nud-group-done { margin-top:auto;min-height:3.8em;border:0;border-radius:999px;color:#082019;background:var(--nud-accent);font-weight:700; }
+
+.nud-settings-sheet { display:flex;flex-direction:column;background:#0d1515; }
+.nud-settings-sheet > header { flex:0 0 5.5em;padding:0 3%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:1px solid rgba(237,242,227,.08);background:#15201f; }
+.nud-settings-sheet > header strong { font:600 1.55em/1 "Songti SC",serif; }
+.nud-settings-sheet > header button { justify-self:end;padding:0;border:0;color:var(--nud-accent);background:transparent;font-size:1.05em; }
+.nud-native-form { flex:1;min-height:0;padding:1.4em 3% 2em;display:grid;align-content:start;gap:1.4em;overflow:auto; }
+.nud-native-form section { display:grid;gap:.55em; }
+.nud-native-form h3 { margin:0 .8em;color:rgba(237,242,227,.58);font-size:.95em;font-weight:500; }
+.nud-native-form section > div { border-radius:1.2em;overflow:hidden;background:rgba(255,255,255,.055); }
+.nud-native-form p { min-height:3.6em;margin:0;padding:0 1em;border-bottom:1px solid rgba(237,242,227,.08);display:flex;align-items:center;justify-content:space-between;gap:1em;font-size:1.05em; }
+.nud-native-form p:last-child { border-bottom:0; }
+.nud-native-form p small { color:rgba(237,242,227,.53);font-size:.9em; }
+.nud-native-form section > small { padding:0 .8em;color:rgba(237,242,227,.45);font-size:.83em;line-height:1.45; }
+
+.nud-ipad-candidate-workspace {
+  position:relative;
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  background:#17201e;
+}
+.nud-ipad-candidate-workspace::before { content:"";position:absolute;z-index:5;bottom:1.3%;left:44%;width:12%;height:3px;border-radius:999px;background:rgba(237,242,227,.72); }
+.nud-ipad-candidate-workspace::after { content:"";position:absolute;z-index:0;inset:-2%;background-image:linear-gradient(90deg,rgba(5,21,18,.18),rgba(5,21,18,.02)),var(--nud-chat-art);background-position:center;background-size:cover; }
+.nud-ipad-chat-pane {
+  position:absolute;
+  z-index:3;
+  top:4.5%;
+  bottom:5.5%;
+  left:3.2%;
+  width:45%;
+  min-width:0;
+  overflow:hidden;
+  border:1px solid rgba(237,242,227,.2);
+  border-radius:2.25em;
+  background:rgba(7,21,18,.62);
+  box-shadow:0 2.2em 4.8em rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(18px);
+  transition:left .3s cubic-bezier(.2,.76,.24,1),right .3s cubic-bezier(.2,.76,.24,1);
+  transition-delay:.1s;
+}
+.nud-ipad-floating-panel {
+  position:absolute;
+  z-index:7;
+  top:4.5%;
+  right:3.2%;
+  bottom:5.5%;
+  width:43.5%;
+  min-width:0;
+  overflow:hidden;
+  border:1px solid rgba(237,242,227,.2);
+  border-radius:2.25em;
+  background:rgba(9,22,20,.78);
+  box-shadow:0 2.2em 4.8em rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(18px);
+  transition:opacity .2s ease,transform .28s cubic-bezier(.2,.76,.24,1);
+}
+.nud-ipad-candidate-workspace.is-side-panel .nud-ipad-floating-panel { right:auto;left:3.2%; }
+.nud-ipad-candidate-workspace.is-side-panel-open .nud-ipad-chat-pane { left:51.8%;transition-delay:0s; }
+.nud-ipad-candidate-workspace.is-side-panel-open .nud-ipad-floating-panel { transition-delay:.1s; }
+.nud-ipad-floating-panel.is-panel-hidden { pointer-events:none;opacity:0;transform:translateX(-1.8em) scale(.985);transition-delay:0s; }
+.nud-ipad-floating-panel > * { animation:nud-ipad-panel-enter .32s cubic-bezier(.2,.76,.24,1) both; }
+.nud-ipad-candidate-workspace.is-portrait .nud-ipad-chat-pane { inset:3.5% 5%;width:auto; }
+.nud-ipad-candidate-workspace.is-portrait .nud-ipad-floating-panel { inset:8% 8%;width:auto; }
+.nud-ipad-private-chat { width:100%;height:100%;display:flex;flex-direction:column;color:#edf2e3; }
+.nud-ipad-private-chat .nud-candidate-phone-header { flex-basis:calc(var(--nud-topbar-height) * .54);background:rgba(52,49,47,.72); }
+.nud-ipad-private-body { flex:1;min-height:0;padding:1.15em;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.9em;background:rgba(7,21,18,.26); }
+.nud-ipad-private-thread { min-height:0;padding:1.2em;display:flex;align-items:flex-start;border:1px solid rgba(237,242,227,.08);border-radius:1.55em;background:linear-gradient(180deg,rgba(5,17,15,.08),rgba(5,17,15,.38)); }
+.nud-ipad-private-thread .nud-native-message { max-width:84%; }
+.nud-ipad-private-thread .nud-native-message span button { width:1.5em;height:1.5em;padding:0;border:0;display:grid;place-items:center;color:rgba(199,218,207,.72);background:transparent; }
+.nud-ipad-private-thread .nud-native-message span button svg { width:1.05em;height:1.05em;stroke-width:1.8; }
+.nud-ipad-voice-progress { min-height:4.8em;padding:.75em 1em;border:1px solid rgba(115,212,179,.28);border-radius:1.25em;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.85em;color:#edf2e3;background:rgba(11,42,35,.88);text-align:left; }
+.nud-ipad-voice-progress > svg { width:1.8em;height:1.8em;color:var(--nud-accent); }
+.nud-ipad-voice-progress > span { min-width:0;display:grid;gap:.45em; }
+.nud-ipad-voice-progress strong { font-size:.92em; }
+.nud-ipad-voice-progress span i { position:relative;height:3px;border-radius:999px;overflow:hidden;background:rgba(237,242,227,.16); }
+.nud-ipad-voice-progress span i::after { content:"";position:absolute;inset:0 44% 0 0;border-radius:inherit;background:var(--nud-accent);animation:nud-voice-progress 3.4s ease-in-out infinite; }
+.nud-ipad-voice-progress small { color:rgba(237,242,227,.5);font-size:.78em; }
+.nud-ipad-private-chat .nud-candidate-composer { padding:.65em 3.5% .65em;background:rgba(36,35,35,.86); }
+.nud-ipad-private-chat .nud-candidate-home-indicator { display:none; }
+.nud-ipad-chat-pane > .nud-native-chat,.nud-ipad-candidate-stage { width:100%;height:100%; }
+.nud-ipad-chat-pane > .nud-native-chat { background:transparent; }
+.nud-ipad-chat-pane .nud-candidate-phone-header { flex-basis:calc(var(--nud-topbar-height) * .54);background:rgba(40,39,38,.64);backdrop-filter:blur(18px); }
+.nud-ipad-chat-pane .nud-native-chat-body { background-color:transparent;background-image:linear-gradient(180deg,rgba(5,16,14,.02),rgba(5,16,14,.18)); }
+.nud-ipad-chat-pane .nud-native-messages.is-opening { padding-top:6.2em; }
+.nud-ipad-chat-pane .nud-candidate-composer { padding:.65em 3.5% .65em;background:rgba(36,35,35,.9); }
+.nud-ipad-chat-pane .nud-candidate-home-indicator { display:none; }
+.nud-ipad-floating-panel .nud-candidate-sidebar-layer { background:transparent; }
+.nud-ipad-floating-panel .nud-candidate-sidebar { width:100%;box-shadow:none;background:linear-gradient(180deg,rgba(21,34,31,.98),rgba(11,24,21,.98)); }
+.nud-ipad-floating-panel .nud-settings-sheet { border-radius:inherit; }
+.nud-ipad-candidate-stage { display:flex;flex-direction:column;background:rgba(7,21,18,.48); }
+.nud-ipad-candidate-stage > header { flex:0 0 5.2em;padding:0 1.35em;border-bottom:1px solid rgba(237,242,227,.09);display:flex;align-items:center;justify-content:space-between;gap:1em;background:rgba(22,35,32,.88); }
+.nud-ipad-candidate-stage > header strong { font:600 1.4em/1 "Songti SC",serif; }
+.nud-ipad-candidate-stage > header small { color:rgba(237,242,227,.5);font-size:.82em; }
+.nud-ipad-candidate-stage-body { flex:1;min-height:0;padding:1.15em;display:flex; }
+.nud-ipad-candidate-speaker { position:relative;min-height:0;border:1px solid rgba(240,176,97,.38);border-radius:1.55em;overflow:hidden;background-position:center 24%;background-size:cover;box-shadow:0 1.2em 2.8em rgba(0,0,0,.28); }
+.nud-ipad-candidate-stage-body .nud-ipad-candidate-speaker { flex:1; }
+.nud-ipad-candidate-speaker::after { content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(5,13,12,.88)); }
+.nud-ipad-stage-members { position:absolute;z-index:3;top:.9em;right:.9em;display:flex;justify-content:flex-end; }
+.nud-ipad-stage-members > i { width:2.5em;height:2.5em;margin-left:-.4em;border:2px solid rgba(7,21,18,.88);border-radius:50%;display:grid;place-items:center;color:#edf2e3;background:linear-gradient(145deg,#59b99d,#155c50);box-shadow:0 .4em 1em rgba(0,0,0,.22);font:600 .82em/1 "Songti SC",serif; }
+.nud-ipad-candidate-speaker > span { position:absolute;z-index:2;left:1.1em;right:1.1em;bottom:.9em;display:flex;align-items:end;justify-content:space-between;gap:1em; }
+.nud-ipad-candidate-speaker strong { font:600 1.45em/1 "Songti SC",serif; }
+.nud-ipad-candidate-speaker small { display:flex;align-items:center;gap:.45em;color:rgba(237,242,227,.68);font-size:.82em; }
+.nud-ipad-candidate-speaker small i { width:.65em;height:.65em;border-radius:50%;background:var(--nud-accent);box-shadow:0 0 8px var(--nud-accent); }
+
+.nud-watch-screen { position:relative;color:#fff;background:#050606;font-size:10px; }
+.nud-statusbar.is-watch { flex:0 0 16%;min-height:28px;padding:9px 22% 0;background:#050606;justify-content:center;font-size:1.05em; }
+.nud-watch-title { position:absolute;z-index:2;top:4.5%;left:0;width:100%;color:rgba(255,255,255,.78);text-align:center;font-size:.9em;font-weight:600; }
+.nud-watch-home { flex:1;min-height:0;padding:0 14% 10%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.65em;text-align:center; }
+.nud-watch-portrait-wrap { position:relative;width:7.1em;height:7.1em;flex:0 0 7.1em; }
+.nud-secretary-portrait { width:100%;height:100%;border:2px solid rgba(240,176,97,.68);border-radius:50%;display:block;object-fit:cover;box-shadow:0 0 0 3px rgba(115,212,179,.18); }
+.nud-watch-portrait-wrap span { position:absolute;right:-.2em;bottom:-.1em;width:2.35em;height:2.35em;border:2px solid #050606;border-radius:50%;display:grid;place-items:center;color:#071916;background:var(--nud-accent); }
+.nud-watch-portrait-wrap svg { width:1.2em;height:1.2em; }
+.nud-watch-home h3 { margin:.15em 0 0;font:600 1.05em/1.25 "Songti SC",serif; }
+.nud-watch-home p { margin:0;color:rgba(255,255,255,.62);font-size:.78em;line-height:1.35; }
+.nud-watch-home button,.nud-watch-route button,.nud-watch-dictation button { width:100%;min-height:3em;padding:0 1em;border:0;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:.55em;color:#071916;background:var(--nud-accent);font:600 .9em/1 -apple-system,BlinkMacSystemFont,sans-serif; }
+.nud-watch-home button svg { width:1.2em;height:1.2em; }
+.nud-watch-home > small { color:rgba(255,255,255,.42);font-size:.67em; }
+.nud-watch-home.is-candidate { padding:0 12% 10%;gap:.8em; }
+.nud-watch-home.is-candidate .nud-watch-avatar-button { width:auto;min-height:0;padding:0;border-radius:50%;display:block;background:transparent; }
+.nud-watch-home.is-candidate .nud-watch-portrait-wrap { transition:width .2s ease,height .2s ease,flex-basis .2s ease; }
+.nud-watch-home.is-candidate.has-no-reply { padding-right:5%;padding-left:5%; }
+.nud-watch-home.is-candidate.has-no-reply .nud-watch-avatar-button { width:72%; }
+.nud-watch-home.is-candidate.has-no-reply .nud-watch-portrait-wrap { width:100%;height:auto;aspect-ratio:1;flex-basis:auto; }
+.nud-watch-home.is-candidate.has-no-reply .nud-watch-portrait-wrap span { width:30%;height:30%; }
+.nud-watch-home.is-candidate.has-no-reply .nud-watch-portrait-wrap svg { width:55%;height:55%; }
+.nud-watch-home.is-candidate.has-reply .nud-watch-portrait-wrap { width:5.6em;height:5.6em;flex-basis:5.6em; }
+.nud-watch-reply-card { width:100%;padding:.7em .85em;border:1px solid rgba(115,212,179,.25);border-radius:1.2em;display:grid;gap:.25em;background:linear-gradient(145deg,rgba(25,82,69,.72),rgba(15,45,39,.78));box-sizing:border-box;text-align:left; }
+.nud-watch-reply-card strong { color:var(--nud-accent);font-size:.7em; }
+.nud-watch-reply-card p { margin:0;color:#fff;font-size:.88em;line-height:1.3; }
+.nud-watch-route { flex:1;padding:2% 13% 10%;display:flex;flex-direction:column;justify-content:center;gap:.7em; }
+.nud-watch-route h3 { margin:0 0 .2em;text-align:center;font:600 1.25em/1.2 "Songti SC",serif; }
+.nud-watch-route button { color:#fff;background:#242727; }
+.nud-watch-route button:first-of-type { color:#071916;background:var(--nud-accent); }
+.nud-watch-route div { padding:.8em;border:1px solid rgba(115,212,179,.25);border-radius:1.2em;background:rgba(115,212,179,.08); }
+.nud-watch-route strong { color:var(--nud-accent);font-size:.75em; }
+.nud-watch-route p { margin:.35em 0 0;font-size:.82em; }
+.nud-watch-route.is-candidate { padding:3% 10% 10%;gap:.65em; }
+.nud-watch-route.is-candidate h3 { margin-bottom:.35em;font-size:1.12em; }
+.nud-watch-route.is-candidate button { min-height:4.75em;padding:.7em 1em;display:grid;justify-items:center;align-content:center;text-align:center; }
+.nud-watch-route.is-candidate button strong { color:inherit;font-size:1.12em;line-height:1.2;font-weight:700; }
+.nud-watch-route.is-candidate button small { color:currentColor;opacity:.58;font-size:.66em;line-height:1.2; }
+.nud-watch-dictation { flex:1;padding:3% 13% 10%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center; }
+.nud-watch-dictation h3 { margin:.7em 0 .25em;font:600 1.25em/1.2 "Songti SC",serif; }
+.nud-watch-dictation p { margin:0 0 1em;color:rgba(255,255,255,.6);font-size:.75em;line-height:1.4; }
+.nud-watch-dictation button { margin-top:.6em; }
+.nud-watch-dictation button:last-child { color:#fff;background:#242727; }
+.nud-watch-dictation button svg { width:1.1em;height:1.1em; }
+.nud-watch-dictation.is-candidate { padding:2% 10% 10%; }
+.nud-watch-dictation.is-candidate h3 { font-size:1.12em; }
+.nud-watch-dictation.is-candidate p { margin-bottom:.75em; }
+.nud-wave { height:3.2em;display:flex;align-items:center;gap:.35em; }
+.nud-wave i { width:.35em;border-radius:999px;background:#ea645d;animation:nud-wave 1.1s ease-in-out infinite alternate; }
+.nud-wave i:nth-child(1),.nud-wave i:nth-child(5) { height:1.2em; }
+.nud-wave i:nth-child(2),.nud-wave i:nth-child(4) { height:2.2em;animation-delay:.18s; }
+.nud-wave i:nth-child(3) { height:3em;animation-delay:.3s; }
+
+.native-ui-design-lab button:focus-visible,.native-ui-design-lab input:focus-visible,.native-ui-design-lab select:focus-visible { outline:2px solid #4f7882;outline-offset:2px; }
+@keyframes nud-wave { from { transform:scaleY(.55);opacity:.65; } to { transform:scaleY(1);opacity:1; } }
+@keyframes nud-voice-progress { from { transform:translateX(-70%); } to { transform:translateX(80%); } }
+@keyframes nud-ipad-panel-enter { from { opacity:.25;transform:translateX(-.9em) scale(.99); } to { opacity:1;transform:none; } }
+@media (prefers-reduced-motion:reduce) { .nud-wave i,.nud-ipad-voice-progress span i::after,.nud-ipad-floating-panel > * { animation:none; } }
+
+@media (min-width:1700px) {
+  .nud-workbench { grid-template-columns:270px minmax(0,1fr); }
+  .nud-device-row { min-height:700px;padding-inline:18px;gap:20px; }
+  .nud-device-card.is-iphone15 { width:290px; }
+  .nud-device-card.is-iphone15 .nud-device-shell { width:290px;height:628px;border-radius:52px; }
+  .nud-device-card.is-iphone15 .nud-screen { border-radius:46px; }
+  .nud-device-card.is-iphone15 .nud-device-shell::before { width:94px;height:25px;top:15px; }
+  .nud-device-card.is-ipad129.is-landscape { width:690px; }
+  .nud-device-card.is-ipad129.is-landscape .nud-device-shell { width:690px;height:518px;border-radius:31px; }
+  .nud-device-card.is-ipad129.is-portrait { width:450px; }
+  .nud-device-card.is-ipad129.is-portrait .nud-device-shell { width:450px;height:600px;border-radius:31px; }
+  .nud-device-card.is-watchS10 { width:210px; }
+  .nud-device-card.is-watchS10 .nud-device-shell { width:210px;height:250px;border-radius:59px; }
+  .is-iphone15 .nud-measure-side { height:628px; }
+  .is-ipad129.is-landscape .nud-measure-side { height:518px; }
+  .is-ipad129.is-portrait .nud-measure-side { height:600px; }
+  .is-watchS10 .nud-measure-side { height:250px; }
+  .nud-phone-screen { font-size:10.5px; }
+  .nud-ipad-screen { font-size:11px; }
+  .nud-watch-screen { font-size:12px; }
+}
+
+@media (max-width:1180px) {
+  .nud-workbench { grid-template-columns:1fr; }
+  .nud-control-panel { position:static;grid-template-columns:1fr 1fr; }
+  .nud-control-panel section { border-right:1px solid var(--nud-tool-line); }
+  .nud-control-panel section:nth-child(even) { border-right:0; }
+  .nud-device-row { min-height:570px;justify-content:flex-start;padding-left:28px; }
+}
+@media (max-width:760px) {
+  .nud-lab-header { min-height:0;padding:18px;align-items:flex-start;flex-direction:column; }
+  .nud-baseline-mark { width:100%;box-sizing:border-box; }
+  .nud-control-panel { grid-template-columns:1fr; }
+  .nud-control-panel section { border-right:0; }
+  .nud-stage > footer { flex-direction:column;gap:3px; }
+}
+@media (max-width:520px) {
+  .nud-stage-ruler small { display:none; }
+  .nud-device-card.is-iphone15 { width:220px; }
+  .nud-device-card.is-iphone15 .nud-device-shell { width:220px;height:477px; }
+  .nud-device-card.is-ipad129.is-landscape { width:500px; }
+  .nud-device-card.is-ipad129.is-landscape .nud-device-shell { width:500px;height:375px; }
+  .nud-device-card.is-watchS10 { width:170px; }
+  .nud-device-card.is-watchS10 .nud-device-shell { width:170px;height:202px; }
+}

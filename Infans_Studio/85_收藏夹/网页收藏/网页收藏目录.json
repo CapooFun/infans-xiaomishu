@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-06T00:00:00+09:00",
+  "bookmarks": [
+    {
+      "id": "example-reading",
+      "name": "示例阅读",
+      "url": "https://reading.example.com/",
+      "category": "interesting",
+      "summary": "虚构的阅读链接，用来演示网页收藏。",
+      "origin": "bookmark",
+      "browserSources": ["safari"]
+    },
+    {
+      "id": "example-course",
+      "name": "示例公开课",
+      "url": "https://course.example.com/",
+      "category": "course",
+      "summary": "虚构的课程链接，不是作者听过的课。",
+      "origin": "bookmark",
+      "browserSources": ["chrome"]
+    }
+  ]
+}

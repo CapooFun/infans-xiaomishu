@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "items": {
+    "N5-01": {
+      "correctTotal": 12,
+      "correctStreak": 2,
+      "lv": 1,
+      "updatedAt": "2026-08-20T12:00:00.000Z",
+      "note": "开源示例掌握，不是作者自评"
+    },
+    "N5-03": {
+      "correctTotal": 8,
+      "correctStreak": 1,
+      "lv": 1,
+      "updatedAt": "2026-08-20T12:00:00.000Z"
+    },
+    "N5-05": {
+      "correctTotal": 6,
+      "correctStreak": 1,
+      "lv": 1,
+      "updatedAt": "2026-08-20T12:00:00.000Z"
+    },
+    "N5-07": {
+      "correctTotal": 5,
+      "correctStreak": 1,
+      "lv": 1,
+      "updatedAt": "2026-08-20T12:00:00.000Z"
+    },
+    "N4-01": {
+      "correctTotal": 3,
+      "correctStreak": 0,
+      "lv": 0,
+      "updatedAt": "2026-08-20T12:00:00.000Z"
+    }
+  }
+}

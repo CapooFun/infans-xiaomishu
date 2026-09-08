@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HealthData locale="zh_CN">
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="测试 Apple Watch" unit="count" startDate="2026-07-31 08:00:00 +0900" endDate="2026-07-31 09:00:00 +0900" value="1200"/>
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="测试体脂秤" unit="kg" startDate="2026-07-31 07:30:00 +0900" endDate="2026-07-31 07:30:00 +0900" value="75.2"/>
+  <Workout workoutActivityType="HKWorkoutActivityTypeTraditionalStrengthTraining" duration="42" durationUnit="min" totalEnergyBurned="260" totalEnergyBurnedUnit="kcal" sourceName="测试 Apple Watch" startDate="2026-07-31 18:00:00 +0900" endDate="2026-07-31 18:42:00 +0900"/>
+</HealthData>

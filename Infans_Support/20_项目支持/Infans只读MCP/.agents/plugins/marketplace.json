@@ -1,0 +1,20 @@
+{
+  "name": "infans-support",
+  "interface": {
+    "displayName": "Infans Support"
+  },
+  "plugins": [
+    {
+      "name": "infans-readonly-vault",
+      "source": {
+        "source": "local",
+        "path": "./plugins/infans-readonly-vault"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

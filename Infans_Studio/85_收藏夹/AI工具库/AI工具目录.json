@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-06T00:00:00+09:00",
+  "tools": [
+    {
+      "id": "example-notes",
+      "name": "示例笔记",
+      "url": "https://notes.example.com/",
+      "category": "coding",
+      "summary": "虚构的笔记工具卡，用来演示收藏页长什么样。",
+      "origin": "recommendation",
+      "discoveryStatus": "baseline"
+    },
+    {
+      "id": "example-palette",
+      "name": "示例调色盘",
+      "url": "https://palette.example.com/",
+      "category": "art",
+      "summary": "虚构的绘画工具卡，不是作者的真实收藏。",
+      "origin": "recommendation",
+      "discoveryStatus": "recent"
+    }
+  ]
+}

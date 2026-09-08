@@ -1,0 +1,15 @@
+/* Light breathes in place; text, portraits and backgrounds remain stationary. */
+.scene-atmosphere { position: absolute; inset: 0; pointer-events: none; opacity: .28; background: radial-gradient(ellipse at 84% 15%, color-mix(in srgb, var(--gold) 12%, transparent), transparent 46%), radial-gradient(ellipse at 18% 88%, color-mix(in srgb, var(--teal) 8%, transparent), transparent 42%); animation: scene-light-breath 14s ease-in-out infinite alternate; }
+.scene-atmosphere[data-motion="paused"] { animation-play-state: paused; }
+.scene-atmosphere--room { position: fixed; z-index: -1; }
+.workspace-backdrop-scene { transform: none; animation: none; }
+@keyframes scene-light-breath { from { opacity: .18; } to { opacity: .48; } }
+.tools-app-icon { transition: box-shadow .2s ease, filter .2s ease; }
+@media (hover: hover) { a:hover > .tools-app-icon, button:hover > .tools-app-icon { box-shadow: inset 0 1px 12px color-mix(in srgb, var(--gold) 16%, transparent), 0 6px 22px var(--shadow-soft); filter: brightness(1.08); } }
+:root[data-visual-transition="theme-dissolve"]::view-transition { pointer-events: none; }
+:root[data-visual-transition="theme-dissolve"]::view-transition-group(root) { animation-duration: .24s; }
+:root[data-visual-transition="theme-dissolve"]::view-transition-old(root) { animation: theme-whole-out .24s ease-out both; mix-blend-mode: normal; }
+:root[data-visual-transition="theme-dissolve"]::view-transition-new(root) { animation: theme-whole-in .24s ease-out both; mix-blend-mode: normal; }
+@keyframes theme-whole-out { to { opacity: 0; } }
+@keyframes theme-whole-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .scene-atmosphere { animation: none; opacity: .2; } .tools-app-icon { transition: none; } }

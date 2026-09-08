@@ -1,0 +1,344 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		100000000000000000000011 /* InfansHealthSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000001 /* InfansHealthSyncApp.swift */; };
+		100000000000000000000012 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000002 /* ContentView.swift */; };
+		100000000000000000000013 /* HealthSyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000003 /* HealthSyncModels.swift */; };
+		100000000000000000000014 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000004 /* SettingsStore.swift */; };
+		100000000000000000000015 /* HealthKitReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000005 /* HealthKitReader.swift */; };
+		100000000000000000000016 /* SyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000006 /* SyncCoordinator.swift */; };
+		100000000000000000000017 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 100000000000000000000007 /* HealthKit.framework */; };
+		1D0000000000000000000002 /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D0000000000000000000012 /* AppIntents.framework */; };
+		100000000000000000000018 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000B /* Assets.xcassets */; };
+		100000000000000000000019 /* HealthSyncSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000C /* HealthSyncSchedule.swift */; };
+		10000000000000000000001A /* HealthSyncToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000D /* HealthSyncToken.swift */; };
+		110000000000000000000001 /* CodexCommandModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000000000000000000011 /* CodexCommandModels.swift */; };
+		110000000000000000000002 /* CodexCommandSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000000000000000000012 /* CodexCommandSettings.swift */; };
+		110000000000000000000003 /* PhoneCommandBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000000000000000000013 /* PhoneCommandBridge.swift */; };
+		110000000000000000000006 /* PendingCodexCommandStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000000000000000000015 /* PendingCodexCommandStore.swift */; };
+		140000000000000000000001 /* UnifiedReminderAuthorizationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140000000000000000000011 /* UnifiedReminderAuthorizationStore.swift */; };
+		140000000000000000000002 /* UnifiedReminderModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140000000000000000000012 /* UnifiedReminderModels.swift */; };
+		140000000000000000000003 /* UnifiedReminderExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140000000000000000000013 /* UnifiedReminderExecutor.swift */; };
+		110000000000000000000004 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 110000000000000000000014 /* WatchConnectivity.framework */; };
+		150000000000000000000001 /* YingningIntakeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000011 /* YingningIntakeModels.swift */; };
+		150000000000000000000002 /* PendingYingningIntakeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000012 /* PendingYingningIntakeStore.swift */; };
+		150000000000000000000003 /* SecretarySharedConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000013 /* SecretarySharedConfiguration.swift */; };
+		150000000000000000000004 /* CodexCommandTokenKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000014 /* CodexCommandTokenKeychain.swift */; };
+		150000000000000000000005 /* YingningIntakeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000015 /* YingningIntakeClient.swift */; };
+		150000000000000000000006 /* YingningIntakeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000016 /* YingningIntakeCoordinator.swift */; };
+		160000000000000000000001 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160000000000000000000011 /* ShareViewController.swift */; };
+		160000000000000000000002 /* ShareComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160000000000000000000012 /* ShareComposerView.swift */; };
+		160000000000000000000003 /* SharePayloadLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160000000000000000000013 /* SharePayloadLoader.swift */; };
+		160000000000000000000004 /* YingningIntakeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000011 /* YingningIntakeModels.swift */; };
+		160000000000000000000005 /* PendingYingningIntakeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000012 /* PendingYingningIntakeStore.swift */; };
+		160000000000000000000006 /* SecretarySharedConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000013 /* SecretarySharedConfiguration.swift */; };
+		160000000000000000000007 /* CodexCommandTokenKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000014 /* CodexCommandTokenKeychain.swift */; };
+		160000000000000000000008 /* YingningIntakeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150000000000000000000015 /* YingningIntakeClient.swift */; };
+		160000000000000000000009 /* InfansShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 16000000000000000000001F /* InfansShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy); }; };
+		16000000000000000000000A /* YinyueShareBackground.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 160000000000000000000016 /* YinyueShareBackground.jpg */; };
+		170000000000000000000001 /* SecretaryChatModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000011 /* SecretaryChatModels.swift */; };
+		170000000000000000000002 /* SecretaryChatPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000012 /* SecretaryChatPersistence.swift */; };
+		170000000000000000000003 /* SecretaryChatClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000013 /* SecretaryChatClient.swift */; };
+		170000000000000000000004 /* SecretaryChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000014 /* SecretaryChatStore.swift */; };
+		170000000000000000000005 /* SecretaryChatRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000015 /* SecretaryChatRootView.swift */; };
+		170000000000000000000006 /* SecretaryConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000016 /* SecretaryConversationView.swift */; };
+		170000000000000000000007 /* SecretaryMessageComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000017 /* SecretaryMessageComposer.swift */; };
+		170000000000000000000008 /* SecretarySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000018 /* SecretarySettingsView.swift */; };
+		170000000000000000000009 /* SecretaryConversationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000019 /* SecretaryConversationListView.swift */; };
+		17000000000000000000000A /* SecretaryConversationInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17000000000000000000001A /* SecretaryConversationInspectorView.swift */; };
+		17000000000000000000000B /* SecretaryAttachmentCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17000000000000000000001B /* SecretaryAttachmentCache.swift */; };
+		17000000000000000000000C /* SecretaryAttachmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17000000000000000000001C /* SecretaryAttachmentView.swift */; };
+		1C0000000000000000000001 /* SecretaryChatActionConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0000000000000000000011 /* SecretaryChatActionConfirmationView.swift */; };
+		17000000000000000000000D /* SecretaryChatExperience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17000000000000000000001D /* SecretaryChatExperience.swift */; };
+		190000000000000000000001 /* RawVoiceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190000000000000000000011 /* RawVoiceModels.swift */; };
+		190000000000000000000002 /* PendingRawVoiceRecordingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190000000000000000000012 /* PendingRawVoiceRecordingStore.swift */; };
+		190000000000000000000003 /* PhoneRawVoicePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190000000000000000000013 /* PhoneRawVoicePipeline.swift */; };
+		1A0000000000000000000001 /* SecretaryVoiceTranscriptionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000011 /* SecretaryVoiceTranscriptionClient.swift */; };
+		1A0000000000000000000002 /* SecretaryVoiceRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000012 /* SecretaryVoiceRecorder.swift */; };
+		1A0000000000000000000003 /* SecretaryVoiceInputStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000013 /* SecretaryVoiceInputStore.swift */; };
+		1B0000000000000000000001 /* SecretaryAttachmentDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B0000000000000000000011 /* SecretaryAttachmentDraftStore.swift */; };
+		1D0000000000000000000001 /* QuickPhotoInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0000000000000000000011 /* QuickPhotoInbox.swift */; };
+		7A0500000000000000000000 /* SecretaryCharacterPhotos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0500000000000000000010 /* SecretaryCharacterPhotos.swift */; };
+		7A0500000000000000000001 /* SecretarySpeechCaptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0500000000000000000011 /* SecretarySpeechCaptions.swift */; };
+		16000000000000000000000B /* Share background preview in Resources */ = {isa = PBXBuildFile; fileRef = 160000000000000000000016 /* YinyueShareBackground.jpg */; };
+		7A0600000000000000000000 /* InfansProductIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0600000000000000000010 /* InfansProductIdentity.swift */; };
+		7A0600000000000000000001 /* SecretaryBundledArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0600000000000000000011 /* SecretaryBundledArt.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		160000000000000000000030 /* PBXContainerItemProxy */ = {isa = PBXContainerItemProxy; containerPortal = 100000000000000000000041 /* Project object */; proxyType = 1; remoteGlobalIDString = 160000000000000000000040; remoteInfo = InfansShareExtension; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		160000000000000000000023 /* Embed App Extensions */ = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (160000000000000000000009 /* InfansShareExtension.appex in Embed App Extensions */); name = "Embed App Extensions"; runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		100000000000000000000001 /* InfansHealthSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfansHealthSyncApp.swift; sourceTree = "<group>"; };
+		100000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		100000000000000000000003 /* HealthSyncModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSyncModels.swift; sourceTree = "<group>"; };
+		100000000000000000000004 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		100000000000000000000005 /* HealthKitReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitReader.swift; sourceTree = "<group>"; };
+		100000000000000000000006 /* SyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCoordinator.swift; sourceTree = "<group>"; };
+		100000000000000000000007 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		1D0000000000000000000012 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
+		100000000000000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		100000000000000000000009 /* InfansHealthSync.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = InfansHealthSync.entitlements; sourceTree = "<group>"; };
+		10000000000000000000000A /* InfansHealthSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InfansHealthSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		10000000000000000000000B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		10000000000000000000000C /* HealthSyncSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSyncSchedule.swift; sourceTree = "<group>"; };
+		10000000000000000000000D /* HealthSyncToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSyncToken.swift; sourceTree = "<group>"; };
+		110000000000000000000011 /* CodexCommandModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexCommandModels.swift; sourceTree = "<group>"; };
+		110000000000000000000012 /* CodexCommandSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexCommandSettings.swift; sourceTree = "<group>"; };
+		110000000000000000000013 /* PhoneCommandBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneCommandBridge.swift; sourceTree = "<group>"; };
+		110000000000000000000014 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
+		110000000000000000000015 /* PendingCodexCommandStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingCodexCommandStore.swift; sourceTree = "<group>"; };
+		140000000000000000000011 /* UnifiedReminderAuthorizationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedReminderAuthorizationStore.swift; sourceTree = "<group>"; };
+		140000000000000000000012 /* UnifiedReminderModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedReminderModels.swift; sourceTree = "<group>"; };
+		140000000000000000000013 /* UnifiedReminderExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedReminderExecutor.swift; sourceTree = "<group>"; };
+		150000000000000000000011 /* YingningIntakeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YingningIntakeModels.swift; sourceTree = "<group>"; };
+		150000000000000000000012 /* PendingYingningIntakeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingYingningIntakeStore.swift; sourceTree = "<group>"; };
+		150000000000000000000013 /* SecretarySharedConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretarySharedConfiguration.swift; sourceTree = "<group>"; };
+		150000000000000000000014 /* CodexCommandTokenKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexCommandTokenKeychain.swift; sourceTree = "<group>"; };
+		150000000000000000000015 /* YingningIntakeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YingningIntakeClient.swift; sourceTree = "<group>"; };
+		150000000000000000000016 /* YingningIntakeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YingningIntakeCoordinator.swift; sourceTree = "<group>"; };
+		160000000000000000000011 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		160000000000000000000012 /* ShareComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareComposerView.swift; sourceTree = "<group>"; };
+		160000000000000000000013 /* SharePayloadLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharePayloadLoader.swift; sourceTree = "<group>"; };
+		160000000000000000000014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		160000000000000000000015 /* InfansShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = InfansShareExtension.entitlements; sourceTree = "<group>"; };
+		160000000000000000000016 /* YinyueShareBackground.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "YinyueShareBackground.jpg"; sourceTree = "<group>"; };
+		16000000000000000000001F /* InfansShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = InfansShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		170000000000000000000011 /* SecretaryChatModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryChatModels.swift; sourceTree = "<group>"; };
+		170000000000000000000012 /* SecretaryChatPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryChatPersistence.swift; sourceTree = "<group>"; };
+		170000000000000000000013 /* SecretaryChatClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryChatClient.swift; sourceTree = "<group>"; };
+		170000000000000000000014 /* SecretaryChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryChatStore.swift; sourceTree = "<group>"; };
+		170000000000000000000015 /* SecretaryChatRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryChatRootView.swift; sourceTree = "<group>"; };
+		170000000000000000000016 /* SecretaryConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryConversationView.swift; sourceTree = "<group>"; };
+		170000000000000000000017 /* SecretaryMessageComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryMessageComposer.swift; sourceTree = "<group>"; };
+		170000000000000000000018 /* SecretarySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretarySettingsView.swift; sourceTree = "<group>"; };
+		170000000000000000000019 /* SecretaryConversationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryConversationListView.swift; sourceTree = "<group>"; };
+		17000000000000000000001A /* SecretaryConversationInspectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryConversationInspectorView.swift; sourceTree = "<group>"; };
+		17000000000000000000001B /* SecretaryAttachmentCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryAttachmentCache.swift; sourceTree = "<group>"; };
+		17000000000000000000001C /* SecretaryAttachmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryAttachmentView.swift; sourceTree = "<group>"; };
+		1C0000000000000000000011 /* SecretaryChatActionConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryChatActionConfirmationView.swift; sourceTree = "<group>"; };
+		17000000000000000000001D /* SecretaryChatExperience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryChatExperience.swift; sourceTree = "<group>"; };
+		190000000000000000000011 /* RawVoiceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawVoiceModels.swift; sourceTree = "<group>"; };
+		190000000000000000000012 /* PendingRawVoiceRecordingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingRawVoiceRecordingStore.swift; sourceTree = "<group>"; };
+		190000000000000000000013 /* PhoneRawVoicePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneRawVoicePipeline.swift; sourceTree = "<group>"; };
+		1A0000000000000000000011 /* SecretaryVoiceTranscriptionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryVoiceTranscriptionClient.swift; sourceTree = "<group>"; };
+		1A0000000000000000000012 /* SecretaryVoiceRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryVoiceRecorder.swift; sourceTree = "<group>"; };
+		1A0000000000000000000013 /* SecretaryVoiceInputStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryVoiceInputStore.swift; sourceTree = "<group>"; };
+		1B0000000000000000000011 /* SecretaryAttachmentDraftStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryAttachmentDraftStore.swift; sourceTree = "<group>"; };
+		1D0000000000000000000011 /* QuickPhotoInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPhotoInbox.swift; sourceTree = "<group>"; };
+		7A0500000000000000000010 /* SecretaryCharacterPhotos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryCharacterPhotos.swift; sourceTree = "<group>"; };
+		7A0500000000000000000011 /* SecretarySpeechCaptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretarySpeechCaptions.swift; sourceTree = "<group>"; };
+		7A0600000000000000000010 /* InfansProductIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfansProductIdentity.swift; sourceTree = "<group>"; };
+		7A0600000000000000000011 /* SecretaryBundledArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretaryBundledArt.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		100000000000000000000021 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (100000000000000000000017 /* HealthKit.framework in Frameworks */, 1D0000000000000000000002 /* AppIntents.framework in Frameworks */, 110000000000000000000004 /* WatchConnectivity.framework in Frameworks */);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		160000000000000000000021 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		100000000000000000000030 = {
+			isa = PBXGroup;
+			children = (
+		100000000000000000000031 /* InfansHealthSync */,
+		160000000000000000000031 /* InfansShareExtension */,
+		100000000000000000000032 /* Frameworks */,
+		100000000000000000000033 /* Products */);
+			sourceTree = "<group>";
+		};
+		100000000000000000000031 /* InfansHealthSync */ = {
+			isa = PBXGroup;
+			children = (
+		100000000000000000000001 /* InfansHealthSyncApp.swift */,
+		100000000000000000000002 /* ContentView.swift */,
+		100000000000000000000003 /* HealthSyncModels.swift */,
+		100000000000000000000004 /* SettingsStore.swift */,
+		100000000000000000000005 /* HealthKitReader.swift */,
+		100000000000000000000006 /* SyncCoordinator.swift */,
+		10000000000000000000000C /* HealthSyncSchedule.swift */,
+		10000000000000000000000D /* HealthSyncToken.swift */,
+		110000000000000000000011 /* CodexCommandModels.swift */,
+		110000000000000000000012 /* CodexCommandSettings.swift */,
+		110000000000000000000013 /* PhoneCommandBridge.swift */,
+		110000000000000000000015 /* PendingCodexCommandStore.swift */,
+		140000000000000000000011 /* UnifiedReminderAuthorizationStore.swift */,
+		140000000000000000000012 /* UnifiedReminderModels.swift */,
+		140000000000000000000013 /* UnifiedReminderExecutor.swift */,
+		150000000000000000000011 /* YingningIntakeModels.swift */,
+		150000000000000000000012 /* PendingYingningIntakeStore.swift */,
+		150000000000000000000013 /* SecretarySharedConfiguration.swift */,
+		150000000000000000000014 /* CodexCommandTokenKeychain.swift */,
+		150000000000000000000015 /* YingningIntakeClient.swift */,
+		150000000000000000000016 /* YingningIntakeCoordinator.swift */,
+		1D0000000000000000000011 /* QuickPhotoInbox.swift */,
+		170000000000000000000011 /* SecretaryChatModels.swift */,
+		170000000000000000000012 /* SecretaryChatPersistence.swift */,
+		170000000000000000000013 /* SecretaryChatClient.swift */,
+		170000000000000000000014 /* SecretaryChatStore.swift */,
+		170000000000000000000015 /* SecretaryChatRootView.swift */,
+		170000000000000000000016 /* SecretaryConversationView.swift */,
+		170000000000000000000017 /* SecretaryMessageComposer.swift */,
+		170000000000000000000018 /* SecretarySettingsView.swift */,
+		170000000000000000000019 /* SecretaryConversationListView.swift */,
+		17000000000000000000001A /* SecretaryConversationInspectorView.swift */,
+		17000000000000000000001B /* SecretaryAttachmentCache.swift */,
+		17000000000000000000001C /* SecretaryAttachmentView.swift */,
+		1C0000000000000000000011 /* SecretaryChatActionConfirmationView.swift */,
+		17000000000000000000001D /* SecretaryChatExperience.swift */,
+		7A0500000000000000000011 /* SecretarySpeechCaptions.swift */,
+		7A0500000000000000000010 /* SecretaryCharacterPhotos.swift */,
+		7A0600000000000000000010 /* InfansProductIdentity.swift */,
+		7A0600000000000000000011 /* SecretaryBundledArt.swift */,
+		190000000000000000000011 /* RawVoiceModels.swift */,
+		190000000000000000000012 /* PendingRawVoiceRecordingStore.swift */,
+		190000000000000000000013 /* PhoneRawVoicePipeline.swift */,
+		1A0000000000000000000011 /* SecretaryVoiceTranscriptionClient.swift */,
+		1A0000000000000000000012 /* SecretaryVoiceRecorder.swift */,
+		1A0000000000000000000013 /* SecretaryVoiceInputStore.swift */,
+		1B0000000000000000000011 /* SecretaryAttachmentDraftStore.swift */,
+		10000000000000000000000B /* Assets.xcassets */,
+		100000000000000000000008 /* Info.plist */,
+		100000000000000000000009 /* InfansHealthSync.entitlements */);
+			path = InfansHealthSync;
+			sourceTree = "<group>";
+		};
+		100000000000000000000032 /* Frameworks */ = {isa = PBXGroup; children = (100000000000000000000007 /* HealthKit.framework */, 1D0000000000000000000012 /* AppIntents.framework */, 110000000000000000000014 /* WatchConnectivity.framework */); name = Frameworks; sourceTree = "<group>"; };
+		100000000000000000000033 /* Products */ = {isa = PBXGroup; children = (10000000000000000000000A /* InfansHealthSync.app */, 16000000000000000000001F /* InfansShareExtension.appex */); name = Products; sourceTree = "<group>"; };
+		160000000000000000000031 /* InfansShareExtension */ = {isa = PBXGroup; children = (160000000000000000000011 /* ShareViewController.swift */, 160000000000000000000012 /* ShareComposerView.swift */, 160000000000000000000013 /* SharePayloadLoader.swift */, 160000000000000000000014 /* Info.plist */, 160000000000000000000015 /* InfansShareExtension.entitlements */, 160000000000000000000016 /* YinyueShareBackground.jpg */); path = InfansShareExtension; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		100000000000000000000040 /* InfansHealthSync */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 100000000000000000000051 /* Build configuration list for PBXNativeTarget "InfansHealthSync" */;
+			buildPhases = (
+		100000000000000000000020 /* Sources */,
+		100000000000000000000021 /* Frameworks */,
+		100000000000000000000022 /* Resources */,
+		160000000000000000000023 /* Embed App Extensions */);
+			buildRules = ();
+			dependencies = (160000000000000000000041 /* PBXTargetDependency */);
+			name = InfansHealthSync;
+			productName = InfansHealthSync;
+			productReference = 10000000000000000000000A /* InfansHealthSync.app */;
+			productType = "com.apple.product-type.application";
+		};
+		160000000000000000000040 /* InfansShareExtension */ = {isa = PBXNativeTarget; buildConfigurationList = 160000000000000000000051 /* Build configuration list for PBXNativeTarget "InfansShareExtension" */; buildPhases = (160000000000000000000020 /* Sources */, 160000000000000000000021 /* Frameworks */, 160000000000000000000022 /* Resources */); buildRules = (); dependencies = (); name = InfansShareExtension; productName = InfansShareExtension; productReference = 16000000000000000000001F /* InfansShareExtension.appex */; productType = "com.apple.product-type.app-extension"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		100000000000000000000041 /* Project object */ = {
+			isa = PBXProject;
+			attributes = { BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 2660; LastUpgradeCheck = 2660; TargetAttributes = { 100000000000000000000040 = { CreatedOnToolsVersion = 26.6; }; 160000000000000000000040 = { CreatedOnToolsVersion = 26.6; }; }; };
+			buildConfigurationList = 100000000000000000000050 /* Build configuration list for PBXProject "InfansHealthSync" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = zh-Hans;
+			hasScannedForEncodings = 0;
+			knownRegions = (Base, "zh-Hans",);
+			mainGroup = 100000000000000000000030;
+			productRefGroup = 100000000000000000000033 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (100000000000000000000040 /* InfansHealthSync */, 160000000000000000000040 /* InfansShareExtension */);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		100000000000000000000022 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (100000000000000000000018 /* Assets.xcassets in Resources */, 16000000000000000000000B /* Share background preview in Resources */); runOnlyForDeploymentPostprocessing = 0; };
+		160000000000000000000022 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (16000000000000000000000A /* YinyueShareBackground.jpg in Resources */); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		100000000000000000000020 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+		100000000000000000000011 /* InfansHealthSyncApp.swift in Sources */,
+		100000000000000000000012 /* ContentView.swift in Sources */,
+		100000000000000000000013 /* HealthSyncModels.swift in Sources */,
+		100000000000000000000014 /* SettingsStore.swift in Sources */,
+		100000000000000000000015 /* HealthKitReader.swift in Sources */,
+		100000000000000000000016 /* SyncCoordinator.swift in Sources */,
+		100000000000000000000019 /* HealthSyncSchedule.swift in Sources */,
+		10000000000000000000001A /* HealthSyncToken.swift in Sources */,
+		110000000000000000000001 /* CodexCommandModels.swift in Sources */,
+		110000000000000000000002 /* CodexCommandSettings.swift in Sources */,
+		110000000000000000000003 /* PhoneCommandBridge.swift in Sources */,
+		110000000000000000000006 /* PendingCodexCommandStore.swift in Sources */,
+		140000000000000000000001 /* UnifiedReminderAuthorizationStore.swift in Sources */,
+		140000000000000000000002 /* UnifiedReminderModels.swift in Sources */,
+		140000000000000000000003 /* UnifiedReminderExecutor.swift in Sources */,
+		150000000000000000000001 /* YingningIntakeModels.swift in Sources */,
+		150000000000000000000002 /* PendingYingningIntakeStore.swift in Sources */,
+		150000000000000000000003 /* SecretarySharedConfiguration.swift in Sources */,
+		150000000000000000000004 /* CodexCommandTokenKeychain.swift in Sources */,
+		150000000000000000000005 /* YingningIntakeClient.swift in Sources */,
+		150000000000000000000006 /* YingningIntakeCoordinator.swift in Sources */,
+		170000000000000000000001 /* SecretaryChatModels.swift in Sources */,
+		170000000000000000000002 /* SecretaryChatPersistence.swift in Sources */,
+		170000000000000000000003 /* SecretaryChatClient.swift in Sources */,
+		170000000000000000000004 /* SecretaryChatStore.swift in Sources */,
+		170000000000000000000005 /* SecretaryChatRootView.swift in Sources */,
+		170000000000000000000006 /* SecretaryConversationView.swift in Sources */,
+		170000000000000000000007 /* SecretaryMessageComposer.swift in Sources */,
+		170000000000000000000008 /* SecretarySettingsView.swift in Sources */,
+		170000000000000000000009 /* SecretaryConversationListView.swift in Sources */,
+		17000000000000000000000A /* SecretaryConversationInspectorView.swift in Sources */,
+		17000000000000000000000B /* SecretaryAttachmentCache.swift in Sources */,
+		17000000000000000000000C /* SecretaryAttachmentView.swift in Sources */,
+		1C0000000000000000000001 /* SecretaryChatActionConfirmationView.swift in Sources */,
+		17000000000000000000000D /* SecretaryChatExperience.swift in Sources */,
+		7A0500000000000000000001 /* SecretarySpeechCaptions.swift in Sources */,
+		7A0500000000000000000000 /* SecretaryCharacterPhotos.swift in Sources */,
+		7A0600000000000000000000 /* InfansProductIdentity.swift in Sources */,
+		7A0600000000000000000001 /* SecretaryBundledArt.swift in Sources */,
+		190000000000000000000001 /* RawVoiceModels.swift in Sources */,
+		190000000000000000000002 /* PendingRawVoiceRecordingStore.swift in Sources */,
+		190000000000000000000003 /* PhoneRawVoicePipeline.swift in Sources */,
+		1A0000000000000000000001 /* SecretaryVoiceTranscriptionClient.swift in Sources */,
+		1A0000000000000000000002 /* SecretaryVoiceRecorder.swift in Sources */,
+		1A0000000000000000000003 /* SecretaryVoiceInputStore.swift in Sources */,
+		1B0000000000000000000001 /* SecretaryAttachmentDraftStore.swift in Sources */,
+		1D0000000000000000000001 /* QuickPhotoInbox.swift in Sources */);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		160000000000000000000020 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (160000000000000000000001 /* ShareViewController.swift in Sources */, 160000000000000000000002 /* ShareComposerView.swift in Sources */, 160000000000000000000003 /* SharePayloadLoader.swift in Sources */, 160000000000000000000004 /* YingningIntakeModels.swift in Sources */, 160000000000000000000005 /* PendingYingningIntakeStore.swift in Sources */, 160000000000000000000006 /* SecretarySharedConfiguration.swift in Sources */, 160000000000000000000007 /* CodexCommandTokenKeychain.swift in Sources */, 160000000000000000000008 /* YingningIntakeClient.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		160000000000000000000041 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 160000000000000000000040 /* InfansShareExtension */; targetProxy = 160000000000000000000030 /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		100000000000000000000060 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; GCC_C_LANGUAGE_STANDARD = gnu17; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_VERSION = 5.0; }; name = Debug; };
+		100000000000000000000061 /* Release */ = {isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; GCC_C_LANGUAGE_STANDARD = gnu17; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_VERSION = 5.0; VALIDATE_PRODUCT = YES; }; name = Release; };
+		100000000000000000000062 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES; CODE_SIGN_ENTITLEMENTS = InfansHealthSync/InfansHealthSync.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = InfansHealthSync/Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.infans.secretary; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		100000000000000000000063 /* Release */ = {isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES; CODE_SIGN_ENTITLEMENTS = InfansHealthSync/InfansHealthSync.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = InfansHealthSync/Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.infans.secretary; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+		160000000000000000000062 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = { APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = InfansShareExtension/InfansShareExtension.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEBUG_INFORMATION_FORMAT = dwarf; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = InfansShareExtension/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.infans.secretary.share; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SKIP_INSTALL = YES; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		160000000000000000000063 /* Release */ = {isa = XCBuildConfiguration; buildSettings = { APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = InfansShareExtension/InfansShareExtension.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = InfansShareExtension/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.infans.secretary.share; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SKIP_INSTALL = YES; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; VALIDATE_PRODUCT = YES; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		100000000000000000000050 /* Build configuration list for PBXProject "InfansHealthSync" */ = {isa = XCConfigurationList; buildConfigurations = (100000000000000000000060 /* Debug */, 100000000000000000000061 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		100000000000000000000051 /* Build configuration list for PBXNativeTarget "InfansHealthSync" */ = {isa = XCConfigurationList; buildConfigurations = (100000000000000000000062 /* Debug */, 100000000000000000000063 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		160000000000000000000051 /* Build configuration list for PBXNativeTarget "InfansShareExtension" */ = {isa = XCConfigurationList; buildConfigurations = (160000000000000000000062 /* Debug */, 160000000000000000000063 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = 100000000000000000000041 /* Project object */;
+}

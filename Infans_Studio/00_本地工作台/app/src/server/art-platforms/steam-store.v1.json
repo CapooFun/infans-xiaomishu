@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "steam-store.v1",
+  "name": "Steam 商店素材规则 v1",
+  "verifiedAt": "2026-08-31",
+  "source": {
+    "label": "Steamworks 图像资产官方文档",
+    "url": "https://partner.steamgames.com/doc/store/assets?language=schinese"
+  },
+  "note": "尺寸和格式合规只是技术检查；角色身份、Logo、视觉一致性和是否可上传都必须单独人工确认。",
+  "slots": [
+    { "id": "header-capsule", "name": "Header Capsule", "required": true, "width": 920, "height": 430, "formats": ["jpg", "jpeg", "png"], "safeArea": "仅保留游戏作品、游戏名和正式副标题；小尺寸仍须可读。", "logoExpectation": "required" },
+    { "id": "small-capsule", "name": "Small Capsule", "required": true, "width": 462, "height": 174, "formats": ["jpg", "jpeg", "png"], "safeArea": "缩小到商店列表尺寸仍要保证标题可读。", "logoExpectation": "required" },
+    { "id": "main-capsule", "name": "Main Capsule", "required": true, "width": 1232, "height": 706, "formats": ["jpg", "jpeg", "png"], "safeArea": "不得添加评分、奖项、折扣或其他宣传文字。", "logoExpectation": "required" },
+    { "id": "vertical-capsule", "name": "Vertical Capsule", "required": true, "width": 748, "height": 896, "formats": ["jpg", "jpeg", "png"], "safeArea": "竖向裁切后主体和标题仍需清晰。", "logoExpectation": "required" },
+    { "id": "page-background", "name": "Page Background", "required": false, "width": 1438, "height": 810, "formats": ["jpg", "jpeg", "png"], "safeArea": "背景应克制，不要过亮或抢占前景信息。", "logoExpectation": "optional" },
+    { "id": "library-capsule", "name": "Library Capsule", "required": true, "width": 600, "height": 900, "formats": ["png", "jpg", "jpeg"], "safeArea": "必须包含游戏 Logo，除正式副标题外不应有其他文字。", "logoExpectation": "required" },
+    { "id": "library-hero", "name": "Library Hero", "required": true, "width": 3840, "height": 1240, "formats": ["png"], "safeArea": "只放美术作品，不应出现任何文字。", "logoExpectation": "forbidden" },
+    { "id": "library-logo", "name": "Library Logo", "required": true, "eitherWidth": 1280, "eitherHeight": 720, "formats": ["png"], "safeArea": "只保留标题字标与可选图形标，透明背景。", "logoExpectation": "only" },
+    { "id": "library-header", "name": "Library Header", "required": true, "width": 920, "height": 430, "formats": ["png", "jpg", "jpeg"], "safeArea": "保持与商店套图同一主视觉与标题识别。", "logoExpectation": "required" },
+    { "id": "screenshots", "name": "游戏截图", "required": true, "minWidth": 1920, "minHeight": 1080, "aspectRatio": 1.7777777778, "formats": ["jpg", "jpeg", "png"], "minimumCount": 5, "safeArea": "使用当前实机画面，不得用历史版本或 mockup 冒充。", "logoExpectation": "not-applicable" },
+    { "id": "shortcut-icon", "name": "快捷方式图标", "required": true, "width": 256, "height": 256, "formats": ["ico", "png"], "safeArea": "小尺寸下仍需可识别。", "logoExpectation": "optional" },
+    { "id": "app-icon", "name": "应用图标", "required": true, "width": 184, "height": 184, "formats": ["jpg", "jpeg"], "safeArea": "使用当前角色或产品身份一致的图标。", "logoExpectation": "optional" }
+  ]
+}

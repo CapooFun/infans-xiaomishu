@@ -1,0 +1,22 @@
+{
+  "name": "infans-readonly-vault",
+  "version": "0.2.0",
+  "description": "只读查询使用者自己配置的知识库，并按知识地图完成选题与学习交接",
+  "author": {
+    "name": "Shanghai Infans Digital Technology Co., Ltd."
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Infans 只读资料库",
+    "shortDescription": "查询个人资料，并从知识地图逐层选择和学习",
+    "longDescription": "只读搜索和读取使用者配置的知识库。学习请求会先读取知识地图协议、真实目录和最近进度。",
+    "developerName": "Infans",
+    "category": "Productivity",
+    "capabilities": [
+      "Search",
+      "Read only",
+      "Knowledge learning"
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}

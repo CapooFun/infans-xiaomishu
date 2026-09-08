@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+version="${1:?version required}"
+root="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+out="${2:-/private/tmp/secretary-mailbox-$version}"
+mkdir -p "$out"
+cp "$root/deploy/secretary-mailbox/server.mjs" "$out/"
+cp "$root/deploy/secretary-mailbox/Dockerfile" "$out/"
+cp "$root/deploy/secretary-mailbox/compose.yaml" "$out/"
+cp "$root/deploy/secretary-mailbox/deploy.sh" "$out/"
+cp "$root/deploy/secretary-mailbox/rollback.sh" "$out/"
+cp "$root/src/server/workbench-secretary-mailbox.mjs" "$out/"
+cp "$root/src/server/workbench-yingning-inbox.mjs" "$out/"
+cp "$root/src/server/vault-paths.mjs" "$out/"
+cp "$root/src/server/workbench-errors.mjs" "$out/"
+tar -C "$(dirname "$out")" -czf "$out.tar.gz" "$(basename "$out")"
+printf '%s\n' "$out.tar.gz"

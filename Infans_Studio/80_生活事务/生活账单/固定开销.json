@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "id": "example-cloud",
+      "name": "示例云盘",
+      "kind": "monthly",
+      "subgroup": "subscription",
+      "dueDay": 15,
+      "amount": 100,
+      "currency": "JPY",
+      "note": "示例订阅，不是真实扣款。"
+    }
+  ]
+}

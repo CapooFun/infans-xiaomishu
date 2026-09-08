@@ -1,0 +1,5 @@
+LXGW WenKai Regular 1.521 (2025-10-10)
+LXGW / Fontworks Inc.
+SIL Open Font License 1.1; see OFL.txt.
+Source: QuitToCultivate/assets/fonts/LXGWWenKai-Regular.ttf
+Derived for web use as Unicode-range WOFF2 shards; all source cmap codepoints preserved.

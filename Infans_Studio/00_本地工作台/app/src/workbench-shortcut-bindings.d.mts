@@ -1,0 +1,13 @@
+export type WorkbenchShortcutCommand = "bookmark-1" | "bookmark-2" | "bookmark-3" | "bookmark-4" | "bookmark-5" | "bookmark-6" | "history-back" | "history-forward" | "toggle-sidebar";
+export type ShortcutBinding = { code: string; meta: boolean; ctrl: boolean; alt: boolean; shift: boolean };
+export type ShortcutBindings = Record<WorkbenchShortcutCommand, ShortcutBinding | null>;
+export type ShortcutBindingIssue = { command: WorkbenchShortcutCommand | null; kind: "invalid" | "reserved" | "conflict"; message: string; conflictsWith?: WorkbenchShortcutCommand };
+export const SHORTCUT_COMMANDS: readonly { id: WorkbenchShortcutCommand; label: string; group: string }[];
+export const DEFAULT_SHORTCUT_BINDINGS: Readonly<ShortcutBindings>;
+export function normalizeShortcutBinding(value: unknown): ShortcutBinding | null;
+export function normalizeShortcutBindings(value?: unknown): ShortcutBindings;
+export function validateShortcutBindings(value: unknown): ShortcutBindingIssue[];
+export function shortcutBindingSignature(binding: ShortcutBinding | null): string;
+export function shortcutBindingWarning(binding: ShortcutBinding | null, command?: WorkbenchShortcutCommand): string;
+export function formatShortcutBinding(binding: ShortcutBinding | null): string;
+export function shortcutBindingAriaLabel(binding: ShortcutBinding | null): string;

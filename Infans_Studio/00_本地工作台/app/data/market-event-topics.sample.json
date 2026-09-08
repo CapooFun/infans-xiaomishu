@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "sample": true,
+  "topics": [
+    {
+      "schemaVersion": 1,
+      "id": "sandbox-us-cpi",
+      "title": "美国 CPI 发布观察（沙盘样例）",
+      "eventDate": "2026-08-20",
+      "eventTime": "待官方确认",
+      "region": "美国",
+      "category": "通胀",
+      "status": "preview",
+      "latestConclusion": "这是界面沙盘：尚未公布，不形成事实结论。",
+      "missingEvidence": [
+        "官方发布时间与完整口径",
+        "有明确调查方和截止时间的共识预期",
+        "事件前跨市场基线"
+      ],
+      "updatedAt": "2026-08-14T12:00:00+09:00",
+      "closeRule": "事件后约 3 天，若无持续重大驱动则结案；历史永久保留。",
+      "sample": true,
+      "nodes": [
+        {
+          "phase": "preview",
+          "status": "current",
+          "observedAt": "2026-08-14",
+          "conclusion": "仅建立待核验清单，不提前押注方向。",
+          "facts": ["本节点内容仅用于验证专题工作台展示。"],
+          "candidateJudgments": ["候选判断应等待官方结果与市场反应共同支持。"],
+          "missingEvidence": ["官方安排", "共识口径", "事件前基线"],
+          "sources": []
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "sandbox-central-bank-review",
+      "title": "央行政策发布复盘（沙盘样例）",
+      "eventDate": "2026-07-31",
+      "eventTime": "沙盘记录",
+      "region": "全球",
+      "category": "央行",
+      "status": "closed",
+      "latestConclusion": "沙盘已结案：没有保存任何现实市场判断。",
+      "missingEvidence": [],
+      "updatedAt": "2026-08-03T18:00:00+09:00",
+      "closeRule": "事件后约 3 天，若无持续重大驱动则结案；历史永久保留。",
+      "sample": true,
+      "nodes": [
+        {
+          "phase": "preview",
+          "status": "recorded",
+          "observedAt": "2026-07-29",
+          "conclusion": "沙盘事前记录已建立。",
+          "facts": ["示例不包含现实政策事实。"],
+          "candidateJudgments": [],
+          "missingEvidence": [],
+          "sources": []
+        },
+        {
+          "phase": "release",
+          "status": "recorded",
+          "observedAt": "2026-07-31",
+          "conclusion": "沙盘公布节点已记录。",
+          "facts": ["示例不包含现实公布结果。"],
+          "candidateJudgments": ["界面可并列呈现候选解释，但不升级为操作建议。"],
+          "missingEvidence": [],
+          "sources": []
+        },
+        {
+          "phase": "d1",
+          "status": "recorded",
+          "observedAt": "2026-08-01",
+          "conclusion": "沙盘 D+1 节点已记录。",
+          "facts": [],
+          "candidateJudgments": [],
+          "missingEvidence": [],
+          "sources": []
+        },
+        {
+          "phase": "d3",
+          "status": "recorded",
+          "observedAt": "2026-08-03",
+          "conclusion": "没有持续驱动，按沙盘规则结案。",
+          "facts": [],
+          "candidateJudgments": [],
+          "missingEvidence": [],
+          "sources": []
+        },
+        {
+          "phase": "closed",
+          "status": "recorded",
+          "observedAt": "2026-08-03",
+          "conclusion": "沙盘记录永久保留，供界面与契约测试。",
+          "facts": [],
+          "candidateJudgments": [],
+          "missingEvidence": [],
+          "sources": []
+        }
+      ]
+    }
+  ]
+}

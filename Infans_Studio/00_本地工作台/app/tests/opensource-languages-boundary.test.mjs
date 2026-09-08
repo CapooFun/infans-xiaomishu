@@ -1,0 +1,40 @@
+import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const appRoot = path.dirname(fileURLToPath(new URL(".", import.meta.url)));
+const studioRoot = path.resolve(appRoot, "../..");
+
+test("语言学习用示例进度，不含真题练习跳转", async () => {
+  const reading = await readFile(new URL("../src/pages/languages/ReadingBoard.tsx", import.meta.url), "utf8");
+  const shared = await readFile(new URL("../src/pages/languages/shared.ts", import.meta.url), "utf8");
+  const exam = await readFile(new URL("../src/server/workbench-japanese-exam.mjs", import.meta.url), "utf8");
+  const modes = await readFile(new URL("../src/server/workbench-japanese-exam-modes.mjs", import.meta.url), "utf8");
+  const routes = await readFile(new URL("../src/server/workbench-routes.mjs", import.meta.url), "utf8");
+  const languagesPage = await readFile(new URL("../src/pages/languages/LanguagesPage.tsx", import.meta.url), "utf8");
+  const exploration = await readFile(new URL("../src/pages/languages/ExplorationMatrix.tsx", import.meta.url), "utf8");
+  const examStage = await readFile(new URL("../src/pages/languages/ExamStage.tsx", import.meta.url), "utf8");
+  const anki = await readFile(new URL("../src/server/workbench-anki.mjs", import.meta.url), "utf8");
+  const today = await readFile(new URL("../src/server/workbench-japanese-today.mjs", import.meta.url), "utf8");
+  const status = await readFile(path.join(studioRoot, "55_语言学习/日语/练习记录与进度/current_status.md"), "utf8");
+  const demo = JSON.parse(await readFile(path.join(studioRoot, "55_语言学习/日语/练习记录与进度/public-demo.json"), "utf8"));
+  assert.doesNotMatch(reading, /真题阅读|随便练几篇|真题原文/);
+  assert.doesNotMatch(shared, /真题练习|launch-exam|openExamHall|127\.0\.0\.1:3000/);
+  assert.doesNotMatch(exam, /真题练习 · 电子考场|独立电子考场/);
+  assert.doesNotMatch(modes, /Sites\/jlpt-exam|os\.homedir\(\)/);
+  assert.doesNotMatch(routes, /launch-exam|JLPT_EXAM_LAUNCH_URL/);
+  assert.doesNotMatch(languagesPage, /eggrolls|真题练习|openExamHall/);
+  assert.doesNotMatch(exploration, /JLPT 进度与考核|最近 JLPT 考核|全卷 /);
+  assert.doesNotMatch(examStage, /关闭考场|真题练习/);
+  assert.doesNotMatch(anki, /eggrolls-JLPT10k/);
+  assert.doesNotMatch(today, /真题测试/);
+  assert.equal(existsSync(path.join(appRoot, "scripts/launch-chrome-exam.sh")), false);
+  assert.equal(existsSync(path.join(appRoot, "scripts/ocr-jlpt-pdf.swift")), false);
+  assert.equal(demo.demo, true);
+  assert.match(status, /开源示例进度/);
+  assert.match(status, /JLPT::示例词汇/);
+  assert.doesNotMatch(status, /连续学习 59|已学 3327|eggrolls/);
+});

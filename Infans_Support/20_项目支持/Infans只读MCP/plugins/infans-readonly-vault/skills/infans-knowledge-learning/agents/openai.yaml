@@ -1,0 +1,4 @@
+interface:
+  display_name: "Infans 知识地图学习"
+  short_description: "从真实知识地图逐层选题、自由学习并生成可核验的回写报告"
+  default_prompt: "Use $infans-knowledge-learning to help me learn something from my Infans knowledge map."

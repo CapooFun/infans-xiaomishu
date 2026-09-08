@@ -1,0 +1,19 @@
+{
+  "name": "小秘书",
+  "short_name": "小秘书",
+  "description": "本地优先个人工作系统",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#060d10",
+  "theme_color": "#060d10",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/theme/avatar-yinyue-public.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

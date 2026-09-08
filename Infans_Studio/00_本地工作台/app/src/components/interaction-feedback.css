@@ -1,0 +1,31 @@
+/* 操作时一次亮起，读完即散。全部取现有玄夜／晴岚角色。 */
+:root[data-visual-transition="appearance"]::view-transition { pointer-events:none; }
+:root[data-visual-transition="appearance"]::view-transition-group(root) { animation-duration:.52s; }
+:root[data-visual-transition="appearance"]::view-transition-old(root) { animation:appearance-night-out .52s ease-out both; }
+:root[data-visual-transition="appearance"]::view-transition-new(root) { animation:appearance-dawn-in .52s ease-out both; }
+@keyframes appearance-night-out { to { opacity:0; } }
+@keyframes appearance-dawn-in { from { opacity:0; } to { opacity:1; } }
+
+.interaction-feedback { position:fixed;z-index:650;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);width:max-content;max-width:calc(100vw - 32px);min-height:88px;display:flex;align-items:center;gap:17px;padding:16px 30px 16px 18px;border:1px solid var(--line-strong);border-radius:16px 16px 16px 5px;color:var(--gold);background:linear-gradient(115deg,var(--surface-2),color-mix(in srgb,var(--teal) 13%,var(--surface-2)));box-shadow:0 18px 48px var(--shadow-soft);pointer-events:none;transform:translateX(-50%);animation:interaction-cue-life 1.3s ease both;isolation:isolate; }
+.interaction-feedback.is-arrival { animation-duration:1.8s; }
+.interaction-feedback::before { content:"";position:absolute;inset:5px;border:1px solid var(--line);border-radius:12px 12px 12px 3px;pointer-events:none; }
+.interaction-feedback-seal { position:relative;flex:none;width:56px;height:56px;border:1px solid var(--line-strong);border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,var(--teal-soft),transparent 70%); }
+.interaction-feedback-seal > svg { animation:interaction-seal-in .4s cubic-bezier(.2,.8,.2,1) both; }
+.interaction-feedback-seal img { width:48px;height:48px;border-radius:50%;object-fit:cover;animation:interaction-seal-in .48s ease-out both; }
+.interaction-feedback-orbit { position:absolute;inset:-7px;border:1px solid var(--gold);border-right-color:transparent;border-left-color:transparent;border-radius:50%;animation:interaction-orbit .85s ease-out both; }
+.interaction-feedback-copy { display:grid;gap:5px;min-width:0; }
+.interaction-feedback-copy span { color:var(--muted);font:var(--text-micro)/1.3 var(--font-body);letter-spacing:.12em; }
+.interaction-feedback-copy strong { color:var(--ink);font:500 var(--text-title-sm)/1.2 var(--font-title);letter-spacing:.12em; }
+.interaction-feedback-line { position:absolute;bottom:-1px;left:18px;right:18px;height:2px;transform-origin:left;background:linear-gradient(90deg,transparent,var(--teal),var(--gold),transparent);animation:interaction-line-in .65s ease-out both; }
+.interaction-feedback.is-complete { color:var(--teal); }
+.interaction-feedback.is-complete .interaction-feedback-seal::after { content:"";position:absolute;inset:-10px;border:1px solid var(--teal);border-radius:50%;animation:interaction-completion-ring .75s ease-out both; }
+@keyframes interaction-cue-life { 0% { opacity:0;transform:translate(-50%,10px); } 18%,76% { opacity:1;transform:translate(-50%,0); } 100% { opacity:0;transform:translate(-50%,-4px); } }
+@keyframes interaction-seal-in { from { opacity:0;transform:scale(.76); } to { opacity:1;transform:scale(1); } }
+@keyframes interaction-orbit { from { opacity:0;transform:rotate(-65deg) scale(.9); } 40% { opacity:.85; } to { opacity:.35;transform:rotate(15deg) scale(1); } }
+@keyframes interaction-line-in { from { opacity:0;transform:scaleX(.1); } to { opacity:.85;transform:scaleX(1); } }
+@keyframes interaction-completion-ring { from { opacity:.7;transform:scale(.65); } to { opacity:0;transform:scale(1.45); } }
+@media (max-width:680px) { .interaction-feedback { min-height:76px;gap:13px;padding:13px 22px 13px 15px; }.interaction-feedback-seal { width:46px;height:46px; }.interaction-feedback-seal img { width:40px;height:40px; } }
+@media (prefers-reduced-motion:reduce) {
+  :root[data-visual-transition="appearance"]::view-transition-group(root),:root[data-visual-transition="appearance"]::view-transition-old(root),:root[data-visual-transition="appearance"]::view-transition-new(root) { animation:none; }
+  .interaction-feedback,.interaction-feedback *,.interaction-feedback *::after { animation:none; }
+}

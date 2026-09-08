@@ -1,0 +1,168 @@
+.gantt-lane-block.tone-life,
+.gantt-lane-axis.is-life {
+  padding-bottom: 8px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mist-blue) 4%, transparent), transparent);
+}
+
+.calendar-life-category,
+.calendar-life-category-axis,
+.calendar-company-travel,
+.calendar-company-travel-axis {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: height 240ms cubic-bezier(.22, .75, .2, 1);
+}
+
+.calendar-company-travel-head {
+  grid-template-columns: 18px 18px minmax(0, 1fr);
+  gap: 4px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 8%, transparent), transparent 72%);
+}
+
+.calendar-company-travel-span {
+  margin-left: 8px;
+  color: var(--quiet);
+  font: var(--text-meta) Georgia, serif;
+}
+
+.calendar-company-travel-events {
+  position: absolute;
+  top: var(--gantt-row-h);
+  right: 0;
+  left: 0;
+}
+
+.calendar-company-travel-event-axis-row {
+  position: absolute;
+  inset: 0 0 auto;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.calendar-company-travel-axis.is-open .calendar-company-travel-event-axis-row {
+  opacity: 1;
+}
+
+/* 差旅首尾常有行程点：周排期时只让标题空出两个日格，不改真实日期范围。 */
+.gantt-axis.is-weeks .calendar-company-travel-axis > .gantt-bar-row:first-child .gantt-bar span {
+  padding-left: calc(var(--gantt-day-width) * 2);
+}
+
+.calendar-life-category-head {
+  position: relative;
+}
+
+.calendar-life-category-label {
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  display: flex;
+  align-items: center;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.calendar-life-category-label small {
+  margin-left: auto;
+  color: var(--quiet);
+  font: var(--text-meta) Georgia, serif;
+}
+
+.calendar-life-events {
+  position: absolute;
+  top: var(--gantt-row-h);
+  right: 0;
+  left: 0;
+}
+
+.calendar-life-row,
+.calendar-event-readonly {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 140ms ease, transform 220ms cubic-bezier(.22, .75, .2, 1);
+}
+
+.calendar-life-category.is-open .calendar-life-row,
+.calendar-company-travel.is-open .calendar-life-row,
+.calendar-event-readonly {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 两端文字用不同字号，但必须共享同一基线。 */
+.gantt-corner-labels {
+  align-items: baseline;
+}
+
+.gantt-corner-labels small {
+  line-height: 1.2;
+}
+
+.calendar-life-empty,
+.calendar-life-axis-empty {
+  height: var(--gantt-row-h);
+  min-height: var(--gantt-row-h);
+  box-sizing: border-box;
+  border-top: 1px solid color-mix(in srgb, var(--surface-2) 3%, transparent);
+}
+
+.calendar-life-empty {
+  display: flex;
+  align-items: center;
+  padding: 0 14px 0 42px;
+  color: var(--quiet);
+  font-size: var(--text-meta);
+}
+
+.calendar-life-axis-row {
+  position: absolute;
+  inset: 0 0 auto;
+}
+
+.calendar-life-event-axis-row {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.calendar-life-category-axis.is-open .calendar-life-event-axis-row {
+  opacity: 1;
+}
+
+.calendar-event-marker-slot {
+  position: absolute;
+  z-index: 2;
+  width: 0;
+  height: var(--gantt-row-h);
+  transition: top 240ms cubic-bezier(.22, .75, .2, 1);
+}
+
+.calendar-company-travel-marker {
+  transition: top 240ms cubic-bezier(.22, .75, .2, 1), margin-left 240ms cubic-bezier(.22, .75, .2, 1), transform 240ms cubic-bezier(.22, .75, .2, 1);
+}
+
+/* 月度路线图中相隔数日的折叠航班仍按真实日期定位；略收图标，避免光晕互相遮住。 */
+.gantt-axis.is-roadmap .calendar-company-travel-axis:not(.is-open) .calendar-company-travel-marker .gantt-milestone {
+  transform: translate(-50%, -50%) scale(.84);
+}
+
+.calendar-event-marker-slot .gantt-milestone {
+  left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-life-category,
+  .calendar-life-category-axis,
+  .calendar-company-travel,
+  .calendar-company-travel-axis,
+  .calendar-life-row,
+  .calendar-life-event-axis-row,
+  .calendar-event-marker-slot,
+  .calendar-company-travel-event-axis-row {
+    transition: none;
+  }
+}

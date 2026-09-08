@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "privateCollections": [],
+  "project": {
+    "id": "secretary-visual-assets",
+    "name": "小秘书",
+    "type": "non-game-local-design-assets"
+  },
+  "snapshotDate": "2026-09-06",
+  "phase": "pre-migration",
+  "authority": "Infans 开源候选公开银月、梅凝头像",
+  "sourcePlan": {
+    "officialRoot": "00_本地工作台/10_设计/50_视觉资产/小秘书",
+    "migrationPolicy": "公开候选登记银月、梅凝公开 SVG 头像，不含其他角色。",
+    "categories": [
+      "正式秘书"
+    ],
+    "currentPathsRemainRuntimeTruth": true
+  },
+  "exclusions": [],
+  "statusDefinitions": {
+    "formal": "可公开使用的正式素材。",
+    "candidate": "待确认。",
+    "legacy-reference": "历史参考。",
+    "needs-confirmation": "缺证据。"
+  },
+  "summary": {
+    "assetCount": 2,
+    "fileCount": 4,
+    "byGovernanceStatus": {
+      "formal": 2
+    },
+    "byAssetClass": {
+      "master": 2
+    },
+    "byReferenceStatus": {
+      "referenced": 2
+    }
+  },
+  "assets": [
+    {
+      "assetId": "secvis-yinyue-public-60294c376801",
+      "subject": "银月",
+      "kind": "头像",
+      "assetClass": "master",
+      "stage": "approved",
+      "governanceStatus": "formal",
+      "canonicalPath": "00_本地工作台/10_设计/50_视觉资产/小秘书/角色/银月/头像/银月_公开头像.svg",
+      "plannedCanonicalPath": "00_本地工作台/10_设计/50_视觉资产/小秘书/角色/银月/头像/银月_公开头像.svg",
+      "plannedDisposition": "official-master-current",
+      "currentPaths": [
+        "00_本地工作台/10_设计/50_视觉资产/小秘书/角色/银月/头像/银月_公开头像.svg",
+        "00_本地工作台/app/public/theme/avatar-yinyue-public.svg"
+      ],
+      "files": [
+        {
+          "path": "00_本地工作台/10_设计/50_视觉资产/小秘书/角色/银月/头像/银月_公开头像.svg",
+          "bytes": 360,
+          "format": "SVG",
+          "width": 256,
+          "height": 256,
+          "hasAlpha": true,
+          "hash": "60294c376801ac1944cb5fd8fa78680a32a20cdbbe2d24caacaa5de69eb01021",
+          "gitStatus": "untracked"
+        },
+        {
+          "path": "00_本地工作台/app/public/theme/avatar-yinyue-public.svg",
+          "bytes": 360,
+          "format": "SVG",
+          "width": 256,
+          "height": 256,
+          "hasAlpha": true,
+          "hash": "60294c376801ac1944cb5fd8fa78680a32a20cdbbe2d24caacaa5de69eb01021",
+          "gitStatus": "untracked"
+        }
+      ],
+      "derivatives": [],
+      "derivedFrom": null,
+      "consumers": [
+        {
+          "path": "00_本地工作台/app/src/secretary-identity.mjs",
+          "kind": "runtime-source",
+          "device": "Web/PWA",
+          "evidence": "/theme/avatar-yinyue-public.svg"
+        }
+      ],
+      "referenceStatus": "referenced",
+      "focalPoint": null,
+      "provenance": {
+        "origin": "opensource-public-svg",
+        "creator": "Infans public candidate",
+        "aiGenerated": false,
+        "license": "public-opensource",
+        "reviewStatus": "confirmed",
+        "importedDate": "2026-09-06"
+      },
+      "privacy": {
+        "level": "public",
+        "containsPrivatePhoto": false,
+        "publishable": true
+      },
+      "hash": "sha256:60294c376801ac1944cb5fd8fa78680a32a20cdbbe2d24caacaa5de69eb01021",
+      "lastVerified": "2026-09-06",
+      "review": {
+        "needsCapoo": false
+      }
+    },
+    {
+      "assetId": "secvis-meining-public-b9b179b58c9e",
+      "subject": "梅凝",
+      "kind": "头像",
+      "assetClass": "master",
+      "stage": "approved",
+      "governanceStatus": "formal",
+      "canonicalPath": "00_本地工作台/10_设计/50_视觉资产/小秘书/角色/梅凝/头像/梅凝_公开头像.svg",
+      "plannedCanonicalPath": "00_本地工作台/10_设计/50_视觉资产/小秘书/角色/梅凝/头像/梅凝_公开头像.svg",
+      "plannedDisposition": "official-master-current",
+      "currentPaths": [
+        "00_本地工作台/10_设计/50_视觉资产/小秘书/角色/梅凝/头像/梅凝_公开头像.svg",
+        "00_本地工作台/app/public/theme/avatar-meining-public.svg"
+      ],
+      "files": [
+        {
+          "path": "00_本地工作台/10_设计/50_视觉资产/小秘书/角色/梅凝/头像/梅凝_公开头像.svg",
+          "bytes": 351,
+          "format": "SVG",
+          "width": 256,
+          "height": 256,
+          "hasAlpha": true,
+          "hash": "b9b179b58c9ea626b08a967c7186405d460a39077f9f449308eb9aaf7ee42792",
+          "gitStatus": "untracked"
+        },
+        {
+          "path": "00_本地工作台/app/public/theme/avatar-meining-public.svg",
+          "bytes": 351,
+          "format": "SVG",
+          "width": 256,
+          "height": 256,
+          "hasAlpha": true,
+          "hash": "b9b179b58c9ea626b08a967c7186405d460a39077f9f449308eb9aaf7ee42792",
+          "gitStatus": "untracked"
+        }
+      ],
+      "derivatives": [],
+      "derivedFrom": null,
+      "consumers": [
+        {
+          "path": "00_本地工作台/app/src/secretary-identity.mjs",
+          "kind": "runtime-source",
+          "device": "Web/PWA",
+          "evidence": "/theme/avatar-meining-public.svg"
+        }
+      ],
+      "referenceStatus": "referenced",
+      "focalPoint": null,
+      "provenance": {
+        "origin": "opensource-public-svg",
+        "creator": "Infans public candidate",
+        "aiGenerated": false,
+        "license": "public-opensource",
+        "reviewStatus": "confirmed",
+        "importedDate": "2026-09-07"
+      },
+      "privacy": {
+        "level": "public",
+        "containsPrivatePhoto": false,
+        "publishable": true
+      },
+      "hash": "sha256:b9b179b58c9ea626b08a967c7186405d460a39077f9f449308eb9aaf7ee42792",
+      "lastVerified": "2026-09-06",
+      "review": {
+        "needsCapoo": false
+      }
+    }
+  ],
+  "activeLibraryPolicy": {
+    "formalOnly": true
+  }
+}

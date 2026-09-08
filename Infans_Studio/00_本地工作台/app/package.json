@@ -1,0 +1,61 @@
+{
+  "name": "infans-local-workbench",
+  "version": "1.16.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "node scripts/build-frontend.mjs",
+    "init:data": "node scripts/init-opensource-data.mjs",
+    "bind:data": "node scripts/init-opensource-data.mjs --bind",
+    "import:data": "node scripts/init-opensource-data.mjs --bind --import",
+    "start": "node src/server/serve.mjs",
+    "check": "node scripts/workbench-version.mjs handoff-check && tsc --noEmit && node scripts/check-theme-contract.mjs && node scripts/check-project-contracts.mjs && node scripts/check-agent-portability.mjs && node scripts/check-workbench-governance.mjs",
+    "check:public": "tsc --noEmit && pnpm test:public",
+    "test:public": "node --experimental-strip-types --test tests/opensource-public-boundary.test.mjs tests/secretary-simple-chat.test.mjs tests/infans-oss-*.test.mjs tests/workbench-origin.test.mjs tests/yingning-chrome-extension.test.mjs",
+    "check:project-contracts": "node scripts/check-project-contracts.mjs",
+    "check:agent-portability": "node scripts/check-agent-portability.mjs",
+    "check:agent-tasks": "node scripts/ai-acceptance-dispatcher.mjs --doctor",
+    "check:governance": "node scripts/check-workbench-governance.mjs",
+    "asset-password": "bash scripts/set-asset-password.sh",
+    "sync:ai-tool-icons": "node scripts/sync-ai-tool-icons.mjs",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "check:performance": "pnpm build && node scripts/check-performance.mjs",
+    "check:performance:strict": "pnpm build && node scripts/check-performance.mjs --strict",
+    "version:inspect": "node scripts/workbench-version.mjs inspect",
+    "version:handoff-check": "node scripts/workbench-version.mjs handoff-check",
+    "version:gate": "node scripts/workbench-version.mjs gate",
+    "version:verify": "node scripts/workbench-version.mjs verify",
+    "version:auto": "node scripts/workbench-version.mjs apply",
+    "check:theme": "node scripts/check-theme-contract.mjs"
+  },
+  "dependencies": {
+    "@musclemap/assets": "^1.0.1",
+    "@musclemap/core": "^1.0.1",
+    "@musclemap/react": "^1.0.1",
+    "edge-tts-universal": "1.4.0",
+    "gray-matter": "^4.0.3",
+    "lucide-react": "^1.28.0",
+    "motion": "^12.43.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.10.1",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
+    "saxes": "^6.0.0",
+    "sharp": "^0.35.4"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "typescript": "5.9.3",
+    "vite": "8.0.13"
+  },
+  "packageManager": "pnpm@10.12.4"
+}

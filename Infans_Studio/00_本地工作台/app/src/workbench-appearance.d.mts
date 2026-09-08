@@ -1,0 +1,18 @@
+export type ThemeId = 'night' | 'day';
+export type TextSize = 'standard' | 'comfortable' | 'large';
+export type SceneAdjustments = { assetId?: string; brightness: number; saturation: number; contrast: number; blur: number; veil: number };
+export type AppearanceScheme = { id: string; name: string; theme: ThemeId; colors: Record<string,string>; surfaceOpacity: number; backgrounds: Record<string,SceneAdjustments> };
+export const TEXT_SIZES: { id: TextSize; name: string; scale: number }[];
+export const TYPE_SCALE: Record<string,number>;
+export const SCENE_ROUTES: string[];
+export const COLOR_ROLES: {id: string; label:string; token:string}[];
+export const DEFAULT_SCENE_ADJUSTMENTS: SceneAdjustments;
+export const SCENE_CONTROLS: {key: keyof Omit<SceneAdjustments,'assetId'>; label: string; min:number; max:number; step:number}[];
+export function hexColor(value: unknown): value is string;
+export function mix(a:string,b:string,fraction:number):string;
+export function alpha(hex:string,amount:number):string;
+export function contrastRatio(a:string,b:string):number;
+export function defaultScheme(theme?:ThemeId):AppearanceScheme;
+export function buildThemeTokens(scheme:AppearanceScheme):Record<string,string>;
+export function resolvedToken(tokens:Record<string,string>,key:string):string;
+export function paletteWarnings(scheme:AppearanceScheme):string[];

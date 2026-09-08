@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "infans-readonly-vault": {
+      "command": "node",
+      "args": ["src/server.mjs"],
+      "cwd": ".",
+      "env_vars": ["HOME", "PATH", "INFANS_VAULT_ROOT", "INFANS_MCP_STATE_DIR", "INFANS_SUPPORT_ROOT", "INFANS_GAMES_ROOT"],
+      "startup_timeout_sec": 20,
+      "tool_timeout_sec": 120
+    }
+  }
+}

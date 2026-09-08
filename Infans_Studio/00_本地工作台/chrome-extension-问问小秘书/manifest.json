@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "问问小秘书",
+  "version": "1.0.0",
+  "description": "选中文字后，在 Chrome 原生右键菜单里问问小秘书。",
+  "permissions": ["contextMenus", "tabs"],
+  "host_permissions": [
+    "http://127.0.0.1:5173/*",
+    "http://localhost:5173/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "问问小秘书"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "infans-readonly-mcp",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Read-only MCP server for querying a local Infans library.",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test",
+    "check": "npm test",
+    "smoke": "node scripts/smoke.mjs",
+    "security:status": "node scripts/security-review.mjs status",
+    "security:complete": "node scripts/security-review.mjs complete",
+    "security:reminder:check": "node scripts/security-reminder.mjs",
+    "security:reminder:install": "node scripts/install-security-reminder.mjs",
+    "tunnel:init": "node scripts/tunnel.mjs init",
+    "tunnel:doctor": "node scripts/tunnel.mjs doctor",
+    "tunnel:run": "node scripts/tunnel.mjs run"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "pdfjs-dist": "^6.2.108",
+    "zod": "^4.4.3"
+  }
+}

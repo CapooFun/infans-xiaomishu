@@ -1,0 +1,31 @@
+services:
+  secretary-mailbox:
+    build: ./current
+    restart: unless-stopped
+    ports: ["127.0.0.1:${SECRETARY_MAILBOX_PORT:-8789}:8789"]
+    environment:
+      PORT: 8789
+      DATA_DIR: /data
+      SECRETARY_MAILBOX_TOKEN_FILE: /run/secrets/secretary_mailbox_token
+    volumes:
+      - ./data:/data
+      - ./secrets/secretary_mailbox_token:/run/secrets/secretary_mailbox_token:ro
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 96m
+    pids_limit: 64
+    healthcheck:
+      test: [CMD, wget, -qO-, http://127.0.0.1:8789/healthz]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    logging:
+      options: {max-size: 5m, max-file: "3"}
+    networks: [infans_tunnel]
+
+networks:
+  infans_tunnel:
+    external: true
+    name: infans-save-api_default

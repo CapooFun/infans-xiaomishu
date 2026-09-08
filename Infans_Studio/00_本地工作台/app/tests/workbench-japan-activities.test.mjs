@@ -1,0 +1,231 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { readJapanActivities, readJapanActivityGuideImage, readJapanActivityPlaybook, writeJapanActivityInterest } from "../src/server/workbench-japan-activities.mjs";
+import { isAppleMobileBrowser, isMacDesktopBrowser } from "../src/pages/tools/guide-share-platform.mjs";
+
+test("Guide PDF sharing is available only on desktop Mac browsers", () => {
+  assert.equal(isMacDesktopBrowser({ userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit Safari", platform: "MacIntel", maxTouchPoints: 0 }), true);
+  assert.equal(isMacDesktopBrowser({ userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit Mobile Safari", platform: "MacIntel", maxTouchPoints: 5 }), false);
+  assert.equal(isMacDesktopBrowser({ userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit Mobile Safari", platform: "iPad", maxTouchPoints: 5 }), false);
+  assert.equal(isMacDesktopBrowser({ userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", platform: "Win32", maxTouchPoints: 0 }), false);
+});
+
+test("Apple 移动浏览器识别覆盖 iPhone、iPad 和桌面伪装的 iPadOS", () => {
+  assert.equal(isAppleMobileBrowser({ userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit Mobile Safari", platform: "iPhone", maxTouchPoints: 5 }), true);
+  assert.equal(isAppleMobileBrowser({ userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit Mobile Safari", platform: "iPad", maxTouchPoints: 5 }), true);
+  assert.equal(isAppleMobileBrowser({ userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit Mobile Safari", platform: "MacIntel", maxTouchPoints: 5 }), true);
+  assert.equal(isAppleMobileBrowser({ userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit Safari", platform: "MacIntel", maxTouchPoints: 0 }), false);
+  assert.equal(isAppleMobileBrowser({ userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", platform: "Win32", maxTouchPoints: 0 }), false);
+});
+
+test("Native Mac workbench routes guide printing through WKWebView print operation", async () => {
+  const native = await fs.readFile(new URL("../native/SecretaryApp.swift", import.meta.url), "utf8");
+  assert.match(native, /if type == "print-guide"/);
+  assert.match(native, /webView\.printOperation\(with: printInfo\)/);
+  assert.match(native, /operation\.jobTitle = jobTitle/);
+  assert.match(native, /operation\.runModal\(/);
+  assert.match(native, /infans:guide-print-started/);
+  assert.match(native, /infans:guide-print-finished/);
+});
+
+test("Japan activity cards show type first and language second", async () => {
+  const source = await fs.readFile(new URL("../src/pages/tools/JapanActivitiesView.tsx", import.meta.url), "utf8");
+  const tags = source.match(/<div className="japan-activity-tags">([\s\S]*?)<\/div>/)?.[1] || "";
+  assert.ok(tags.indexOf("activity.category") >= 0);
+  assert.ok(tags.indexOf("activity.category") < tags.indexOf("activity.languagePressure"));
+  assert.equal(tags.includes("activity.filterTag"), false);
+  assert.match(source, /<small>未过期的<\/small>/);
+  assert.match(source, /<small>攻略集<\/small>/);
+  assert.match(source, /<small>参加过的<\/small>/);
+  assert.match(source, /data\?\.playbooks\.length/);
+  assert.match(source, /data\?\.attended\.length/);
+  assert.match(source, /onOpen\(playbook\.id\)/);
+  assert.match(source, /showPlaybooks && data/);
+  assert.match(source, /<JapanPlaybookShelf/);
+  assert.match(source, /className="japan-playbook-carousel"/);
+  assert.match(source, /按更新时间从新到旧排列的攻略/);
+  assert.match(source, /aria-expanded=\{showPlaybooks\}/);
+  assert.match(source, /aria-controls="japan-playbook-shelf"/);
+  assert.match(source, /playbookScrollLeftRef\.current/);
+  assert.match(source, /pageScrollYRef\.current/);
+  assert.match(source, /window\.scrollTo\(\{ top: 0, left: 0, behavior: "auto" \}\)/);
+  assert.match(source, /playbookCarouselRef\.current\.scrollLeft = playbookScrollLeftRef\.current/);
+  assert.match(source, /<GuideOfficialImage \{\.\.\.playbook\} guideId=\{playbook\.id\} className="is-playbook-card" \/>/);
+  assert.match(source, /activity\.hasPlaybook \? <span className="is-guide-ready"/);
+  assert.match(source, /activity\.hasPlaybook \? \(/);
+  assert.match(source, /onClick=\{\(\) => openPlaybook\(activity\.id, "activities"\)\}/);
+  assert.match(source, /guideOrigin === "attended" \? "返回日本活动"/);
+  assert.match(source, /openPlaybook\(data\.attended\[0\]\.id, "attended"\)/);
+  assert.match(source, /setShowPlaybooks\(true\)/);
+  assert.doesNotMatch(source, /GameDungeonGuide/);
+  assert.doesNotMatch(source, /showPlaybookCollection|JapanPlaybookCollection/);
+  assert.match(source, /import\("\.\/JapanActivityGuide"\)/);
+  assert.doesNotMatch(source, /SourceLink/);
+});
+
+test("Japan playbooks use a lightweight native horizontal shelf", async () => {
+  const styles = await fs.readFile(new URL("../src/styles.css", import.meta.url), "utf8");
+  const guide = await fs.readFile(new URL("../src/pages/tools/JapanActivityGuide.tsx", import.meta.url), "utf8");
+  assert.match(styles, /\.japan-playbook-shelf \{/);
+  assert.match(styles, /\.japan-playbook-shelf-shell \{ min-width:0; \}/);
+  assert.match(styles, /\.japan-playbook-carousel \{[^}]*overflow-x:auto;[^}]*scroll-snap-type:x mandatory;/);
+  assert.match(styles, /\.japan-playbook-carousel > li \{[^}]*scroll-snap-align:start;/);
+  assert.match(styles, /\.japan-playbook-carousel \{ grid-auto-columns:min\(82vw,340px\); \}/);
+  assert.match(styles, /\.guide-official-image-frame \{[^}]*aspect-ratio:16\/10;/);
+  assert.match(styles, /\.guide-official-image-frame img \{[^}]*object-fit:cover;/);
+  assert.doesNotMatch(styles, /japan-playbook-collection-hero/);
+  assert.match(guide, /活动纪念 · 小秘书内阅读/);
+  assert.match(guide, /出发导航与取票/);
+  assert.match(guide, /japan-guide-departure/);
+  assert.match(styles, /\.japan-guide-departure \{/);
+  assert.match(guide, /data\.name\.includes\("观影"\) \? "观影纪念" : "活动纪念"/);
+  assert.match(guide, /分享攻略/);
+  assert.match(guide, /import \{ isMacDesktopBrowser \} from "\.\/guide-share-platform\.mjs"/);
+  assert.match(guide, /data && canSharePdf/);
+  assert.match(guide, /PDF 分享请在 Mac 上使用/);
+  assert.match(guide, /data\.shareName \|\| data\.name/);
+  assert.match(guide, /root\.setAttribute\("data-theme", "day"\)/);
+  assert.match(guide, /root\.style\.colorScheme = "light"/);
+  assert.match(guide, /window\.addEventListener\("beforeprint", handleBeforePrint\)/);
+  assert.match(guide, /window\.addEventListener\("afterprint", handleAfterPrint\)/);
+  assert.match(guide, /nativePrintBridge\.postMessage\(\{ type: "print-guide", jobTitle: shareDocumentTitle\(data\) \}\)/);
+  assert.match(guide, /window\.addEventListener\("infans:guide-print-started", handleNativePrintStarted\)/);
+  assert.match(guide, /window\.addEventListener\("infans:guide-print-finished", handleNativePrintFinished\)/);
+  assert.match(guide, /系统打印面板未能打开/);
+  assert.doesNotMatch(guide, /await waitForPrintPaint\(\)/);
+  assert.match(guide, /root\.setAttribute\("data-theme", previousTheme\)/);
+  assert.match(guide, /window\.print\(\)/);
+  assert.match(guide, /role="status" aria-live="polite"/);
+  assert.match(styles, /\.japan-guide-reader-grid \{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\);[^}]*align-items:stretch;/);
+  assert.match(styles, /@page \{ size:A4 portrait;margin:16mm 0 18mm;background:#fff; \}/);
+  assert.match(styles, /@media print \{[\s\S]*?\*,\*::before,\*::after \{[^}]*animation:none!important;[^}]*transition:none!important;/);
+  assert.match(styles, /@media print \{[\s\S]*?html,body \{[^}]*background-color:#fff!important;[^}]*background-image:none!important;[^}]*color-scheme:light!important;/);
+  assert.match(styles, /\.workspace-backdrop,\.workspace-backdrop \* \{[^}]*display:none!important;[^}]*background:none!important;/);
+  assert.match(styles, /\.japan-guide-reader \.museum-card \{[^}]*background-color:#fff!important;[^}]*background-image:none!important;/);
+  assert.match(styles, /\.japan-guide-reader \.museum-card::before,\.japan-guide-reader \.museum-card::after \{[^}]*content:none!important;[^}]*display:none!important;[^}]*background:none!important;/);
+  assert.match(styles, /\.japan-guide-reader \{[^}]*padding:0 20mm!important;[^}]*box-sizing:border-box!important;/);
+  assert.match(styles, /@media print \{[\s\S]*?\.japan-guide-reader-grid \{ display:block!important; \}/);
+  assert.match(styles, /@media print \{[\s\S]*?\.japan-guide-reader-toolbar,\.japan-guide-share-status,\.japan-guide-share-availability \{ display:none!important; \}/);
+});
+
+test("Workbench product contract makes in-app reading primary", async () => {
+  const design = await fs.readFile(new URL("../../10_设计/10_产品与架构/Infans本地工作台_项目设计.md", import.meta.url), "utf8");
+  const shared = await fs.readFile(new URL("../src/page-shared.tsx", import.meta.url), "utf8");
+  assert.match(design, /小秘书内收录的内容优先在小秘书内看完/);
+  assert.match(design, /Obsidian 只作为次要编辑、全库维护和故障备用入口/);
+  assert.match(shared, /前台内容必须另有小秘书内部阅读路径/);
+  assert.match(shared, /label = "在 Obsidian 编辑"/);
+});
+
+test("Japan activities separates future cards, playbooks and attended history", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "infans-japan-activities-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const dir = path.join(root, "80_生活事务", "日本游玩攻略");
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(path.join(dir, "日本活动.md"), `---\ndate: 2026-08-22\n---\n<!-- INFANS_JAPAN_ACTIVITIES_JSON_START -->\n\`\`\`json\n${JSON.stringify({
+    updatedAt: "2026-08-22T09:00:00+09:00",
+    scope: "东京／关东为主",
+    activities: [
+      { id: "trip-guide", name: "未来展", category: "动漫漫画", startDate: "2026-09-05", endDate: "2026-09-06", officialUrl: "https://example.org/official", verifiedAt: "2026-08-22T09:00:00+09:00" },
+      { id: "ai", name: "AI 展", filterTag: "AI 新知", category: "生成式 AI", startDate: "2026-09-03", endDate: "2026-09-04", officialUrl: "https://example.org/ai", verifiedAt: "2026-08-22T09:00:00+09:00" },
+      { id: "expired", name: "过期展", startDate: "2026-07-01", endDate: "2026-07-02", officialUrl: "https://example.org/old", verifiedAt: "2026-08-22T09:00:00+09:00" },
+      { id: "unsafe", name: "非安全链接", startDate: "2026-09-03", endDate: "2026-09-04", officialUrl: "http://example.org", verifiedAt: "2026-08-22T09:00:00+09:00" },
+    ],
+    playbooks: [
+      { id: "older-guide", name: "旧攻略", dateLabel: "2026-08-01", status: "攻略已做", updatedAt: "2026-08-20", sourcePath: "80_生活事务/日本游玩攻略/旧攻略.md" },
+      { id: "trip-guide", name: "Trip Guide", shareName: "中文出门攻略", dateLabel: "2026-09-01", status: "想去·攻略已做", updatedAt: "2026-08-23", sourcePath: "80_生活事务/日本游玩攻略/攻略.md", imageUrl: "https://official.example.org/guide.jpg", imageAlt: "官方内容图", imageSourceLabel: "主办方", imageSourceUrl: "https://official.example.org/event", imageCredit: "主办方摄影" },
+    ],
+    guides: [{ id: "tokyo-game-dungeon-13", name: "东京游戏地牢 13", dateLabel: "2026-08-08", status: "已参加", sourcePath: "80_生活事务/日本游玩攻略/参加过.md", imageUrl: "https://official.example.org/history.jpg", imageAlt: "官方现场图", imageSourceLabel: "主办方", imageSourceUrl: "https://official.example.org/history", imageCredit: "活动官方" }],
+  })}\n\`\`\`\n<!-- INFANS_JAPAN_ACTIVITIES_JSON_END -->\n`, "utf8");
+  await fs.writeFile(path.join(dir, "攻略.md"), `---\ndescription: 小秘书内攻略\ndate: 2026-08-22\nupdated: 2026-08-23\n---\n\n# 出门攻略\n\n## 路线\n\n在小秘书里阅读全文。\n`, "utf8");
+  await fs.writeFile(path.join(dir, "参加过.md"), `---\ndescription: 参加过的活动攻略\ndate: 2026-08-08\nupdated: 2026-08-28\n---\n\n# 东京游戏地牢 13\n\n## 怎么逛\n\n统一使用同一套攻略阅读器。\n`, "utf8");
+
+  const snapshot = await readJapanActivities(root, { today: "2026-08-22" });
+  assert.deepEqual(snapshot.activities.map((item) => item.id), ["trip-guide", "ai"]);
+  assert.deepEqual(snapshot.activities.map((item) => item.filterTag), ["ACG", "AI 新知"]);
+  assert.equal(snapshot.activities[0]?.hasPlaybook, true);
+  assert.equal(snapshot.activities[1]?.hasPlaybook, false);
+  assert.deepEqual(snapshot.playbooks.map((item) => item.id), ["trip-guide", "older-guide"]);
+  assert.equal(snapshot.playbooks[0]?.sourcePath, "80_生活事务/日本游玩攻略/攻略.md");
+  assert.equal(snapshot.playbooks[0]?.shareName, "中文出门攻略");
+  assert.equal(snapshot.playbooks[0]?.imageUrl, "https://official.example.org/guide.jpg");
+  assert.equal(snapshot.playbooks[1]?.imageUrl, "");
+  assert.equal(snapshot.attended[0]?.id, "tokyo-game-dungeon-13");
+  assert.equal(snapshot.attended[0]?.sourcePath, "80_生活事务/日本游玩攻略/参加过.md");
+  assert.equal(snapshot.attended[0]?.imageCredit, "活动官方");
+  assert.equal(snapshot.activities[0]?.interested, false);
+  const guide = await readJapanActivityPlaybook(root, "trip-guide");
+  assert.equal(guide.description, "小秘书内攻略");
+  assert.equal(guide.shareName, "中文出门攻略");
+  assert.equal(guide.updatedAt, "2026-08-23");
+  assert.equal(guide.imageSourceLabel, "主办方");
+  assert.match(guide.markdown, /## 路线/);
+  const attendedGuide = await readJapanActivityPlaybook(root, "tokyo-game-dungeon-13");
+  assert.equal(attendedGuide.description, "参加过的活动攻略");
+  assert.match(attendedGuide.markdown, /统一使用同一套攻略阅读器/);
+
+  const image = await readJapanActivityGuideImage(root, "trip-guide", {
+    fetchImpl: async (url, init) => {
+      assert.equal(url, "https://official.example.org/guide.jpg");
+      assert.equal(init.headers.Referer, "https://official.example.org/event");
+      return new Response(new Uint8Array([1, 2, 3]), { headers: { "content-type": "image/jpeg", "content-length": "3" } });
+    },
+  });
+  assert.equal(image.contentType, "image/jpeg");
+  assert.deepEqual([...image.bytes], [1, 2, 3]);
+
+  const interested = await writeJapanActivityInterest(root, { activityId: "trip-guide", interested: true }, { now: "2026-08-22T12:00:00+09:00" });
+  assert.equal(interested.activities[0]?.interested, true);
+  const saved = await fs.readFile(path.join(dir, "日本活动.md"), "utf8");
+  assert.match(saved, /INFANS_JAPAN_ACTIVITY_INTERESTS_JSON_START/);
+
+  const cleared = await writeJapanActivityInterest(root, { activityId: "trip-guide", interested: false });
+  assert.equal(cleared.activities[0]?.interested, false);
+  assert.match(await fs.readFile(path.join(dir, "日本活动.md"), "utf8"), /"items": \{\}/);
+});
+
+test("real Japan guides include official content images and the Orsay playbook", async () => {
+  const vaultRoot = fileURLToPath(new URL("../../..", import.meta.url));
+  const snapshot = await readJapanActivities(vaultRoot, { today: "2026-08-28" });
+  const refreshPrompt = await fs.readFile(path.join(vaultRoot, "80_生活事务", "日本游玩攻略", "日本活动_本机定时prompt.md"), "utf8");
+  const orsayActivity = snapshot.activities.find((item) => item.id === "orsay-tobikan-2026");
+  const orsayGuide = snapshot.playbooks.find((item) => item.id === "orsay-tobikan-2026");
+  const sekiroActivity = snapshot.activities.find((item) => item.id === "sekiro-no-defeat-shinjuku-2026");
+  const sekiroGuide = await readJapanActivityPlaybook(vaultRoot, "sekiro-no-defeat-shinjuku-2026");
+  const bbqGuide = await readJapanActivityPlaybook(vaultRoot, "tokyo-autumn-bbq-2026");
+  const madokaGuide = await readJapanActivityPlaybook(vaultRoot, "madoka-walpurgisnacht-rising-japan-2026");
+  const attendedGuide = await readJapanActivityPlaybook(vaultRoot, "tokyo-game-dungeon-13");
+
+  assert.equal(orsayActivity?.interested, true);
+  assert.equal(orsayActivity?.hasPlaybook, true);
+  assert.ok(snapshot.activities.findIndex((item) => item.id === "orsay-tobikan-2026") < 2);
+  assert.equal(orsayGuide?.status, "想去·未购票·攻略已做");
+  const bbqPlaybook = snapshot.playbooks.find((item) => item.id === "tokyo-autumn-bbq-2026");
+  assert.equal(bbqPlaybook?.status, "想去·攻略已做");
+  assert.equal(bbqPlaybook?.sourcePath, "80_生活事务/日本游玩攻略/东京秋季户外BBQ攻略.md");
+  const sekiroPlaybook = snapshot.playbooks.find((item) => item.id === "sekiro-no-defeat-shinjuku-2026");
+  assert.equal(sekiroActivity?.hasPlaybook, true);
+  assert.equal(sekiroPlaybook?.status, "三人同行·待购票·攻略已做");
+  assert.equal(bbqGuide.shareName, "东京秋季户外BBQ｜十人电车出发");
+  assert.match(bbqGuide.markdown, /首选订国营昭和纪念公园/);
+  assert.equal(sekiroGuide.shareName, "《只狼》剧场版观影活动｜新宿声优登台特别场");
+  assert.match(sekiroGuide.markdown, /9 月 6 日.*16:25/);
+  assert.match(sekiroGuide.markdown, /坂本龙一《Blu》/);
+  assert.equal(snapshot.attended[0]?.id, "madoka-walpurgisnacht-rising-japan-2026");
+  assert.equal(snapshot.attended[0]?.status, "已参加·非常喜欢·纪念攻略");
+  assert.match(madokaGuide.markdown, /16:20 到场，16:50 正式开始/);
+  assert.match(madokaGuide.markdown, /非常喜欢/);
+  assert.match(madokaGuide.markdown, /不冒充当天实时记录/);
+  assert.match(refreshPrompt, /同 `id` 的活动卡必须继续保留在 `activities`/);
+  assert.match(orsayGuide?.imageUrl || "", /^https:\/\//);
+  assert.match(orsayGuide?.imageSourceUrl || "", /^https:\/\//);
+  assert.ok(snapshot.playbooks.every((item) => item.imageUrl && item.imageSourceUrl && item.imageSourceLabel));
+  assert.ok(snapshot.attended.every((item) => item.imageUrl && item.imageSourceUrl && item.imageSourceLabel));
+  assert.match(attendedGuide.sourcePath, /2026-08-08_东京游戏地牢13_活动攻略\.md$/);
+  assert.match(attendedGuide.markdown, /## 怎么逛/);
+});

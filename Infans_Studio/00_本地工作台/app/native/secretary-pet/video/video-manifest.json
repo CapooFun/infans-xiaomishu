@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "canvasWidth": 384,
+  "canvasHeight": 416,
+  "fps": 30,
+  "clips": [
+    {
+      "id": "idle",
+      "file": "idle.mov",
+      "fps": 30,
+      "frameCount": 90,
+      "loop": true,
+      "source": {
+        "kind": "codex-v2-authored-poses",
+        "keyframes": 8
+      }
+    },
+    {
+      "id": "hover",
+      "file": "hover.mov",
+      "fps": 30,
+      "frameCount": 48,
+      "loop": true,
+      "source": {
+        "kind": "codex-v2-authored-poses",
+        "keyframes": 6
+      }
+    },
+    {
+      "id": "launching",
+      "file": "launching.mov",
+      "fps": 30,
+      "frameCount": 30,
+      "loop": false,
+      "source": {
+        "kind": "codex-v2-authored-poses",
+        "keyframes": 5
+      }
+    },
+    {
+      "id": "talking",
+      "file": "talking.mov",
+      "fps": 30,
+      "frameCount": 36,
+      "loop": true,
+      "source": {
+        "kind": "authored-yinyue-look-strip",
+        "keyframes": 8
+      }
+    },
+    {
+      "id": "dragging-right",
+      "file": "dragging-right.mov",
+      "fps": 30,
+      "frameCount": 24,
+      "loop": true,
+      "source": {
+        "kind": "codex-v2-authored-poses",
+        "keyframes": 8
+      }
+    },
+    {
+      "id": "dragging-left",
+      "file": "dragging-left.mov",
+      "fps": 30,
+      "frameCount": 24,
+      "loop": true,
+      "source": {
+        "kind": "codex-v2-authored-poses",
+        "keyframes": 8
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+# 系统垃圾
+.DS_Store
+**/.DS_Store
+
+# 依赖与构建产物
+**/node_modules/
+**/.pnpm-store/
+**/dist/
+**/.build/
+**/DerivedData/
+**/*.xcuserstate
+**/xcuserdata/
+
+# 本机运行与凭据
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.template
+**/.workbench-access.local
+**/.health-sync.local
+**/.codex-command-sync.local
+**/.local-workbench.log
+**/.local-workbench-server.stamp
+
+# 运行派生状态
+Infans_Studio/00_本地工作台/派生数据/**
+!Infans_Studio/00_本地工作台/派生数据/.gitkeep

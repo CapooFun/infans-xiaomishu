@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "snapshotDate": "2026-09-07",
+  "authority": "开源候选保留银月、梅凝公开头像",
+  "source": {
+    "type": "opensource-public-filter",
+    "previousSnapshotDate": null,
+    "previousDecisionCount": 0
+  },
+  "policy": "角色只保留银月、梅凝公开 SVG 头像。",
+  "decisions": [
+    {
+      "assetId": "secvis-yinyue-public-60294c376801",
+      "state": "selected",
+      "useClass": "头像",
+      "reason": "公开候选银月头像"
+    },
+    {
+      "assetId": "secvis-meining-public-b9b179b58c9e",
+      "state": "selected",
+      "useClass": "头像",
+      "reason": "公开候选梅凝头像"
+    }
+  ]
+}
