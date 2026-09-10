@@ -72,17 +72,6 @@ struct SecretaryConversationInspectorView: View {
                         values: allowedCurrentBackends
                     )
 
-                    if draft.ordinaryBackend == "cursor", !allowedCursorModels.isEmpty {
-                        protocolPicker(
-                            title: "Cursor 模型",
-                            selection: Binding(
-                                get: { draft.cursorModel ?? allowedCursorModels.first ?? "" },
-                                set: { controlDraft?.cursorModel = $0 }
-                            ),
-                            values: allowedCursorModels
-                        )
-                    }
-
                     Button {
                         guard let controlDraft else { return }
                         Task {
@@ -195,11 +184,8 @@ struct SecretaryConversationInspectorView: View {
     }
 
     private func displayLabel(_ value: String) -> String {
-        switch value {
-        case "openrouter": return "未配置"
-        case "cursor": return "未配置"
-        default: return value
-        }
+        _ = value
+        return "未配置"
     }
 
     @ViewBuilder

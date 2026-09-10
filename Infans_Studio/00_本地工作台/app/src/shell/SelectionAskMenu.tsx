@@ -25,7 +25,7 @@ function readSelectionText() {
   return raw.slice(0, TEXT_LIMIT);
 }
 
-/** 工作台内选区右键菜单：不依赖 Chrome 扩展也能「问问小秘书」。 */
+/** 工作台页内划字后，右键可以问问小秘书。 */
 export function SelectionAskMenu({
   route,
   onAsk,

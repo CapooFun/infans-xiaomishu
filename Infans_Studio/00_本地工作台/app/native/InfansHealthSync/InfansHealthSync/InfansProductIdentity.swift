@@ -13,6 +13,9 @@ enum InfansProductIdentity {
         string(for: "InfansProductEdition") == "opensource"
     }
 
+    /// 开源包不在手机上粘贴作者令牌；配对空位只显示电脑是否推过。
+    static var allowsCommandTokenPaste: Bool { false }
+
     private static func string(for key: String) -> String? {
         let value = Bundle.main.object(forInfoDictionaryKey: key) as? String
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""

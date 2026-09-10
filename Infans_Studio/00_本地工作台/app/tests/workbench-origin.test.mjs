@@ -1,11 +1,23 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { assertAuthorizedWriteAccess, assertAuthorizedWriteIdentity, assertTrustedOrigin, assertLoopbackOnly, assertPrivateAssetAccess } from "../src/server/workbench-routes.mjs";
+import { assertAuthorizedWriteAccess, assertAuthorizedWriteIdentity, assertTrustedOrigin, assertLoopbackOnly, assertAppleHealthZipOps, assertPrivateAssetAccess } from "../src/server/workbench-routes.mjs";
 import { assertCodexCommandDeviceAccess } from "../src/server/workbench-codex-command-inbox.mjs";
 import { WorkbenchWriteError } from "../src/server/workbench-errors.mjs";
 
 const TAILSCALE_HOST = "mailbox.example.invalid";
+
+function assertPersistentWriteOnRoute(routes, route) {
+  const start = routes.indexOf(`router.use("${route}"`);
+  assert.notEqual(start, -1, route);
+  const nearby = routes.slice(start, start + 900);
+  if (nearby.includes("assertPersistentWrite(request)")) return;
+  const handler = nearby.match(/,\s*(\w+)\s*\)/)?.[1];
+  assert.ok(handler, route);
+  const fnStart = routes.indexOf(`const ${handler} = async`);
+  assert.notEqual(fnStart, -1, `${route} -> ${handler}`);
+  assert.ok(routes.slice(fnStart, fnStart + 1600).includes("assertPersistentWrite(request)"), route);
+}
 
 function fakeRequest({
   host,
@@ -83,7 +95,7 @@ test("cron read and authorized rerun use the same three-device identity policy",
   );
   const readRoute = routes.slice(
     routes.indexOf('router.use("/api/tools/cron"'),
-    routes.indexOf('router.use("/api/tools/japan-activities"'),
+    routes.indexOf('router.use("/api/tools/local-activities"'),
   );
 
   assert.ok(runRoute.includes("assertPersistentWrite(request)"));
@@ -96,17 +108,62 @@ test("cron read and authorized rerun use the same three-device identity policy",
   assert.equal(routes.includes("资产管理仅允许本机访问"), false);
 });
 
-test("日本活动三端同权读取，感兴趣标记仍走远程身份门禁", () => {
+test("本地活动三端同权读取，感兴趣标记仍走远程身份门禁", () => {
   const routes = readFileSync(new URL("../src/server/workbench-routes.mjs", import.meta.url), "utf8");
-  const activityRoute = routes.slice(
-    routes.indexOf('router.use("/api/tools/japan-activities"'),
-    routes.indexOf('router.use("/api/tools/renewals"'),
-  );
+  const handlerStart = routes.indexOf("const handleLocalActivities = async");
+  assert.notEqual(handlerStart, -1);
+  const activityRoute = routes.slice(handlerStart, handlerStart + 900);
   assert.ok(activityRoute.includes('request.method === "GET"'));
   assert.ok(activityRoute.includes("assertTrustedOrigin(request)"));
   assert.ok(activityRoute.includes('request.method === "PATCH"'));
   assert.ok(activityRoute.includes("assertPersistentWrite(request)"));
   assert.equal(activityRoute.includes("assertLoopbackOnly(request)"), false);
+  assert.match(routes, /router\.use\("\/api\/tools\/japan-activities", handleLocalActivities\)/);
+  assert.match(routes, /router\.use\("\/api\/tools\/japan-activity-guide", handleLocalActivityGuide\)/);
+  assert.match(routes, /router\.use\("\/api\/tools\/japan-guide-image", handleLocalGuideImage\)/);
+});
+
+test("Apple Health ZIP 恢复只允许本机回环，日常同步不走 ZIP 闸", () => {
+  const routes = readFileSync(new URL("../src/server/workbench-routes.mjs", import.meta.url), "utf8");
+  const preview = routes.slice(
+    routes.indexOf('router.use("/api/apple-health/preview"'),
+    routes.indexOf('router.use("/api/apple-health/device-sync"'),
+  );
+  const deviceSync = routes.slice(
+    routes.indexOf('router.use("/api/apple-health/device-sync"'),
+    routes.indexOf('router.use("/api/inbox"'),
+  );
+  const previewLocal = routes.slice(
+    routes.indexOf('router.use("/api/apple-health/preview-local"'),
+    routes.indexOf('router.use("/api/apple-health/commit"'),
+  );
+  const commit = routes.slice(
+    routes.indexOf('router.use("/api/apple-health/commit"'),
+    routes.indexOf('router.use("/api/language-reactor/preview"'),
+  );
+  assert.ok(preview.includes("assertAppleHealthZipOps(request)"));
+  assert.equal(preview.includes("assertTrustedOrigin(request)"), false);
+  assert.ok(previewLocal.includes("assertAppleHealthZipOps(request)"));
+  assert.ok(commit.includes("assertAppleHealthZipOps(request)"));
+  assert.ok(commit.includes("assertPersistentWrite(request)"));
+  assert.ok(deviceSync.includes("assertAppleHealthDeviceSyncAccess"));
+  assert.equal(deviceSync.includes("assertAppleHealthZipOps(request)"), false);
+  assert.equal(deviceSync.includes("assertLoopbackOnly(request)"), false);
+
+  assert.throws(
+    () => assertAppleHealthZipOps(fakeRequest({
+      host: TAILSCALE_HOST,
+      origin: `https://${TAILSCALE_HOST}`,
+      tailscaleLogin: "verified-tailnet-member",
+    })),
+    (error) => error instanceof WorkbenchWriteError
+      && error.code === "ORIGIN_REJECTED"
+      && error.message === "这个操作仅支持在 Mac 本机执行",
+  );
+  assert.doesNotThrow(() => assertAppleHealthZipOps(fakeRequest({
+    host: "127.0.0.1:5173",
+    origin: "http://127.0.0.1:5173",
+  })));
 });
 
 test("loopback-only actions reject spoofed Host from a non-loopback peer", () => {
@@ -261,10 +318,8 @@ test("二进制附件和无正文同步复用同一身份门禁，不被 JSON �
 
 test("持久写入都走身份门禁，语音和 AI 查询不被误当成持久写入", () => {
   const routes = readFileSync(new URL("../src/server/workbench-routes.mjs", import.meta.url), "utf8");
-  for (const route of ["/api/secretary-life-core", "/api/secretary", "/api/relationship-memory/preview", "/api/relationship-memory/commit", "/api/proactive-interactions", "/api/home-pins", "/api/sidebar-bookmarks", "/api/gantt-hidden", "/api/project-task-follows", "/api/assets/bills/import-downloads", "/api/assets/custody/import-downloads", "/api/tools/japan-activities", "/api/calendar/commit", "/api/apple-health/commit", "/api/language-reactor/commit", "/api/write/commit"]) {
-    const start = routes.indexOf(`router.use("${route}"`);
-    assert.notEqual(start, -1, route);
-    assert.ok(routes.slice(start, start + 900).includes("assertPersistentWrite(request)"), route);
+  for (const route of ["/api/secretary-life-core", "/api/secretary", "/api/relationship-memory/preview", "/api/relationship-memory/commit", "/api/proactive-interactions", "/api/home-pins", "/api/sidebar-bookmarks", "/api/gantt-hidden", "/api/project-task-follows", "/api/assets/bills/import-downloads", "/api/assets/custody/import-downloads", "/api/tools/local-activities", "/api/calendar/commit", "/api/apple-health/commit", "/api/language-reactor/commit", "/api/write/commit"]) {
+    assertPersistentWriteOnRoute(routes, route);
   }
   assert.doesNotMatch(routes, /\/api\/meining-(?:chats|attachments|guest-media)/);
   const secretaryChatRoute = routes.indexOf('router.use("/api/secretary-chats"');

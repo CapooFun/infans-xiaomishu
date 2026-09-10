@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { JP_MISTAKE_STATE, JP_SPECIAL_HISTORY_DIR } from "./vault-paths.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 
 export const EXPLORATION_MISTAKE_STATE_PATH = JP_MISTAKE_STATE;
 export const SPECIAL_HISTORY_DIR = JP_SPECIAL_HISTORY_DIR;
@@ -328,12 +329,13 @@ export function composeReadingDrill(pool, { count = 3 } = {}) {
 }
 
 export async function saveSpecialHistory(root, sessionId, payload) {
-  const dir = path.join(root, SPECIAL_HISTORY_DIR);
-  await fs.mkdir(dir, { recursive: true });
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo" }).format(new Date());
-  const file = path.join(dir, `${day}_${sessionId}.json`);
-  await fs.writeFile(file, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-  return file;
+  const relative = path.posix.join(SPECIAL_HISTORY_DIR, `${day}_${sessionId}.json`);
+  await withVaultFileWrite(root, relative, async (file) => {
+    await fs.mkdir(path.dirname(file), { recursive: true });
+    await fs.writeFile(file, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  });
+  return path.join(root, relative);
 }
 
 export async function loadStoredQuestionsByNode(root) {
@@ -365,9 +367,10 @@ export async function loadMistakeState(root) {
 }
 
 export async function saveMistakeState(root, state) {
-  const absolute = path.join(root, EXPLORATION_MISTAKE_STATE_PATH);
-  await fs.mkdir(path.dirname(absolute), { recursive: true });
-  await fs.writeFile(absolute, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+  await withVaultFileWrite(root, EXPLORATION_MISTAKE_STATE_PATH, async (absolute) => {
+    await fs.mkdir(path.dirname(absolute), { recursive: true });
+    await fs.writeFile(absolute, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+  });
 }
 
 export function applyMistakeStreaks(state, { level, track, verifiedIds = [], missedIds = [], stamp }) {

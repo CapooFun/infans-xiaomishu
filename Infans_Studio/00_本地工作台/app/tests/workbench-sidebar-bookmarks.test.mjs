@@ -51,6 +51,12 @@ test("侧栏书签去重、清理标签并限制为六个", () => {
   assert.equal(defaultSidebarBookmarkLabel("/tools/web-bookmarks"), "网页收藏");
   assert.equal(defaultSidebarBookmarkLabel("/tools/food-map"), "美食地图");
   assert.equal(defaultSidebarBookmarkLabel("/languages?section=grammar"), "日语 · 文法");
+  assert.equal(normalizeSidebarBookmarkLocation("/tools/inbox"), "/tools/inbox");
+  assert.equal(normalizeSidebarBookmarkLocation("/tools/inbox?section=projects&q=secret"), "/tools/inbox?section=projects");
+  assert.equal(normalizeSidebarBookmarkLocation("/tools/inbox?foo=1"), "/tools/inbox");
+  assert.equal(defaultSidebarBookmarkLabel("/tools/inbox"), "秘书收件箱");
+  assert.equal(defaultSidebarBookmarkLabel("/tools/inbox?section=projects"), "秘书收件箱 · 项目收件");
+  assert.equal(defaultSidebarBookmarkLabel("/tools/inbox?section=bookmarks"), "秘书收件箱 · 书签");
   assert.equal(defaultSidebarBookmarkLabel("/markets"), "世界资讯 · 日本");
   assert.equal(defaultSidebarBookmarkLabel("/markets?lane=finance"), "世界资讯 · 金融");
   assert.equal(defaultSidebarBookmarkLabel("/markets?lane=ai"), "世界资讯 · AI");

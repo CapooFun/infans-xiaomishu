@@ -139,7 +139,7 @@ export function AppleHealthImportCard({
       ) : (
         <p>日常由私人 iPhone App 自动送达，不需要手动导出。</p>
       )}
-      <p className="evidence-note"><ShieldCheck size={13} />每天 12:00 后由 iPhone 择机同步；日常无需操作，恢复工具以后只在运维模式开放。</p>
+      <p className="evidence-note"><ShieldCheck size={13} />每天 12:00 后由 iPhone 择机同步；日常无需操作。手工 ZIP 恢复只允许在这台 Mac 本机执行，页面上不再开放。</p>
     </Card>
   );
 }

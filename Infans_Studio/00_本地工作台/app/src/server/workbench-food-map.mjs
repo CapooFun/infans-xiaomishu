@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { FOOD_MAP_CATALOG_PATH, FOOD_MAP_STATE_PATH } from "./vault-paths.mjs";
 import { WorkbenchWriteError } from "./workbench-errors.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 
 const PLACE_ID_RE = /^[a-z0-9][a-z0-9-]{1,79}$/u;
 const LIST_STATES = new Set(["explore", "favorite", "blacklist", "archived"]);
@@ -9,7 +10,6 @@ const CATEGORIES = new Set(["meal", "snack", "dessert", "night"]);
 const PROFILE_MATCHES = new Set(["high", "likely", "interest", "neutral"]);
 const IMAGE_KINDS = new Set(["official", "venue-photo", "reference"]);
 const MAX_NOTE_LENGTH = 220;
-let writeQueue = Promise.resolve();
 
 function cleanText(value, limit = 180) {
   return String(value ?? "")
@@ -131,13 +131,17 @@ export async function readFoodMapCatalog(vaultRoot) {
   };
 }
 
-export async function readFoodMapState(vaultRoot) {
+async function readStateFrom(absolute) {
   try {
-    return normalizeState(JSON.parse(await fs.readFile(foodMapStatePath(vaultRoot), "utf8")));
+    return normalizeState(JSON.parse(await fs.readFile(absolute, "utf8")));
   } catch (error) {
     if (error?.code === "ENOENT") return emptyState();
     throw error;
   }
+}
+
+export async function readFoodMapState(vaultRoot) {
+  return readStateFrom(foodMapStatePath(vaultRoot));
 }
 
 function mapSearchUrl(place) {
@@ -205,11 +209,11 @@ export async function writeFoodMapPlaceState(vaultRoot, payload = {}) {
   if (hasFollowed && typeof payload.followed !== "boolean") throw new WorkbenchWriteError("关注状态不正确", 400, "INVALID_FOOD_MAP_FOLLOW_STATE");
   if (hasNote && typeof payload.note !== "string") throw new WorkbenchWriteError("个人备注格式不正确", 400, "INVALID_FOOD_MAP_NOTE");
 
-  const operation = writeQueue.then(async () => {
+  const operation = withVaultFileWrite(vaultRoot, FOOD_MAP_STATE_PATH, async (absolute) => {
     const catalog = await readFoodMapCatalog(vaultRoot);
     const place = catalog.places.find((item) => item.id === id);
     if (!place) throw new WorkbenchWriteError("这张美食卡片已经不在当前原件中", 409, "FOOD_MAP_PLACE_NOT_FOUND");
-    const current = await readFoodMapState(vaultRoot);
+    const current = await readStateFrom(absolute);
     const previous = current.items[id] || {
       listState: place.initialState,
       followed: false,
@@ -228,9 +232,8 @@ export async function writeFoodMapPlaceState(vaultRoot, payload = {}) {
       updatedAt: nextItem.updatedAt,
       items: { ...current.items, [id]: nextItem },
     });
-    await writeStateFile(foodMapStatePath(vaultRoot), next);
+    await writeStateFile(absolute, next);
     return readFoodMap(vaultRoot);
   });
-  writeQueue = operation.catch(() => undefined);
   return operation;
 }

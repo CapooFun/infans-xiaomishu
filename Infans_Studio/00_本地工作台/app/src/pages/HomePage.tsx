@@ -91,7 +91,7 @@ function DayTimeline({ calendar, compact = false, onSelect }: { calendar: Calend
     .slice(0, compact ? 4 : 12);
   if (!calendar.available) {
     const denied = calendar.permission === "denied";
-    return <div className={`calendar-unavailable ${calendar.loading ? "loading" : ""}`} onClick={(event) => event.stopPropagation()}>{calendar.loading ? <LoaderCircle className="spin" size={18} /> : <LockKeyhole size={18} />}<div><strong>{calendar.loading ? "正在读取苹果日历" : denied ? "日历权限未开启" : "苹果日历读取失败"}</strong><p>{calendar.message || (calendar.loading ? "本机尚无缓存时需要稍等片刻；之后会先显示缓存再后台更新。" : "可在日程页点「同步日历」重试。")}</p></div></div>;
+    return <div className={`calendar-unavailable ${calendar.loading ? "loading" : ""}`} onClick={(event) => event.stopPropagation()}>{calendar.loading ? <LoaderCircle className="spin" size={18} /> : <LockKeyhole size={18} />}<div><strong>{calendar.loading ? "正在读取苹果日历" : denied ? "日历权限未开启" : "苹果日历读取失败"}</strong><p>{calendar.message || (calendar.loading ? "本机尚无缓存时需要稍等片刻；之后会先显示缓存再后台更新。" : "下拉刷新或回到前台后会再试。")}</p></div></div>;
   }
   if (!events.length) {
     return <Empty>因过竹院逢僧话<br />偷得浮生半日闲</Empty>;

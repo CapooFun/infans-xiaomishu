@@ -7,6 +7,8 @@ struct SecretarySettingsView: View {
     let secretaryID: String
     let secretaryName: String
     let secretaryAvatarURL: URL?
+    var chatStore: SecretaryChatStore?
+    var showsOrdinaryModelList = false
     var onClose: (() -> Void)?
     @StateObject private var model = SyncCoordinator.shared
     @StateObject private var settings = SettingsStore.shared
@@ -36,11 +38,15 @@ struct SecretarySettingsView: View {
         secretaryID: String = "yinyue",
         secretaryName: String = "银月",
         secretaryAvatarURL: URL? = nil,
+        chatStore: SecretaryChatStore? = nil,
+        showsOrdinaryModelList: Bool = false,
         onClose: (() -> Void)? = nil
     ) {
         self.secretaryID = secretaryID
         self.secretaryName = secretaryName
         self.secretaryAvatarURL = secretaryAvatarURL
+        self.chatStore = chatStore
+        self.showsOrdinaryModelList = showsOrdinaryModelList
         self.onClose = onClose
     }
 
@@ -108,6 +114,7 @@ struct SecretarySettingsView: View {
                         .textInputAutocapitalization(.never)
                         .keyboardType(.URL)
                         .autocorrectionDisabled()
+                    if InfansProductIdentity.allowsCommandTokenPaste {
                     SecureField("小秘书指令令牌", text: $commandTokenInput)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -123,10 +130,15 @@ struct SecretarySettingsView: View {
                         }
                         persistCommandToken(clipboard)
                     }
+                    } else {
+                    LabeledContent("指令配对", value: commandSettings.tokenConfigured ? "已由电脑配对" : "还没配对")
+                    }
                     if let commandTokenMessage {
                         Text(commandTokenMessage).font(.footnote).foregroundStyle(.secondary)
                     }
-                    Text("聊天大脑连 Mac；离线发件与回复同步走 NAS 信箱。系统分享仍复用 Mac 私有连接；它们都不使用 Apple 健康同步令牌。")
+                    Text(InfansProductIdentity.allowsCommandTokenPaste
+                         ? "聊天大脑连 Mac；离线发件与回复同步走 NAS 信箱。系统分享仍复用 Mac 私有连接；它们都不使用 Apple 健康同步令牌。"
+                         : "聊天大脑连 Mac；离线发件与回复同步走 NAS 信箱。正式包配对只靠电脑推送，不必在手机上粘贴。")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                     }
@@ -145,6 +157,9 @@ struct SecretarySettingsView: View {
                 }
 
                 Section("聊天体验") {
+                    if showsOrdinaryModelList, let chatStore {
+                        SecretaryOrdinaryModelSettingsList(store: chatStore)
+                    }
                     Toggle("秘书回复完后自动朗读", isOn: $speechPreferences.automaticallyReadsReplies)
                     Picker("朗读速度", selection: $speechPreferences.rate) {
                         ForEach(SecretarySpeechRateSetting.allCases, id: \.self) { rate in
@@ -313,5 +328,36 @@ struct SecretarySettingsView: View {
         } catch {
             commandTokenMessage = error.localizedDescription
         }
+    }
+}
+
+private struct SecretaryOrdinaryModelSettingsList: View {
+    @ObservedObject var store: SecretaryChatStore
+
+    private var currentLabel: String {
+        SecretaryOrdinaryChannelSwitch.entryLabel(
+            backend: store.currentOrdinaryBackend,
+            secretaryID: store.displaySecretaryID
+        )
+    }
+
+    var body: some View {
+        Picker(SecretaryOrdinaryChannelSwitch.listTitle, selection: Binding(
+            get: { store.currentOrdinaryBackend },
+            set: { backend in
+                Task { await store.chooseOrdinaryBackend(backend) }
+            }
+        )) {
+            ForEach(store.ordinaryChannelSwitchBackends, id: \.self) { backend in
+                Text(SecretaryOrdinaryChannelSwitch.entryLabel(
+                    backend: backend,
+                    secretaryID: store.displaySecretaryID
+                ))
+                .tag(backend)
+            }
+        }
+        .pickerStyle(.navigationLink)
+        .disabled(store.isManagingConversation || store.isStreaming)
+        .accessibilityLabel("\(SecretaryOrdinaryChannelSwitch.listTitle)，当前 \(currentLabel)")
     }
 }

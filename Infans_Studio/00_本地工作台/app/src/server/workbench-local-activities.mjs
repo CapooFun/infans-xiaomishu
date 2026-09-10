@@ -1,7 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { JAPAN_ACTIVITIES_SOURCE } from "./vault-paths.mjs";
+import { WorkbenchWriteError } from "./workbench-errors.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
+import { LOCAL_ACTIVITIES_SOURCE } from "./vault-paths.mjs";
 
 const START = "<!-- INFANS_JAPAN_ACTIVITIES_JSON_START -->";
 const END = "<!-- INFANS_JAPAN_ACTIVITIES_JSON_END -->";
@@ -20,10 +22,10 @@ function tokyoDay(now = new Date()) {
 function parseEmbeddedJson(markdown) {
   const start = markdown.indexOf(START);
   const end = markdown.indexOf(END);
-  if (start < 0 || end <= start) throw new Error("日本活动原件缺少数据区");
+  if (start < 0 || end <= start) throw new Error("本地活动原件缺少数据区");
   const block = markdown.slice(start + START.length, end);
   const fenced = block.match(/```json\s*([\s\S]*?)\s*```/i);
-  if (!fenced) throw new Error("日本活动数据区不完整");
+  if (!fenced) throw new Error("本地活动数据区不完整");
   return JSON.parse(fenced[1]);
 }
 
@@ -127,9 +129,9 @@ function normalizeGuideImage(raw) {
   };
 }
 
-export async function readJapanActivities(vaultRoot, options = {}) {
+export async function readLocalActivities(vaultRoot, options = {}) {
   const today = options.today || tokyoDay();
-  const markdown = await fs.readFile(path.join(vaultRoot, JAPAN_ACTIVITIES_SOURCE), "utf8");
+  const markdown = await fs.readFile(path.join(vaultRoot, LOCAL_ACTIVITIES_SOURCE), "utf8");
   const parsed = parseEmbeddedJson(markdown);
   const interests = parseInterests(markdown);
   const playbooks = (Array.isArray(parsed.playbooks) ? parsed.playbooks : []).flatMap((playbook) => {
@@ -180,21 +182,21 @@ export async function readJapanActivities(vaultRoot, options = {}) {
     activities,
     playbooks,
     attended,
-    sourcePath: JAPAN_ACTIVITIES_SOURCE,
+    sourcePath: LOCAL_ACTIVITIES_SOURCE,
   };
 }
 
-export async function readJapanActivityPlaybook(vaultRoot, playbookId) {
+export async function readLocalActivityPlaybook(vaultRoot, playbookId) {
   const id = String(playbookId || "").trim();
   if (!id) throw new Error("没有指定要看的攻略");
-  const catalogMarkdown = await fs.readFile(path.join(vaultRoot, JAPAN_ACTIVITIES_SOURCE), "utf8");
+  const catalogMarkdown = await fs.readFile(path.join(vaultRoot, LOCAL_ACTIVITIES_SOURCE), "utf8");
   const parsed = parseEmbeddedJson(catalogMarkdown);
   const entries = [
     ...(Array.isArray(parsed.playbooks) ? parsed.playbooks : []),
     ...(Array.isArray(parsed.guides) ? parsed.guides : []),
   ];
   const playbook = entries.find((item) => String(item?.id || "") === id);
-  if (!playbook?.name || !playbook?.sourcePath) throw new Error("日本活动里没有这一份攻略");
+  if (!playbook?.name || !playbook?.sourcePath) throw new Error("本地活动里没有这一份攻略");
   const source = playbookSource(vaultRoot, playbook.sourcePath);
   const markdown = await fs.readFile(source.target, "utf8");
   return {
@@ -211,10 +213,10 @@ export async function readJapanActivityPlaybook(vaultRoot, playbookId) {
   };
 }
 
-export async function readJapanActivityGuideImage(vaultRoot, guideId, options = {}) {
+export async function readLocalActivityGuideImage(vaultRoot, guideId, options = {}) {
   const id = String(guideId || "").trim();
   if (!id) throw new Error("没有指定攻略图片");
-  const catalogMarkdown = await fs.readFile(path.join(vaultRoot, JAPAN_ACTIVITIES_SOURCE), "utf8");
+  const catalogMarkdown = await fs.readFile(path.join(vaultRoot, LOCAL_ACTIVITIES_SOURCE), "utf8");
   const parsed = parseEmbeddedJson(catalogMarkdown);
   const entries = [
     ...(Array.isArray(parsed.playbooks) ? parsed.playbooks : []),
@@ -244,26 +246,31 @@ export async function readJapanActivityGuideImage(vaultRoot, guideId, options = 
   return { bytes, contentType };
 }
 
-export async function writeJapanActivityInterest(vaultRoot, payload, options = {}) {
+export async function writeLocalActivityInterest(vaultRoot, payload, options = {}) {
   const activityId = String(payload?.activityId || "").trim();
-  if (!activityId || typeof payload?.interested !== "boolean") throw new Error("感兴趣状态不完整");
-  const target = path.join(vaultRoot, JAPAN_ACTIVITIES_SOURCE);
-  const markdown = await fs.readFile(target, "utf8");
-  const parsed = parseEmbeddedJson(markdown);
-  const known = (Array.isArray(parsed.activities) ? parsed.activities : []).some((activity) => String(activity?.id || "") === activityId);
-  if (!known) throw new Error("找不到这张活动卡");
-  const items = parseInterests(markdown);
-  if (payload.interested) {
-    items[activityId] = { interested: true, updatedAt: options.now || new Date().toISOString() };
-  } else {
-    delete items[activityId];
+  if (!activityId || typeof payload?.interested !== "boolean") {
+    throw new WorkbenchWriteError("感兴趣状态不完整", 400, "LOCAL_ACTIVITY_INTEREST_INVALID");
   }
-  const block = renderInterests(items);
-  const start = markdown.indexOf(INTEREST_START);
-  const end = markdown.indexOf(INTEREST_END);
-  const next = start >= 0 && end > start
-    ? `${markdown.slice(0, start)}${block}${markdown.slice(end + INTEREST_END.length)}`
-    : `${markdown.trimEnd()}\n\n## 个人标记\n\n> 由小秘书保存，供后续购票和攻略任务读取。\n\n${block}\n`;
-  await atomicWrite(target, next);
-  return readJapanActivities(vaultRoot);
+  await withVaultFileWrite(vaultRoot, LOCAL_ACTIVITIES_SOURCE, async (target) => {
+    const markdown = await fs.readFile(target, "utf8");
+    const parsed = parseEmbeddedJson(markdown);
+    const known = (Array.isArray(parsed.activities) ? parsed.activities : []).some((activity) => String(activity?.id || "") === activityId);
+    if (!known) throw new WorkbenchWriteError("找不到这张活动卡", 404, "LOCAL_ACTIVITY_NOT_FOUND");
+    const items = parseInterests(markdown);
+    if (payload.interested) {
+      items[activityId] = { interested: true, updatedAt: options.now || new Date().toISOString() };
+    } else {
+      delete items[activityId];
+    }
+    const block = renderInterests(items);
+    const start = markdown.indexOf(INTEREST_START);
+    const end = markdown.indexOf(INTEREST_END);
+    const next = start >= 0 && end > start
+      ? `${markdown.slice(0, start)}${block}${markdown.slice(end + INTEREST_END.length)}`
+      : `${markdown.trimEnd()}\n\n## 个人标记\n\n> 由小秘书保存，供后续购票和攻略任务读取。\n\n${block}\n`;
+    await atomicWrite(target, next);
+  });
+  return readLocalActivities(vaultRoot, {
+    today: options.today || (options.now ? tokyoDay(new Date(options.now)) : undefined),
+  });
 }

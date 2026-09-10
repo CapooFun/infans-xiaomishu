@@ -14,6 +14,7 @@ export function workbenchDataPlugin() {
     apply: "serve",
     configureServer(server) {
       const router = createWorkbenchRouter();
+      // 深度刷新 HTTP 走同一张路由表；不传入重建闸，避免 Vite 点刷新或导航时跑 vite build。
       const routes = registerWorkbenchRoutes(router, { root: vaultRoot(), publicDir: path.join(process.cwd(), "public") });
       server.httpServer?.once("close", () => routes.dispose());
       server.middlewares.use((request, response, next) => router.handle(request, response, next));

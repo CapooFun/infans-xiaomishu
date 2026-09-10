@@ -12,8 +12,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   agentTaskAutomaticCompletionGates,
   agentTaskCompletionGates,
+  CURRENT_AUTOMATION_EXECUTOR_ROLE_ID,
   doctorAgentTasks,
   evaluateAgentTaskEligibility,
+  isLegacyAutomationExecutor,
   parseAgentTaskContract,
   stableJson,
   validateVaultEvidencePath,
@@ -49,6 +51,9 @@ const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const OUTCOME_SCHEMA_PATH = path.join(SCRIPT_DIR, "agent-task-outcome.schema.json");
 export const DEFAULT_VAULT_ROOT = path.resolve(SCRIPT_DIR, "../../..");
 export const EXECUTOR_ID = "agent-task-readonly-verifier";
+if (EXECUTOR_ID !== CURRENT_AUTOMATION_EXECUTOR_ROLE_ID) {
+  throw new Error("自动验收现行岗位必须与契约层 CURRENT_AUTOMATION_EXECUTOR_ROLE_ID 一致");
+}
 export const CODEX_RUN_TIMEOUT_MS = 60 * 60_000;
 export const START_RETRY_COOLDOWN_MS = 5 * 60_000;
 export const RETRY_COOLDOWN_MS = 30 * 60_000;
@@ -449,7 +454,18 @@ export async function buildDispatchPlan({ root, snapshot, ledger, config, now, r
   const candidates = [];
   const skipped = [];
   for (const task of tasks) {
-    if (task.executorId !== config.executorRoleId) continue;
+    if (task.executorId !== config.executorRoleId) {
+      if (!task.done && isLegacyAutomationExecutor(task.executorId)) {
+        skipped.push({
+          taskId: task.id,
+          sourcePath: task.sourcePath,
+          executorId: task.executorId,
+          expectedExecutorRoleId: config.executorRoleId,
+          reasons: ["LEGACY_EXECUTOR_NOT_CURRENT"],
+        });
+      }
+      continue;
+    }
     if (driftedTaskIds.has(task.id) && !migrationTaskIds.has(task.id)) {
       skipped.push({ taskId: task.id, sourcePath: task.sourcePath, reasons: ["source-ledger-drift"] });
       continue;

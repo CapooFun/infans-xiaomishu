@@ -9,6 +9,8 @@ import {
   isNativeSecretaryTalking,
   SECRETARY_SPEECH_STATE_EVENT,
   onSecretarySpeechState,
+  onSecretarySpeechFallback,
+  secretarySpeechFallbackMessage,
   prepareSecretarySpeechText,
   pickSecretaryVoice,
   publishSecretarySpeechState,
@@ -127,9 +129,10 @@ test("speech state publishes DOM and native bridge events for real playback boun
   const unsubscribe = onSecretarySpeechState((state) => listenerStates.push(state));
   try {
     publishSecretarySpeechState(true, "meining");
-    assert.equal(isNativeSecretaryTalking(), true);
-    stopSecretarySpeech();
+    assert.deepEqual(getSecretarySpeechState(), { active: true, speaker: "meining" });
     assert.equal(isNativeSecretaryTalking(), false);
+    stopSecretarySpeech();
+    assert.equal(getSecretarySpeechState().active, false);
     assert.equal(domEvents[0].type, SECRETARY_SPEECH_STATE_EVENT);
     assert.deepEqual(bridgeMessages[0], { type: "speech-state", active: true, speaker: "meining" });
     assert.deepEqual(bridgeMessages.at(-1), { type: "speech-state", active: false, speaker: "meining" });
@@ -146,15 +149,27 @@ test("speech state publishes DOM and native bridge events for real playback boun
 test("native talking animation stays off unless the current speaker is 银月", () => {
   publishSecretarySpeechState(true, "meining");
   assert.equal(isNativeSecretaryTalking(), false);
-  publishSecretarySpeechState(true, "unknown-speaker");
+  publishSecretarySpeechState(true, "yinyue");
+  assert.equal(isNativeSecretaryTalking(), true);
+  publishSecretarySpeechState(false, "yinyue");
   assert.equal(isNativeSecretaryTalking(), false);
-  publishSecretarySpeechState(false, "unknown-speaker");
 });
 
 test("autoplay block recognition covers browser rejection shapes", () => {
   assert.equal(isAutoplayBlockedError(Object.assign(new Error("autoplay blocked"), { name: "NotAllowedError" })), true);
   assert.equal(isAutoplayBlockedError(new Error("play() failed because the user didn't interact")), true);
   assert.equal(isAutoplayBlockedError(new Error("network failed")), false);
+});
+
+test("朗读失败文案让银月和梅凝可见，不换成作者私声", () => {
+  assert.equal(secretarySpeechFallbackMessage({ from: "edge", to: "stop", code: "EDGE_TTS_FAILED", speaker: "yinyue" }), "银月朗读失败，先看文字");
+  assert.equal(secretarySpeechFallbackMessage({ from: "edge", to: "stop", code: "EDGE_TTS_FAILED", speaker: "meining" }), "梅凝朗读失败，先看文字");
+  assert.equal(secretarySpeechFallbackMessage({ from: "edge", to: "webspeech", code: "EDGE_TTS_FAILED", speaker: "meining" }), "普通朗读失败，先改用本机声线");
+  const overlays = readFileSync(new URL("../src/shell/WorkbenchOverlays.tsx", import.meta.url), "utf8");
+  assert.match(overlays, /onSecretarySpeechFallback\(\(event\) => onToast\(event\.message\)\)/);
+  const tts = readFileSync(new URL("../src/secretary-tts.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(tts, /缨宁/);
+  assert.doesNotMatch(overlays, /缨宁朗读失败/);
 });
 
 test("speech rate presets normalize, persist and keep provider fallbacks safe", () => {
@@ -194,6 +209,7 @@ test("speech playback state covers edge start/end, queues, stop, failure fallbac
   const states = [];
   const requests = [];
   const webUtterances = [];
+  const fallbacks = [];
 
   class FakeAudio {
     static instance;
@@ -255,6 +271,7 @@ test("speech playback state covers edge start/end, queues, stop, failure fallbac
     setTimeout,
   };
   const unsubscribe = onSecretarySpeechState((state) => states.push(state));
+  const unsubscribeFallback = onSecretarySpeechFallback((event) => fallbacks.push(event));
   const waitFor = async (predicate, message) => {
     for (let attempt = 0; attempt < 80; attempt += 1) {
       if (predicate()) return;
@@ -265,7 +282,7 @@ test("speech playback state covers edge start/end, queues, stop, failure fallbac
 
   try {
     // Edge 正常播放：play() 成功后才说话，ended 后立即待机。
-    assert.equal(speakAsSecretary("第一句", { enabled: true }), true);
+    assert.equal(speakAsSecretary("第一句", { enabled: true, speaker: "meining" }), true);
     await waitFor(() => getSecretarySpeechState().active, "Edge play did not publish active state");
     assert.deepEqual(getSecretarySpeechState(), { active: true, speaker: "meining" });
     assert.equal(FakeAudio.instance.playbackRate, 0.7);
@@ -290,16 +307,18 @@ test("speech playback state covers edge start/end, queues, stop, failure fallbac
     await waitFor(() => !getSecretarySpeechState().active, "queue did not finish");
 
     // 主动停止清空当前播放状态。
-    assert.equal(speakAsSecretary("停止测试", { enabled: true }), true);
+    assert.equal(speakAsSecretary("停止测试", { enabled: true, speaker: "meining" }), true);
     await waitFor(() => getSecretarySpeechState().active, "stop case did not start");
     stopSecretarySpeech();
     assert.equal(getSecretarySpeechState().active, false);
 
     // Edge 播放失败时进入 Web Speech，并以 utterance 事件界定状态。
     FakeAudio.instance.playBehavior = () => Promise.reject(new Error("audio decoder failed"));
-    assert.equal(speakAsSecretary("系统语音回退", { enabled: true }), true);
+    assert.equal(speakAsSecretary("系统语音回退", { enabled: true, speaker: "meining" }), true);
     await waitFor(() => webUtterances.length > 0, "Web Speech fallback was not used");
     assert.deepEqual(getSecretarySpeechState(), { active: true, speaker: "meining" });
+    assert.equal(fallbacks.at(-1)?.to, "webspeech");
+    assert.equal(fallbacks.at(-1)?.message, "普通朗读失败，先改用本机声线");
     webUtterances.at(-1).onend?.();
     assert.equal(getSecretarySpeechState().active, false);
 
@@ -310,11 +329,14 @@ test("speech playback state covers edge start/end, queues, stop, failure fallbac
     await new Promise((resolve) => setTimeout(resolve, 10));
     assert.equal(webUtterances.length, yinyueFallbackCount);
     assert.deepEqual(getSecretarySpeechState(), { active: false, speaker: "yinyue" });
+    assert.equal(fallbacks.at(-1)?.to, "stop");
+    assert.equal(fallbacks.at(-1)?.speaker, "yinyue");
+    assert.equal(fallbacks.at(-1)?.message, "银月朗读失败，先看文字");
 
     // 自动播放阻断时不假装已开始，也不误降级为 Web Speech。
     const webFallbackCount = webUtterances.length;
     FakeAudio.instance.playBehavior = () => Promise.reject(Object.assign(new Error("play() failed because the user didn't interact"), { name: "NotAllowedError" }));
-    assert.equal(speakAsSecretary("自动播放阻断", { enabled: true }), true);
+    assert.equal(speakAsSecretary("自动播放阻断", { enabled: true, speaker: "meining" }), true);
     await waitFor(() => isSecretarySpeechBlocked(), "autoplay block was not exposed");
     assert.equal(getSecretarySpeechState().active, false);
     assert.equal(webUtterances.length, webFallbackCount);
@@ -325,10 +347,11 @@ test("speech playback state covers edge start/end, queues, stop, failure fallbac
     assert.ok(requests.every((item) => !("ratePreset" in item)));
     assert.equal(FakeAudio.instance.playbackRate, 0.7);
     assert.equal(FakeAudio.instance.preservesPitch, true);
-    assert.equal(webUtterances.at(-1).rate, 0.77);
+    assert.equal(webUtterances.at(-1).rate, 0.756);
     assert.ok(states.some((state) => state.active && state.speaker === "yinyue"));
   } finally {
     unsubscribe();
+    unsubscribeFallback();
     stopSecretarySpeech();
     globalThis.window = originalWindow;
     globalThis.Audio = originalAudio;

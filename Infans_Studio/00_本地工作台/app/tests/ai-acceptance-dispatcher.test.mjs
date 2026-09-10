@@ -236,6 +236,38 @@ test("未支持授权与本任务原件证据均失败关闭", async (t) => {
   assert.equal(plan.doctor.issues.some((item) => item.taskId === selfEvidence.id && item.code === "AUTOMATION_EVIDENCE_SELF_REFERENCE"), true);
 });
 
+test("历史岗位只警告、不认领，即使契约与触发都满足", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "infans-agent-legacy-executor-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const now = new Date("2026-09-04T12:00:00.000Z");
+  const due = [{ id: "due", type: "time", at: "2026-09-04T09:00:00.000Z" }];
+  const historical = taskRecord({
+    id: "legacy-automatic-ticket",
+    executorId: "codex-ai-acceptance",
+    displayText: "AI· 历史岗位票",
+    text: "AI· 历史岗位票｜ID：legacy-automatic-ticket｜执行器：codex-ai-acceptance",
+    details: [automaticContract(due)],
+  });
+  const current = taskRecord({
+    id: "current-automatic-ticket",
+    details: [automaticContract(due)],
+  });
+  const plan = await buildDispatchPlan({
+    root,
+    snapshot: { tasks: [historical, current], relationIndex: { issues: [] } },
+    ledger: createRuntimeLedgerState(now),
+    config: config(),
+    now,
+  });
+  assert.equal(plan.selected?.task.id, "current-automatic-ticket");
+  assert.equal(plan.candidates.some((item) => item.task.id === "legacy-automatic-ticket"), false);
+  const skipped = plan.skipped.find((item) => item.taskId === "legacy-automatic-ticket");
+  assert.deepEqual(skipped?.reasons, ["LEGACY_EXECUTOR_NOT_CURRENT"]);
+  assert.equal(skipped?.executorId, "codex-ai-acceptance");
+  assert.equal(skipped?.expectedExecutorRoleId, EXECUTOR_ID);
+  assert.equal(plan.doctor.issues.some((item) => item.taskId === "legacy-automatic-ticket" && item.code === "LEGACY_EXECUTOR_NOT_CURRENT"), true);
+});
+
 test("没有完成门的显式自动任务也失败关闭", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "infans-agent-no-gate-"));
   t.after(() => fs.rm(root, { recursive: true, force: true }));

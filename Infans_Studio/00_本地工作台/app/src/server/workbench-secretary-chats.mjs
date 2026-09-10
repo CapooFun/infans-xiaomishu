@@ -13,6 +13,7 @@ import {
 import { normalizeChatSpeaker } from "../secretary-characters.mjs";
 import { normalizeSecretaryId } from "../secretary-identity.mjs";
 import { SECRETARY_CHAT_DIR } from "./vault-paths.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 import { assertPublicChatPayload } from "../opensource-chat-session.mjs";
 
 /** 相对 Vault 根。需要换目录时只改 vault-paths.mjs。 */
@@ -319,14 +320,12 @@ async function locateChat(vaultRoot, id) {
 async function writePlaintextSecretaryChatUnlocked(vaultRoot, payload, options = {}) {
   const id = assertSafeChatId(options.id);
   const body = options.preparedBody || prepareSecretaryChatDocument(payload, { savedAt: options.savedAt });
-  const dir = options.absolute ? path.dirname(options.absolute) : await ensureChatDir(vaultRoot);
-  if (options.absolute) {
-    await fs.mkdir(dir, { recursive: true, mode: 0o700 });
-    await fs.chmod(dir, 0o700);
-  }
-  const absolute = options.absolute || path.join(dir, `${id}.json`);
-  await atomicWritePlainJson(absolute, body);
   const relativePath = options.relative || path.join(SECRETARY_CHAT_DIR_RELATIVE, `${id}.json`);
+  await withVaultFileWrite(vaultRoot, relativePath, async (target) => {
+    await fs.mkdir(path.dirname(target), { recursive: true, mode: 0o700 });
+    await fs.chmod(path.dirname(target), 0o700);
+    await atomicWritePlainJson(target, body);
+  });
   return {
     id,
     title: body.title,

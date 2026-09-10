@@ -32,7 +32,7 @@ test("本机快捷键默认是关灯、系统全屏、框选、Shift 双 Command
   assert.equal(cursorVoiceShortcutKey(snapshot.bindings), "cmd+,");
   assert.match(snapshot.commands.find((item) => item.id === "agent-dictation")?.note || "", /取消设置键/u);
   assert.match(snapshot.commands.find((item) => item.id === "screenshot-full")?.note || "", /原来的全屏截图键/u);
-  assert.match(snapshot.commands.find((item) => item.id === "agent-screenshot-chat")?.note || "", /焦点所在屏幕/u);
+  assert.match(snapshot.commands.find((item) => item.id === "agent-screenshot-chat")?.note || "", /鼠标所在那块屏/u);
   const upgradedLights = presentComputerShortcuts({
     "lights-off": { code: "F12", meta: true, ctrl: false, alt: false, shift: false },
   });
@@ -87,8 +87,8 @@ test("保存时会取消 Cursor 自己的设置键，并把本机快捷键放进
   assert.match(source, /Path\.home\(\)/u);
   assert.match(settings, /这台电脑 · 关灯/u);
   assert.match(settings, /这台电脑 · 截屏/u);
-  assert.match(settings, /截进 Cursor 对话/u);
-  assert.match(settings, /当前焦点那块屏/u);
+  assert.match(settings, /截进 Cursor 当前对话/u);
+  assert.match(settings, /鼠标所在那块屏/u);
   assert.match(prefs, /settingsTabFromLocation/u);
   assert.match(prefs, /computerValue=\{computerDraft\}/u);
   assert.match(prefs, /SECRETARY_PROFILES\.filter\(profile=>profile\.secretaryEligible\)/u);

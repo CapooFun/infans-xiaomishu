@@ -933,7 +933,7 @@ final class CodexShortcutController: NSObject, AVAudioPlayerDelegate {
             return
         }
         lastScreenshotAt = now
-        guard copyFocusedDisplayToPasteboard() else {
+        guard copyMouseDisplayToPasteboard() else {
             onStatus?("screenshot capture failed; grant screen recording if prompted")
             return
         }
@@ -945,14 +945,36 @@ final class CodexShortcutController: NSObject, AVAudioPlayerDelegate {
     }
 
     private func activateCursorThenPaste() {
-        if let cursor = runningCursor() {
-            let alreadyFront = cursor.isActive
-            if !alreadyFront {
-                cursor.activate(options: [.activateIgnoringOtherApps])
+        pasteWhenChordReleased()
+    }
+
+    private func hardwareModifiersHeld() -> Bool {
+        let flags = CGEventSource.flagsState(.hidSystemState)
+        return flags.contains(.maskCommand) || flags.contains(.maskShift)
+    }
+
+    private func pasteWhenChordReleased() {
+        let started = Date()
+        func attempt() {
+            if self.hardwareModifiersHeld() && Date().timeIntervalSince(started) < 5 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: attempt)
+                return
             }
-            let delay: TimeInterval = alreadyFront ? 0.12 : 0.32
+            if self.hardwareModifiersHeld() {
+                self.onStatus?("screenshot captured; release Shift and Command to paste into Cursor")
+                return
+            }
+            self.bringCursorFrontAndPaste()
+        }
+        attempt()
+    }
+
+    private func bringCursorFrontAndPaste() {
+        if let cursor = runningCursor() {
+            cursor.activate(options: [.activateIgnoringOtherApps])
+            let delay: TimeInterval = cursor.isActive ? 0.08 : 0.28
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-                self?.pasteWhenChordReleased()
+                self?.pasteIntoCursorComposer()
             }
             return
         }
@@ -970,51 +992,29 @@ final class CodexShortcutController: NSObject, AVAudioPlayerDelegate {
                     return
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-                    self.pasteWhenChordReleased()
+                    self.pasteIntoCursorComposer()
                 }
             }
         }
     }
 
-    private func pasteWhenChordReleased() {
-        let started = Date()
-        func attempt() {
-            if !self.bothCommandsWereDown || Date().timeIntervalSince(started) > 1 {
-                self.postPaste()
-                self.onStatus?("screenshot pasted into \(cursorBundleIdentifier)")
-                return
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: attempt)
-        }
-        attempt()
+    private func pasteIntoCursorComposer() {
+        postPaste()
+        onStatus?("screenshot pasted into \(cursorBundleIdentifier)")
     }
 
-    private func copyFocusedDisplayToPasteboard() -> Bool {
-        if copyDisplayImageToPasteboard(displayIDForFrontmostWindow()) { return true }
-        return copyDisplayWithScreenCaptureTool()
+    private func copyMouseDisplayToPasteboard() -> Bool {
+        let displayID = displayIDUnderMouse()
+        if copyDisplayImageToPasteboard(displayID) { return true }
+        if copyDisplayWithScreenCaptureTool(displayID) { return true }
+        return copyDisplayWithScreenCaptureTool(nil)
     }
 
-    private func displayIDForFrontmostWindow() -> CGDirectDisplayID {
-        let pid = Int(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0)
-        let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
-        let windows = (CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]]) ?? []
-        let match = windows.first { item in
-            let owner = item[kCGWindowOwnerPID as String] as? Int ?? Int(item[kCGWindowOwnerPID as String] as? pid_t ?? 0)
-            let layer = item[kCGWindowLayer as String] as? Int ?? 0
-            let bounds = item[kCGWindowBounds as String] as? [String: Any]
-            let width = (bounds?["Width"] as? NSNumber)?.doubleValue ?? 0
-            let height = (bounds?["Height"] as? NSNumber)?.doubleValue ?? 0
-            return owner == pid && layer == 0 && width > 80 && height > 80
-        }
-        if let bounds = match?[kCGWindowBounds as String] as? [String: Any] {
-            let x = (bounds["X"] as? NSNumber)?.doubleValue ?? 0
-            let y = (bounds["Y"] as? NSNumber)?.doubleValue ?? 0
-            let width = (bounds["Width"] as? NSNumber)?.doubleValue ?? 0
-            let height = (bounds["Height"] as? NSNumber)?.doubleValue ?? 0
-            var displayID = CGMainDisplayID()
-            var count: UInt32 = 0
-            CGGetDisplaysWithPoint(CGPoint(x: x + width / 2, y: y + height / 2), 1, &displayID, &count)
-            if count > 0 { return displayID }
+    private func displayIDUnderMouse() -> CGDirectDisplayID {
+        let mouse = NSEvent.mouseLocation
+        if let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }),
+           let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber {
+            return CGDirectDisplayID(truncating: number)
         }
         return CGMainDisplayID()
     }
@@ -1028,10 +1028,16 @@ final class CodexShortcutController: NSObject, AVAudioPlayerDelegate {
         return pasteboard.setData(png, forType: .png)
     }
 
-    private func copyDisplayWithScreenCaptureTool() -> Bool {
+    private func copyDisplayWithScreenCaptureTool(_ displayID: CGDirectDisplayID?) -> Bool {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
-        process.arguments = ["-x", "-c"]
+        if let displayID, let index = screencaptureDisplayIndex(displayID) {
+            process.arguments = ["-x", "-c", "-D", String(index)]
+        } else if let displayID {
+            process.arguments = ["-x", "-c", "-D", String(displayID)]
+        } else {
+            process.arguments = ["-x", "-c"]
+        }
         do {
             try process.run()
             process.waitUntilExit()
@@ -1041,6 +1047,16 @@ final class CodexShortcutController: NSObject, AVAudioPlayerDelegate {
         guard process.terminationStatus == 0 else { return false }
         let pasteboard = NSPasteboard.general
         return pasteboard.data(forType: .png) != nil || pasteboard.data(forType: .tiff) != nil
+    }
+
+    private func screencaptureDisplayIndex(_ displayID: CGDirectDisplayID) -> Int? {
+        var count: UInt32 = 0
+        CGGetActiveDisplayList(0, nil, &count)
+        guard count > 0 else { return nil }
+        var displays = [CGDirectDisplayID](repeating: 0, count: Int(count))
+        CGGetActiveDisplayList(count, &displays, &count)
+        guard let index = displays.prefix(Int(count)).firstIndex(of: displayID) else { return nil }
+        return index + 1
     }
 
     private func postPaste() {

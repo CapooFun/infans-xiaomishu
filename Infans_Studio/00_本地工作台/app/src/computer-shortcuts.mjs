@@ -238,10 +238,10 @@ export function computerShortcutConflictNotes(bindings) {
     notes["screenshot-full"] = "会抢走几乎所有软件里的撤销。";
   }
   if (isCursorScreenshotBinding(bindings["agent-screenshot-chat"])) {
-    notes["agent-screenshot-chat"] = "Shift 加左右 Command。任意软件前台都可用：截当前焦点所在屏幕，交给 Cursor 对话。不加 Shift 的左右 Command 留给 Codex。";
+    notes["agent-screenshot-chat"] = "Shift 加左右 Command。任意软件前台都可用：截鼠标所在那块屏，交给 Cursor 当前对话。不加 Shift 的 ⌘⌘ 留给 Codex。";
   }
   if (shortcutBindingSignature(bindings["lights-off"]) === "meta+Escape") {
-    notes["lights-off"] = "副屏熄掉，Mac 只留一点光。再按一次恢复。系统强制退出是 Option+Command+Esc。";
+    notes["lights-off"] = "副屏切掉，Mac 只留一点光。再按一次恢复。系统强制退出是 Option+Command+Esc。";
   }
   return notes;
 }

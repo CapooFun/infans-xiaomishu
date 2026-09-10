@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { MUSIC_PLAYLISTS_PATH } from "./vault-paths.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 import { normalizeMusicPath, readMusicFileMetadata } from "./workbench-music.mjs";
 
 const MAX_PLAYLISTS = 100;
@@ -47,9 +48,9 @@ function normalizePlaylist(raw) {
   };
 }
 
-async function readStored(vaultRoot) {
+async function readStoredFrom(absolute) {
   try {
-    const raw = JSON.parse(await fs.readFile(musicPlaylistsPath(vaultRoot), "utf8"));
+    const raw = JSON.parse(await fs.readFile(absolute, "utf8"));
     return (Array.isArray(raw?.playlists) ? raw.playlists : []).map(normalizePlaylist).filter(Boolean).slice(0, MAX_PLAYLISTS);
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
@@ -57,8 +58,11 @@ async function readStored(vaultRoot) {
   }
 }
 
-async function writeStored(vaultRoot, playlists) {
-  const absolute = musicPlaylistsPath(vaultRoot);
+async function readStored(vaultRoot) {
+  return readStoredFrom(musicPlaylistsPath(vaultRoot));
+}
+
+async function writeStoredTo(absolute, playlists) {
   await fs.mkdir(path.dirname(absolute), { recursive: true });
   const temporary = `${absolute}.infans-tmp`;
   await fs.writeFile(temporary, `${JSON.stringify({ version: 1, playlists }, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
@@ -93,52 +97,58 @@ export async function readMusicPlaylists(vaultRoot, libraryDir) {
 }
 
 export async function createMusicPlaylist(vaultRoot, libraryDir, value) {
-  const current = await readStored(vaultRoot);
-  if (current.length >= MAX_PLAYLISTS) throw playlistError("歌单数量已到上限");
-  const name = normalizeName(value);
-  if (current.some((playlist) => playlist.name === name)) throw playlistError("已经有同名歌单");
-  const now = new Date().toISOString();
-  const next = [...current, { id: `playlist-${randomUUID()}`, name, paths: [], createdAt: now, updatedAt: now }];
-  await writeStored(vaultRoot, next);
-  return snapshot(libraryDir, next);
+  return withVaultFileWrite(vaultRoot, MUSIC_PLAYLISTS_PATH, async (absolute) => {
+    const current = await readStoredFrom(absolute);
+    if (current.length >= MAX_PLAYLISTS) throw playlistError("歌单数量已到上限");
+    const name = normalizeName(value);
+    if (current.some((playlist) => playlist.name === name)) throw playlistError("已经有同名歌单");
+    const now = new Date().toISOString();
+    const next = [...current, { id: `playlist-${randomUUID()}`, name, paths: [], createdAt: now, updatedAt: now }];
+    await writeStoredTo(absolute, next);
+    return snapshot(libraryDir, next);
+  });
 }
 
 export async function updateMusicPlaylist(vaultRoot, libraryDir, body) {
-  const current = await readStored(vaultRoot);
-  const index = current.findIndex((playlist) => playlist.id === body?.playlistId);
-  if (index < 0) throw playlistError("找不到这个歌单", 404);
-  const playlist = { ...current[index], paths: [...current[index].paths], updatedAt: new Date().toISOString() };
-  if (body.action === "add") {
-    const track = await readMusicFileMetadata(libraryDir, body.path);
-    if (!playlist.paths.includes(track.path)) playlist.paths.push(track.path);
-    if (playlist.paths.length > MAX_TRACKS) throw playlistError("这个歌单的歌曲太多了");
-  } else if (body.action === "remove") {
-    const relative = normalizeMusicPath(body.path);
-    playlist.paths = playlist.paths.filter((item) => item !== relative);
-  } else if (body.action === "move") {
-    const relative = normalizeMusicPath(body.path);
-    const from = playlist.paths.indexOf(relative);
-    if (from < 0) throw playlistError("这首歌不在歌单里", 404);
-    const requested = Number(body.toIndex);
-    if (!Number.isInteger(requested)) throw playlistError("排序位置不合法");
-    const to = Math.max(0, Math.min(requested, playlist.paths.length - 1));
-    playlist.paths.splice(from, 1);
-    playlist.paths.splice(to, 0, relative);
-  } else if (body.action === "rename") {
-    playlist.name = normalizeName(body.name);
-    if (current.some((item, itemIndex) => itemIndex !== index && item.name === playlist.name)) throw playlistError("已经有同名歌单");
-  } else {
-    throw playlistError("这个歌单操作不受支持");
-  }
-  const next = current.with(index, playlist);
-  await writeStored(vaultRoot, next);
-  return snapshot(libraryDir, next);
+  return withVaultFileWrite(vaultRoot, MUSIC_PLAYLISTS_PATH, async (absolute) => {
+    const current = await readStoredFrom(absolute);
+    const index = current.findIndex((playlist) => playlist.id === body?.playlistId);
+    if (index < 0) throw playlistError("找不到这个歌单", 404);
+    const playlist = { ...current[index], paths: [...current[index].paths], updatedAt: new Date().toISOString() };
+    if (body.action === "add") {
+      const track = await readMusicFileMetadata(libraryDir, body.path);
+      if (!playlist.paths.includes(track.path)) playlist.paths.push(track.path);
+      if (playlist.paths.length > MAX_TRACKS) throw playlistError("这个歌单的歌曲太多了");
+    } else if (body.action === "remove") {
+      const relative = normalizeMusicPath(body.path);
+      playlist.paths = playlist.paths.filter((item) => item !== relative);
+    } else if (body.action === "move") {
+      const relative = normalizeMusicPath(body.path);
+      const from = playlist.paths.indexOf(relative);
+      if (from < 0) throw playlistError("这首歌不在歌单里", 404);
+      const requested = Number(body.toIndex);
+      if (!Number.isInteger(requested)) throw playlistError("排序位置不合法");
+      const to = Math.max(0, Math.min(requested, playlist.paths.length - 1));
+      playlist.paths.splice(from, 1);
+      playlist.paths.splice(to, 0, relative);
+    } else if (body.action === "rename") {
+      playlist.name = normalizeName(body.name);
+      if (current.some((item, itemIndex) => itemIndex !== index && item.name === playlist.name)) throw playlistError("已经有同名歌单");
+    } else {
+      throw playlistError("这个歌单操作不受支持");
+    }
+    const next = current.with(index, playlist);
+    await writeStoredTo(absolute, next);
+    return snapshot(libraryDir, next);
+  });
 }
 
 export async function deleteMusicPlaylist(vaultRoot, libraryDir, playlistId) {
-  const current = await readStored(vaultRoot);
-  const next = current.filter((playlist) => playlist.id !== playlistId);
-  if (next.length === current.length) throw playlistError("找不到这个歌单", 404);
-  await writeStored(vaultRoot, next);
-  return snapshot(libraryDir, next);
+  return withVaultFileWrite(vaultRoot, MUSIC_PLAYLISTS_PATH, async (absolute) => {
+    const current = await readStoredFrom(absolute);
+    const next = current.filter((playlist) => playlist.id !== playlistId);
+    if (next.length === current.length) throw playlistError("找不到这个歌单", 404);
+    await writeStoredTo(absolute, next);
+    return snapshot(libraryDir, next);
+  });
 }

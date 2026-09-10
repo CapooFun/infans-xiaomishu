@@ -19,13 +19,103 @@ export function lifeCategoryDefaultOpen(group: Pick<LifeEventGroup, "id" | "even
   return group.id === "leisure" && group.events.length <= 3;
 }
 
+export function lifeCategoryIsOpen(
+  group: Pick<LifeEventGroup, "id" | "events">,
+  expanded: Record<string, boolean>,
+) {
+  return expanded[group.id] ?? lifeCategoryDefaultOpen(group);
+}
+
+/** 泳道都打开、但生活分类或差旅仍收着时，一键按钮应继续显示「展开」。 */
+export function ganttExpandAllShouldShow(
+  allLanesCollapsed: boolean,
+  lifeGroups: Array<Pick<LifeEventGroup, "id" | "events">>,
+  lifeExpanded: Record<string, boolean>,
+  travelGroupIds: string[],
+  travelExpanded: Record<string, boolean>,
+) {
+  if (allLanesCollapsed) return true;
+  const lifeOpen = lifeGroups.every((group) => lifeCategoryIsOpen(group, lifeExpanded));
+  const travelOpen = travelGroupIds.every((id) => Boolean(travelExpanded[id]));
+  return !(lifeOpen && travelOpen);
+}
+
 const INDUSTRY_PATTERN = /Tokyo Indies|Tokyo Game Dungeon|东京游戏地牢|東京ゲームダンジョン|BitSummit|TGS|もくもく|AIDD|MERGE|行业活动|行业交流|業界|开发者大会|開発者大会|游戏交流会|遊戲交流會|ゲーム交流会|游戏展|遊戲展|ゲームショウ|カンファレンス|meetup/i;
 const COMPANY_TRAVEL_PATTERN = /航班|飞机|飛機|机场|機場|羽田|成田|浦东|浦東|虹桥|虹橋|新干线|新幹線|列车|列車|铁路|鉄道|酒店|旅馆|旅館|住宿|入住|退房|出差|差旅|商务旅行|商務旅行|flight|airport|hotel|check.?in|check.?out/i;
+const GAME_RELEASE_PATTERN = /游戏发售/i;
 const LEISURE_PATTERN = /电影|電影|映画|影院|シネマ|バルト|TOHO|PG\d{1,2}|剧场|劇場|观影|観劇|展览|展覧|美术馆|美術館|博物馆|博物館|演出|演唱会|演唱會|音乐会|音樂會|ライブ|コンサート|游乐|遊園地|乐园|樂園|公园|公園|温泉|观赛|観戦|聚餐|吃饭|吃飯|早饭|早飯|午餐|晚餐|约饭|約飯|食事|ランチ|ディナー|朋友|同学|同學|聚会|聚會|见面|見面|会面|會面|飲み会|旅行|旅游|旅遊|郊游|郊遊/i;
 const PERSONAL_TRAVEL_PATTERN = /出行安排|个人出行|個人出行|接送|接人|送人|接机|接機|送机|送機|取车|取車|还车|還車|打车|打車/i;
 
+export function calendarEventKind(event: Pick<CalendarEvent, "title">) {
+  return GAME_RELEASE_PATTERN.test(event.title) ? "游戏" : "事件";
+}
+
+function isScheduleTitleTimePart(part: string) {
+  const text = part.trim();
+  if (!text) return true;
+  if (/正式开始|到场|入场/.test(text) && /\d{1,2}:\d{2}/.test(text)) return true;
+  if (/^\d{1,2}:\d{2}/.test(text) && /集合|到场|入场|正式开始/.test(text)) return true;
+  if (/^正式开始/.test(text)) return true;
+  if (/集合/.test(text) && /\d{1,2}:\d{2}/.test(text)) return true;
+  return false;
+}
+
+function normalizeScheduleMatchText(value: string) {
+  return value.toLowerCase().replace(/[\s　、,，.。:：;；+\-—_《》「」『』（）()]/gu, "");
+}
+
+/** 甘特列表只保留事项内容；到场、正式开始和钟点仍留在原标题与悬停里。 */
+export function calendarEventListTitle(title: string) {
+  const stripped = String(title || "").replace(/^\s*游戏发售\s*/u, "").trim();
+  const parts = stripped.split(/[｜|]/u).map((part) => part.trim()).filter(Boolean);
+  const kept = parts.filter((part) => !isScheduleTitleTimePart(part));
+  return (kept.join("｜") || stripped || String(title || "").trim())
+    .replace(/\s*\d{1,2}:\d{2}\s*/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export type CalendarEventLinkCatalog = {
+  playbooks?: Array<{ id: string; name: string; shareName?: string }>;
+};
+
+function playbookNameScore(title: string, playbook: { name: string; shareName?: string }) {
+  const listTitle = calendarEventListTitle(title);
+  const needle = normalizeScheduleMatchText(listTitle);
+  const first = normalizeScheduleMatchText(listTitle.split("｜")[0] || listTitle);
+  let score = 0;
+  for (const label of [playbook.name, playbook.shareName]) {
+    if (!label) continue;
+    const hay = normalizeScheduleMatchText(label);
+    const hayFirst = normalizeScheduleMatchText(label.split(/[｜|]/u)[0] || label);
+    if (first.length >= 4 && (hay.includes(first) || (hayFirst.length >= 4 && first.includes(hayFirst)))) {
+      score = Math.max(score, Math.min(first.length, hayFirst.length || first.length));
+    } else if (needle.length >= 4 && (hay.includes(needle) || needle.includes(hay))) {
+      score = Math.max(score, Math.min(needle.length, hay.length));
+    }
+  }
+  return score;
+}
+
+/** 游戏发售进新品发售；对得上攻略的活动进本地活动。时间仍以苹果日历为原件。 */
+export function calendarEventHref(title: string, catalog: CalendarEventLinkCatalog = {}): string | null {
+  const raw = String(title || "").trim();
+  if (!raw) return null;
+  if (GAME_RELEASE_PATTERN.test(raw)) {
+    const query = calendarEventListTitle(raw).replace(/[《》「」『』]/gu, "").trim();
+    return `/schedule?view=releases${query ? `&q=${encodeURIComponent(query)}` : ""}`;
+  }
+  let best: { id: string; score: number } | null = null;
+  for (const playbook of catalog.playbooks || []) {
+    const score = playbookNameScore(raw, playbook);
+    if (score >= 4 && (!best || score > best.score)) best = { id: playbook.id, score };
+  }
+  return best ? `/schedule?view=local&guide=${encodeURIComponent(best.id)}` : null;
+}
+
 export function calendarEventPlacement(event: CalendarEvent): CalendarEventPlacement {
   const text = `${event.title} ${event.calendar}`;
+  if (GAME_RELEASE_PATTERN.test(text)) return { laneId: "life", categoryId: "leisure" };
   if (INDUSTRY_PATTERN.test(text)) return { laneId: "company", categoryId: "industry" };
   if (COMPANY_TRAVEL_PATTERN.test(text)) return { laneId: "company", categoryId: "travel" };
   if (LEISURE_PATTERN.test(text)) return { laneId: "life", categoryId: "leisure" };
@@ -37,6 +127,26 @@ export function calendarEventsByLane(events: CalendarEvent[]) {
   const lanes: Record<CalendarLaneId, CalendarEvent[]> = { company: [], life: [] };
   for (const event of events) lanes[calendarEventPlacement(event).laneId].push(event);
   return lanes;
+}
+
+function normalizeScheduleCoverKey(value: string) {
+  return String(value || "").replace(/\s+/g, "").toLowerCase();
+}
+
+/** 例行行已经覆盖的行业活动，不再另画苹果日历副本；把例行藏起时也不要把这些副本翻出来。 */
+export function calendarEventsNotCoveredByRoutines(
+  events: CalendarEvent[],
+  routines: Array<{ displayText?: string }>,
+) {
+  const routineKeys = routines
+    .map((series) => normalizeScheduleCoverKey(String(series.displayText || "")))
+    .filter(Boolean);
+  if (!routineKeys.length) return Array.isArray(events) ? events : [];
+  return (Array.isArray(events) ? events : []).filter((event) => {
+    const eventTitle = normalizeScheduleCoverKey(event?.title);
+    if (!eventTitle) return true;
+    return !routineKeys.some((routineTitle) => eventTitle.includes(routineTitle) || routineTitle.includes(eventTitle));
+  });
 }
 
 const COMPANY_TRAVEL_PARENT_PATTERN = /差旅|出差|商务旅行|商務旅行|business\s*trip/i;

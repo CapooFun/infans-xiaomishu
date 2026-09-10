@@ -5,6 +5,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { COMPUTER_SHORTCUTS_PATH } from "./vault-paths.mjs";
 import { WorkbenchWriteError } from "./workbench-errors.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 import {
   CURSOR_VOICE_COMMAND,
   cursorSettingsUnbindNeeded,
@@ -205,15 +206,16 @@ export async function writeComputerShortcuts(root, body) {
     revision: current.revision + 1,
     bindings: normalizeComputerShortcutBindings(body.bindings),
   };
-  const file = statePath(root);
-  await fs.mkdir(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${crypto.randomUUID()}.tmp`;
-  try {
-    await fs.writeFile(temporary, `${JSON.stringify(next, null, 2)}\n`, { flag: "wx", mode: 0o600 });
-    await fs.rename(temporary, file);
-  } finally {
-    await fs.unlink(temporary).catch(() => {});
-  }
+  await withVaultFileWrite(root, COMPUTER_SHORTCUTS_PATH, async (file) => {
+    await fs.mkdir(path.dirname(file), { recursive: true });
+    const temporary = `${file}.${crypto.randomUUID()}.tmp`;
+    try {
+      await fs.writeFile(temporary, `${JSON.stringify(next, null, 2)}\n`, { flag: "wx", mode: 0o600 });
+      await fs.rename(temporary, file);
+    } finally {
+      await fs.unlink(temporary).catch(() => {});
+    }
+  });
   const warnings = await applyComputerShortcutEffects(next.bindings);
   return { ...snapshot(next), warnings };
 }

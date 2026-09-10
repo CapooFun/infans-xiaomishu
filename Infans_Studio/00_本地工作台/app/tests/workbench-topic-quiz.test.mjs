@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseTongjianProgress, selectQuizItem, buildExplainSeed } from "../src/server/workbench-topic-quiz.mjs";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { parseTongjianProgress, selectQuizItem, buildExplainSeed, getDailyTopicQuiz } from "../src/server/workbench-topic-quiz.mjs";
 
 test("parseTongjianProgress reads frontmatter first", () => {
   const text = `---
@@ -37,4 +40,18 @@ test("buildExplainSeed asks Meining to teach not quiz first", () => {
   assert.match(seed, /请讲清楚/);
   assert.match(seed, /不要一上来就考我/);
   assert.match(seed, /第5季第006讲/);
+});
+
+test("今日一问已暂停，旧地址不再写派生文件", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "infans-topic-quiz-"));
+  const result = await getDailyTopicQuiz(root, "any-topic");
+  assert.equal(result.available, false);
+  assert.equal(result.paused, true);
+  const entries = await fs.readdir(root);
+  assert.equal(entries.length, 0);
+  await fs.rm(root, { recursive: true, force: true });
+  const home = await fs.readFile(new URL("../src/pages/HomePage.tsx", import.meta.url), "utf8");
+  const main = await fs.readFile(new URL("../src/main.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(home, /今日一问|topic-quiz|TopicQuiz/);
+  assert.doesNotMatch(main, /今日一问|topic-quiz|TopicQuiz/);
 });

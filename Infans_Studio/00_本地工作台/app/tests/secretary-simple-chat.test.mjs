@@ -39,3 +39,34 @@ test("开源 iOS 检查器只介绍一对一会话", async () => {
   const inspector = await readFile(path.join(nativeRoot, "SecretaryConversationInspectorView.swift"), "utf8");
   assert.match(inspector, /一对一会话/);
 });
+
+test("载入失败要收掉确认框，空存档不给点，别把人卡在换不了对话的界面上", async () => {
+  const overlays = await read("src/shell/WorkbenchOverlays.tsx");
+  const styles = await read("src/styles.css");
+  const applyLoaded = overlays.slice(
+    overlays.indexOf("const applyLoadedChat = async (id: string) => {"),
+    overlays.indexOf("useEffect(() => {", overlays.indexOf("const applyLoadedChat = async (id: string) => {")),
+  );
+  const catchAt = applyLoaded.indexOf("} catch (error) {");
+  assert.ok(catchAt >= 0);
+  assert.match(applyLoaded.slice(catchAt), /setPendingLoad\(null\);[\s\S]*onToast\(/);
+
+  const request = overlays.slice(
+    overlays.indexOf("const requestLoadChat = (item: SecretaryChatListItem) => {"),
+    overlays.indexOf("const confirmLoadChat ="),
+  );
+  assert.match(request, /item\.messageCount <= 0/);
+
+  const confirmLoad = overlays.slice(
+    overlays.indexOf("const confirmLoadChat = async () => {"),
+    overlays.indexOf("const beginRenameChat ="),
+  );
+  assert.match(confirmLoad, /setPendingLoad\(null\);[\s\S]*onToast\([\s\S]*return;/);
+  assert.match(confirmLoad, /这份聊天在别处也改过，先点保存另存一份，再换/);
+
+  assert.match(overlays, /const isEmpty = item\.messageCount <= 0;/);
+  assert.match(overlays, /disabled=\{busy \|\| isEmpty\}/);
+  assert.match(overlays, /isEmpty \? " empty" : ""/);
+  assert.match(styles, /\.ai-archive-item\.empty/);
+  assert.doesNotMatch(overlays, /visibleGroupUiActive|GuestStage|群聊晴岚/);
+});

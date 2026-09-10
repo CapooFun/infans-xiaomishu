@@ -3,7 +3,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { resolveWritableVaultPath, withVaultFileWrite } from "../src/server/workbench-file-write-guard.mjs";
+import { readFileSync } from "node:fs";
+import { resolveWritableVaultPath, toVaultRelativePath, withVaultFileWrite } from "../src/server/workbench-file-write-guard.mjs";
 
 async function fixture(t) {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "infans-write-guard-"));
@@ -60,4 +61,17 @@ test("write targets reject traversal and links, but allow missing regular parent
   await assert.rejects(resolveWritableVaultPath(root, "linked/note.md"), { code: "PATH_SYMLINK_FORBIDDEN" });
   await assert.rejects(resolveWritableVaultPath(root, "leaf.md"), { code: "PATH_SYMLINK_FORBIDDEN" });
   assert.equal(await resolveWritableVaultPath(root, "new/sub/note.md"), path.join(await fs.realpath(root), "new/sub/note.md"));
+});
+
+test("toVaultRelativePath keeps vault files and rejects escape", async (t) => {
+  const { directory, root } = await fixture(t);
+  assert.equal(toVaultRelativePath(root, "00_本地工作台/派生数据/home-pins.json"), "00_本地工作台/派生数据/home-pins.json");
+  assert.equal(toVaultRelativePath(root, path.join(root, "note.md")), "note.md");
+  assert.throws(() => toVaultRelativePath(root, path.join(directory, "outside.md")), { code: "PATH_OUTSIDE_VAULT" });
+  assert.throws(() => toVaultRelativePath(root, "../outside.md"), { code: "PATH_OUTSIDE_VAULT" });
+});
+
+test("the write guard does not special-case fixtures or the system temp directory", () => {
+  const source = readFileSync(new URL("../src/server/workbench-file-write-guard.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /os\.tmpdir|mkdtemp|INFANS_TEST|fixture/u);
 });

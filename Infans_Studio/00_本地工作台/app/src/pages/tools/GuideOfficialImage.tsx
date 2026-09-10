@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { ImageOff } from "lucide-react";
 
-import type { JapanActivityGuideImage } from "../../types";
+import type { LocalActivityGuideImage } from "../../types";
 import { ExternalSourceDisclosure } from "../../page-shared";
 
-type GuideOfficialImageProps = JapanActivityGuideImage & {
+type GuideOfficialImageProps = LocalActivityGuideImage & {
   guideId: string;
   className?: string;
   priority?: boolean;
@@ -30,7 +30,7 @@ export default function GuideOfficialImage({
       <div className="guide-official-image-frame">
         {showImage ? (
           <img
-            src={`/api/tools/japan-guide-image?id=${encodeURIComponent(guideId)}`}
+            src={`/api/tools/local-guide-image?id=${encodeURIComponent(guideId)}`}
             alt={imageAlt}
             loading={priority ? "eager" : "lazy"}
             decoding="async"

@@ -11,6 +11,7 @@ import { WorkbenchWriteError } from "./workbench-errors.mjs";
 import { formatFileCreatedAt } from "./workbench-wechat-bills.mjs";
 import { tokyoDay } from "../tokyo-time.mjs";
 import { APPLE_HEALTH_DERIVED, APPLE_HEALTH_SUMMARY } from "./vault-paths.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 
 const execFileAsync = promisify(execFile);
 const TARGET_PATH = APPLE_HEALTH_SUMMARY;
@@ -205,7 +206,9 @@ async function atomicWriteFile(absolute, content, mode = 0o600) {
 
 export async function writeAppleHealthDerived(vaultRoot, data) {
   const normalized = { ...data, schemaVersion: Number(data?.schemaVersion) || 1 };
-  await atomicWriteFile(appleHealthDerivedPath(vaultRoot), `${JSON.stringify(normalized)}\n`, 0o600);
+  await withVaultFileWrite(vaultRoot, DERIVED_RELATIVE, async (absolute) => {
+    await atomicWriteFile(absolute, `${JSON.stringify(normalized)}\n`, 0o600);
+  });
   return normalized;
 }
 
@@ -213,7 +216,9 @@ export async function writeAppleHealthDerived(vaultRoot, data) {
 export async function writeAppleHealthSnapshot(vaultRoot, data) {
   const normalized = normalizeAppleHealthData(data);
   await writeAppleHealthDerived(vaultRoot, normalized);
-  await atomicWriteFile(path.join(path.resolve(vaultRoot), TARGET_PATH), renderAppleHealthMarkdown(normalized), 0o600);
+  await withVaultFileWrite(vaultRoot, TARGET_PATH, async (absolute) => {
+    await atomicWriteFile(absolute, renderAppleHealthMarkdown(normalized), 0o600);
+  });
   return normalized;
 }
 
@@ -485,7 +490,9 @@ export function createAppleHealthImportService(vaultRoot, options = {}) {
       if (!item || item.expiresAt < now().getTime()) throw new WorkbenchWriteError("Apple 健康导入预览已过期", 409, "PREVIEW_EXPIRED");
       const target = path.join(root, TARGET_PATH); if (await fingerprintFile(target) !== item.expectedHash) throw new WorkbenchWriteError("Apple 健康摘要已被外部修改，本次导入已停止", 409, "WRITE_CONFLICT");
       await writeAppleHealthDerived(root, item.data);
-      await atomicWriteFile(target, item.content, 0o600);
+      await withVaultFileWrite(root, TARGET_PATH, async (absolute) => {
+        await atomicWriteFile(absolute, item.content, 0o600);
+      });
       return { ok: true, targetPath: TARGET_PATH, derivedPath: DERIVED_RELATIVE };
     },
   };

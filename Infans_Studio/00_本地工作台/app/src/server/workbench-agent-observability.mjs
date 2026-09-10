@@ -38,7 +38,7 @@ const CURSOR_ROLE_FEATURE_IDS = Object.freeze({
   "japan-activities": ["tools-game-dungeon"],
   "market-brief": ["automation-market-brief"],
   "world-brief": ["automation-world-brief", "markets-world-lanes", "markets-japan-reading"],
-  "workbench-daily-health": ["automation-daily-release"],
+  "workbench-daily-health": ["automation-daily-health"],
   "workbench-daily-release": ["automation-daily-release"],
   "ai-tools-quarterly": ["automation-ai-tools-quarterly"],
   "cursor-usage-probe": ["tools-agent-observability"],
@@ -335,7 +335,7 @@ export function isWeakCursorWindowTitle(title) {
   if (/^不要使用任何工具/u.test(text)) return true;
   const han = [...text].filter((char) => /[\u4e00-\u9fff]/u.test(char)).length;
   const latin = [...text].filter((char) => /[A-Za-z]/u.test(char)).length;
-  // "Job search for 袁存凯" still reads as an English auto title.
+  // Mixed English-plus-Han titles still read as auto-generated English.
   if (han > 0 && latin > han * 2) return true;
   if (han > 0) return false;
   return /^[A-Za-z0-9][A-Za-z0-9 _\-:/.,'’()+#]*$/u.test(text);
@@ -378,7 +378,7 @@ export function deriveCursorWindowTitle(sourceText) {
     if (/训练/u.test(text)) return "训练复盘定时任务";
     if (/市场|简报/u.test(text)) return "市场简报定时任务";
     if (/工作台|收口|版本/u.test(text)) return "工作台每日收口";
-    if (/日本活动/u.test(text)) return "日本活动定时任务";
+    if (/日本活动|本地活动/u.test(text)) return "本地活动定时任务";
     if (/Cursor|用量|探针/iu.test(text)) return "Cursor用量探针";
     return "定时任务";
   }
@@ -573,11 +573,11 @@ const CURSOR_ROLE_TITLES = Object.freeze({
   "health-daily": "身心日评",
   "monthly-review": "月度复盘",
   "training-review": "训练复盘",
-  "japan-activities": "日本活动",
+  "japan-activities": "本地活动",
   "market-brief": "金融简报",
   "world-brief": "世界资讯",
   "workbench-daily-health": "每日轻量检查",
-  "workbench-daily-release": "版本收口",
+  "workbench-daily-release": "每周版本收口",
   "ai-tools-quarterly": "AI 工具季度盘点",
   "cursor-usage-probe": "用量探针",
 });
@@ -2159,7 +2159,8 @@ const FEATURE_TITLE_RULES = [
   { featureId: "assistant-tts", pattern: /语音速度|语速|朗读|tts/iu },
   { featureId: "assistant-diary-mode", pattern: /日记模式|今天的日志|写.{0,4}日记/iu },
   { featureId: "schedule-all-project-todos", pattern: /全部待办|项目待办/iu },
-  { featureId: "automation-daily-release", pattern: /版本收口|自动版本|升版本/iu },
+  { featureId: "automation-daily-health", pattern: /每日轻量检查|轻量检查/iu },
+  { featureId: "automation-daily-release", pattern: /每周版本收口|版本收口|自动版本|升版本/iu },
   { featureId: "automation-ai-acceptance", pattern: /自动验收/iu },
   { featureId: "global-themes", pattern: /玄夜|晴岚|主题.{0,6}(色|模式|视觉|方案|切换|配色|样式)|字体.{0,8}(统一|复测)|排版.{0,8}统一/iu },
   { featureId: "assets-overview", pattern: /总资产|资产总览/iu },

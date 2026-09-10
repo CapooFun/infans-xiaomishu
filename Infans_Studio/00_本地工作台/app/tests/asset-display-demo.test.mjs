@@ -99,5 +99,11 @@ test("asset display mode includes legible buy-low sell-high examples and a reali
   const cashflow = ASSET_DISPLAY_DEMO.cashflow;
   assert.equal(cashflow?.ledgerByMonth["2026-08"]?.length, 15);
   assert.equal(cashflow?.ledgerByMonth["2026-08"]?.reduce((sum, row) => sum + row.amount, 0), -96_000);
-  assert.ok(new Set(cashflow?.ledgerByMonth["2026-08"]?.map((row) => row.category)).size >= 8);
+  const augustCats = new Set(cashflow?.ledgerByMonth["2026-08"]?.map((row) => row.category));
+  assert.ok(augustCats.size >= 8);
+  assert.equal(augustCats.has("娱乐"), true);
+  assert.equal(augustCats.has("人情"), true);
+  assert.equal(augustCats.has("吃喝"), true);
+  assert.equal(augustCats.has("餐饮"), false);
+  assert.equal(augustCats.has("转账红包"), false);
 });

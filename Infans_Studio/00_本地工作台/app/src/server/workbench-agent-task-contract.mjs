@@ -3,6 +3,12 @@ import path from "node:path";
 
 export const AGENT_TASK_CONTRACT_VERSION = 1;
 export const AGENT_TASK_CONTRACT_FIELD = "自动推进";
+export const CURRENT_AUTOMATION_EXECUTOR_ROLE_ID = "agent-task-readonly-verifier";
+export const LEGACY_AUTOMATION_EXECUTOR_IDS = Object.freeze(["codex-ai-acceptance"]);
+
+export function isLegacyAutomationExecutor(executorId) {
+  return LEGACY_AUTOMATION_EXECUTOR_IDS.includes(String(executorId || "").trim());
+}
 
 const STABLE_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/u;
 const EXECUTOR_ROLE_RE = /^[a-z0-9][a-z0-9-]{0,119}$/u;
@@ -591,6 +597,16 @@ export function doctorAgentTasks(input = [], options = {}) {
     });
     if (parsed.valid && !executorRoleId) issues.push({ severity: "error", ...issue("AUTOMATION_EXECUTOR_MISSING", `自动任务“${task.id || "未编号"}”没有执行器。`, reference) });
     if (parsed.valid && executorRoleId && !EXECUTOR_ROLE_RE.test(executorRoleId)) issues.push({ severity: "error", ...issue("AUTOMATION_EXECUTOR_INVALID", `自动任务“${task.id || "未编号"}”的执行器标识超出公共入口边界。`, reference) });
+    if (!task?.done && isLegacyAutomationExecutor(executorRoleId)) {
+      issues.push({
+        severity: "warning",
+        ...issue(
+          "LEGACY_EXECUTOR_NOT_CURRENT",
+          `任务“${task.id || "未编号"}”绑定的是历史岗位 ${executorRoleId}，现行扫描只警告、不认领。`,
+          { ...reference, executorId: executorRoleId },
+        ),
+      });
+    }
     if (parsed.valid && (task?.idKind === "derived" || !task?.id || !STABLE_ID_RE.test(String(task.id)))) issues.push({ severity: "error", ...issue("AUTOMATION_TASK_ID_INVALID", "自动任务必须使用合法、显式、全局稳定的任务 ID。", reference) });
     if (parsed.valid && completionGates(task).length === 0) issues.push({ severity: "error", ...issue("AUTOMATION_COMPLETION_GATE_MISSING", `自动任务“${task.id || "未编号"}”缺少可复查完成门。`, reference) });
     if (parsed.valid && taskObjectives(task).length !== 1) issues.push({

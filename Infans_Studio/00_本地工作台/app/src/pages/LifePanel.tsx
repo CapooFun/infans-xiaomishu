@@ -2,6 +2,8 @@ import { useId } from "react";
 import type { HealthSectionData, RecentWellbeingAssessment } from "../types";
 import { Empty, Kicker } from "../page-shared";
 
+type WeeklyGoodTime = NonNullable<HealthSectionData["life"]["weeklyGoodTimes"]>[number];
+
 const GAUGE_LABELS = [
   { key: "health" as const, label: "健康" },
   { key: "work" as const, label: "工作" },
@@ -10,16 +12,6 @@ const GAUGE_LABELS = [
 ];
 
 type GaugeKey = (typeof GAUGE_LABELS)[number]["key"];
-
-function TempBadge({
-  label = "AI 草稿",
-  title = "由 AI 整理生成，可随时调整",
-}: {
-  label?: string;
-  title?: string;
-} = {}) {
-  return <span className="temp-test-badge" title={title}>{label}</span>;
-}
 
 function buildGaugeRows(life: HealthSectionData["life"]) {
   const gauges = life?.gauges ?? [];
@@ -117,17 +109,24 @@ function recentRecoverySummary(balance: NonNullable<RecentWellbeingAssessment["e
   return `${balance.judgment}${balance.unknown ? `。还不知道：${balance.unknown}` : ""}`;
 }
 
+function formatGoodTimeDates(dates: string[], evidence: string) {
+  if (dates.length) return dates.join(" · ");
+  return evidence || "还没日期";
+}
+
 /** 好时光：只显示当前已有的回能／耗能判断，不替本人制造结论。 */
 function LineLeanDial({
   line,
   lean,
   dates,
   note,
+  evidence,
 }: {
   line: string;
   lean: "回能" | "耗能" | "中性" | null;
   dates: string[];
   note: string;
+  evidence: string;
 }) {
   const value = lean === "回能" ? 0.82 : lean === "耗能" ? 0.18 : 0.5;
   const uid = `lean${useId().replace(/:/g, "")}`;
@@ -153,17 +152,17 @@ function LineLeanDial({
         <strong style={{ color: tip }}>{lean || "—"}</strong>
       </div>
       <h3>{line}</h3>
-      <span>{dates.length ? dates.join(" · ") : "还没日期"}</span>
+      <span>{formatGoodTimeDates(dates, evidence)}</span>
       {note ? <p>{note}</p> : null}
     </article>
   );
 }
 
-function goodTimesSummary(toolbox: NonNullable<HealthSectionData["life"]["toolbox"]>) {
-  const recharge = toolbox.goodTimes.find((row) => row.lean === "回能");
-  const drain = toolbox.goodTimes.find((row) => row.lean === "耗能");
+function goodTimesSummary(rows: WeeklyGoodTime[]) {
+  const recharge = rows.find((row) => row.lean === "回能");
+  const drain = rows.find((row) => row.lean === "耗能");
   if (!recharge && !drain) return "";
-  return [recharge ? `回能 · ${recharge.line}` : null, drain ? `耗能 · ${drain.line}` : null].filter(Boolean).join(" / ");
+  return [recharge ? `回能 · ${recharge.text}` : null, drain ? `耗能 · ${drain.text}` : null].filter(Boolean).join(" / ");
 }
 
 export default function LifePanel({
@@ -178,10 +177,10 @@ export default function LifePanel({
   const { latest, values, lowestKey } = buildGaugeRows(life);
   const surprise = latest?.surprise && !/^[…\.．\s]+$/.test(latest.surprise) ? latest.surprise : "";
   const refuel = latest?.refuel && !/^[…\.．\s]+$/.test(latest.refuel) ? latest.refuel : "";
-  const toolbox = life?.toolbox ?? null;
+  const weeklyGoodTimes = life?.weeklyGoodTimes ?? [];
   const lowestLabel = lowestKey ? GAUGE_LABELS.find((item) => item.key === lowestKey)?.label : null;
   const lowestValue = lowestKey ? values.find((item) => item.key === lowestKey)?.value : null;
-  const cardGoodTimes = toolbox ? goodTimesSummary(toolbox) : "";
+  const cardGoodTimes = goodTimesSummary(weeklyGoodTimes);
   const recentEntries = life?.recentAssessment?.entries ?? [];
   const recentBalance = recentEntries[0]?.balance ?? null;
   const recentKnownGoodTime = recentEntries
@@ -212,7 +211,7 @@ export default function LifePanel({
         {cardGoodTimes ? (
           <div className="health-deck-inset life-goodtimes-compact">
             <Kicker>好时光</Kicker>
-            <p className="life-card-goodtimes" title="点进完整页看依据">{toolbox?.tempTest ? <TempBadge /> : null}{cardGoodTimes}</p>
+            <p className="life-card-goodtimes" title="点进完整页看依据">{cardGoodTimes}</p>
           </div>
         ) : null}
       </div>
@@ -226,13 +225,21 @@ export default function LifePanel({
       <section className="life-atelier-section">
         <div className="life-section-head">
           <div><Kicker>好时光</Kicker><h2>哪些事情回能，哪些事情耗能</h2></div>
-          {toolbox?.tempTest ? <TempBadge /> : null}
         </div>
-        {toolbox?.goodTimes?.length ? (
+        {weeklyGoodTimes.length ? (
           <div className="life-lean-grid">
-            {toolbox.goodTimes.map((row) => <LineLeanDial key={row.line} line={row.line} lean={row.lean} dates={row.dates} note={row.note} />)}
+            {weeklyGoodTimes.map((row, index) => (
+              <LineLeanDial
+                key={`${row.text}-${index}`}
+                line={row.text}
+                lean={row.lean}
+                dates={row.dates}
+                note={row.note}
+                evidence={row.evidence}
+              />
+            ))}
           </div>
-        ) : <p className="life-muted">还没有按线的好时光记录</p>}
+        ) : <p className="life-muted">这周还没有记下哪些事情回能或耗能</p>}
       </section>
     </div>
   );

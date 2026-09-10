@@ -1136,7 +1136,7 @@ export default function ToolsPage({
   useEffect(() => {
     const sync = () => {
       if (window.location.pathname === "/tools/game-dungeon") {
-        window.history.replaceState({}, "", "/schedule?view=japan");
+        window.history.replaceState({}, "", "/schedule?view=local");
         window.dispatchEvent(new PopStateEvent("popstate"));
         return;
       }

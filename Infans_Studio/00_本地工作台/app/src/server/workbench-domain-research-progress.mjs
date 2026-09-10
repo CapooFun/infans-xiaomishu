@@ -2,11 +2,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { DOMAIN_RESEARCH_PROGRESS_PATH } from "./vault-paths.mjs";
 import { WorkbenchWriteError } from "./workbench-errors.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 
 const ID_RE = /^[a-z0-9][a-z0-9-]{0,119}$/u;
 const CARD_STATUSES = new Set(["overview", "unclear", "deep"]);
 const MAX_RECENT = 30;
-let writeQueue = Promise.resolve();
 
 function emptyProgress() {
   return { schemaVersion: 1, cards: {}, choices: {}, lastPosition: null, lastPositions: {}, recentCardIds: [] };
@@ -71,14 +71,18 @@ async function writeProgressFile(absolute, payload) {
   }
 }
 
-export async function readDomainResearchProgress(vaultRoot) {
+async function readProgressFrom(absolute) {
   try {
-    const text = await fs.readFile(domainResearchProgressPath(vaultRoot), "utf8");
+    const text = await fs.readFile(absolute, "utf8");
     return normalizeDomainResearchProgress(JSON.parse(text));
   } catch (error) {
     if (error?.code === "ENOENT") return emptyProgress();
     throw error;
   }
+}
+
+export async function readDomainResearchProgress(vaultRoot) {
+  return readProgressFrom(domainResearchProgressPath(vaultRoot));
 }
 
 /** 单次点按只更新当前卡；知识正文与本人判断原件不写入此派生文件。 */
@@ -93,17 +97,15 @@ export async function writeDomainResearchProgress(vaultRoot, payload = {}, optio
   if (!position || position.cardId !== cardId) throw new WorkbenchWriteError("浏览位置不正确", 400, "INVALID_DOMAIN_POSITION");
   const now = options.now?.() ?? new Date();
   const updatedAt = now.toISOString();
-  const operation = writeQueue.then(async () => {
-    const current = await readDomainResearchProgress(vaultRoot);
+  return withVaultFileWrite(vaultRoot, DOMAIN_RESEARCH_PROGRESS_PATH, async (absolute) => {
+    const current = await readProgressFrom(absolute);
     const next = normalizeDomainResearchProgress(current);
     if (status !== undefined) next.cards[cardId] = { status, updatedAt };
     if (choiceId !== undefined) next.choices[cardId] = { choiceId, updatedAt };
     next.lastPosition = { ...position, updatedAt };
     next.lastPositions[position.domainId] = { ...position, updatedAt };
     next.recentCardIds = [cardId, ...next.recentCardIds.filter((id) => id !== cardId)].slice(0, MAX_RECENT);
-    await writeProgressFile(domainResearchProgressPath(vaultRoot), next);
+    await writeProgressFile(absolute, next);
     return next;
   });
-  writeQueue = operation.catch(() => undefined);
-  return operation;
 }

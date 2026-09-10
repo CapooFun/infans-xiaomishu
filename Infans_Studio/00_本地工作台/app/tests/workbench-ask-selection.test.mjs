@@ -1,14 +1,12 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
-import {
-  buildAskSelectionSeedUser,
-  clearPendingAskSelection,
-  enqueueAskSelection,
-  takePendingAskSelection,
-} from "../src/server/workbench-ai-selection.mjs";
-import { assertAskSelectionOrigin } from "../src/server/workbench-routes.mjs";
-import { WorkbenchWriteError } from "../src/server/workbench-errors.mjs";
+import { fileURLToPath } from "node:url";
+import { buildAskSelectionSeedUser } from "../src/shell/ask-selection.ts";
 import { DEFAULT_MODEL } from "../src/server/workbench-ai.mjs";
+
+const workbenchRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 test("DEFAULT_MODEL is empty in the open-source tree", () => {
   assert.equal(DEFAULT_MODEL, "");
@@ -38,36 +36,34 @@ test("buildAskSelectionSeedUser uses markets / languages templates", () => {
   assert.match(external, /example\.com/);
 });
 
-test("enqueue and take pending ask selection", () => {
-  clearPendingAskSelection();
-  const queued = enqueueAskSelection({
-    selectedText: "测试选区",
-    pageUrl: "http://127.0.0.1:5173/markets",
-  });
-  assert.ok(queued.id);
-  assert.match(queued.seedUser, /世界资讯/);
-  const taken = takePendingAskSelection();
-  assert.equal(taken?.selectedText, "测试选区");
-  assert.equal(takePendingAskSelection(), null);
-});
+test("问问空接口已退场，发给秘书 Origin 留下，页内划字仍在", () => {
+  const routes = fs.readFileSync(new URL("../src/server/workbench-routes.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(routes, /\/api\/ai\/ask-selection/);
+  assert.doesNotMatch(routes, /\/api\/ai\/pending-selection/);
+  assert.doesNotMatch(routes, /assertAskSelectionOrigin/);
+  assert.doesNotMatch(routes, /writeAskSelectionCors/);
+  assert.match(routes, /writeYingningIntakeCors/);
+  assert.match(routes, /allowChromeExtensionOrigin:\s*true/);
 
-test("assertAskSelectionOrigin allows chrome-extension on loopback", () => {
-  assert.doesNotThrow(() => assertAskSelectionOrigin({
-    headers: { host: "127.0.0.1:5173", origin: "chrome-extension://abcdefghijklmnop" },
-  }));
-  assert.doesNotThrow(() => assertAskSelectionOrigin({
-    headers: { host: "127.0.0.1:5173", origin: "http://127.0.0.1:5173" },
-  }));
-  assert.throws(
-    () => assertAskSelectionOrigin({
-      headers: { host: "127.0.0.1:5173", origin: "https://evil.example" },
-    }),
-    (error) => error instanceof WorkbenchWriteError && error.code === "ORIGIN_REJECTED",
-  );
-  assert.throws(
-    () => assertAskSelectionOrigin({
-      headers: { host: "example.com", origin: "chrome-extension://abcdefghijklmnop" },
-    }),
-    (error) => error instanceof WorkbenchWriteError && error.code === "ORIGIN_REJECTED",
-  );
+  const selectionQueue = path.join(workbenchRoot, "app/src/server/workbench-ai-selection.mjs");
+  assert.equal(fs.existsSync(selectionQueue), false);
+
+  const askExt = path.join(workbenchRoot, "chrome-extension-问问小秘书");
+  const sendExt = path.join(workbenchRoot, "chrome-extension-发给秘书");
+  assert.equal(fs.existsSync(askExt), false);
+  assert.equal(fs.existsSync(path.join(sendExt, "manifest.json")), true);
+
+  const launcher = fs.readFileSync(path.join(workbenchRoot, "app/scripts/launch-chrome-workbench.sh"), "utf8");
+  assert.doesNotMatch(launcher, /--load-extension/);
+  assert.doesNotMatch(launcher, /chrome-extension-问问/);
+  assert.doesNotMatch(launcher, /user-data-dir=/);
+  assert.match(launcher, /日常桌面入口是原生 小秘书\.app/);
+  assert.match(launcher, /open -a "Google Chrome"/);
+
+  const main = fs.readFileSync(new URL("../src/main.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(main, /pending-selection/);
+  assert.doesNotMatch(main, /askSecretary/);
+  assert.doesNotMatch(main, /setInterval\(tick, 1500\)/);
+  assert.match(main, /<SelectionAskMenu route=\{path\}/);
+  assert.match(main, /<SelectionAskFab route=\{path\}/);
 });

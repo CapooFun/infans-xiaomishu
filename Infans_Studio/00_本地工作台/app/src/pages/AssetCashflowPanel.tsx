@@ -59,6 +59,8 @@ const CAT_TONE: Record<string, string> = {
   订阅娱乐: "gold",
   游戏: "gold",
   公司支出: "gold",
+  娱乐: "gold",
+  人情: "gold",
   转账红包: "gold",
   学习: "gold",
   手续费: "gold",
@@ -79,6 +81,7 @@ const CAT_TONE: Record<string, string> = {
   当面付款: "mist",
   物流: "gold",
   其他: "mist",
+  待确认: "mist",
 };
 
 const STACK_COLORS = ["var(--teal)", "var(--gold)", "var(--mist-blue)", "var(--red)", "color-mix(in srgb, var(--red) 45%, var(--mist-blue))", "color-mix(in srgb, var(--teal) 60%, var(--gold))"];
@@ -319,7 +322,7 @@ function categoriesFromLedger(ledger: AssetCashflowEntry[], kind: "income" | "ex
   const catMap = new Map<string, { name: string; cny: number; count: number }>();
   for (const row of ledger) {
     if (row.kind !== kind) continue;
-    const name = row.category || "其他";
+    const name = row.category || "待确认";
     const prev = catMap.get(name) || { name, cny: 0, count: 0 };
     prev.cny += toCny(row.amount, row.currency, jpyToCny);
     prev.count += 1;
@@ -409,7 +412,7 @@ function pickTrendCategories(
   for (const month of selected) {
     for (const row of ledgerByMonth[month] ?? []) {
       if (row.kind !== kind) continue;
-      const name = row.category || "其他";
+      const name = row.category || "待确认";
       map.set(name, (map.get(name) ?? 0) + Math.abs(toCny(row.amount, row.currency, jpyToCny)));
     }
   }

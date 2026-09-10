@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { WorkbenchWriteError } from "./workbench-errors.mjs";
 
 export const PROJECT_HUB_SCHEMA_VERSION = 1;
 export const PROJECT_HUB_MANIFEST_PATH = ".infans/project-hub.v1.json";
@@ -443,4 +444,76 @@ export async function readExternalProjectHub(projectId, options = {}) {
       errors: [],
     };
   }
+}
+
+// 页内阅读只服务已在清单登记、通过安全校验的 Markdown 原件；不接受用户提交的任意绝对路径，
+// 不放宽凭据、日志或冻结扩展名边界。正文只按稳定 projectId + 对象 ID 定位。
+const MAX_HUB_SOURCE_BODY_BYTES = 1_000_000;
+const READABLE_HUB_SOURCE_EXTENSION_RE = /\.(?:md|markdown)$/iu;
+
+function findHubSourceById(hub, objectId) {
+  const visitFeature = (feature) => {
+    if (feature.id === objectId) return feature.source || null;
+    for (const child of feature.children || []) {
+      const found = visitFeature(child);
+      if (found) return found;
+    }
+    return null;
+  };
+  for (const workline of hub.worklines || []) if (workline.id === objectId) return workline.source || null;
+  for (const tree of hub.featureTrees || []) {
+    if (tree.id === objectId) return tree.source || null;
+    for (const module of tree.modules || []) {
+      if (module.id === objectId) return module.source || null;
+      for (const feature of module.features || []) {
+        const found = visitFeature(feature);
+        if (found) return found;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * 只读打开外部项目主页已登记的原件正文。定位链路：稳定 projectId 命中服务器白名单根 →
+ * 读固定清单 → 稳定对象 ID 命中该对象“已通过校验并展示”的 source → 二次安全校验路径 →
+ * 读文件正文。任何一步失败都返回明确错误码，绝不回退到用户可控路径。
+ */
+export async function readExternalProjectHubSource(projectId, objectId, options = {}) {
+  const sources = options.sources || DEFAULT_EXTERNAL_PROJECT_SOURCES;
+  const safeProjectId = safeId(projectId);
+  const safeObjectId = safeId(objectId);
+  if (!safeProjectId) throw new WorkbenchWriteError("请选择要打开的项目", 400, "PROJECT_HUB_SOURCE_PROJECT_ID_REQUIRED");
+  if (!safeObjectId) throw new WorkbenchWriteError("请选择要打开的原件条目", 400, "PROJECT_HUB_SOURCE_OBJECT_ID_REQUIRED");
+  const registered = sources[safeProjectId];
+  if (!registered) throw new WorkbenchWriteError("这个项目未登记外部资料", 404, "PROJECT_HUB_SOURCE_PROJECT_NOT_REGISTERED");
+  const result = await readExternalProjectHub(safeProjectId, { sources });
+  if (!result.hub) throw new WorkbenchWriteError("这个项目的资料当前打不开", 404, "PROJECT_HUB_SOURCE_HUB_UNAVAILABLE");
+  const source = findHubSourceById(result.hub, safeObjectId);
+  if (!source?.path) throw new WorkbenchWriteError("这个条目没有可读的项目原件", 404, "PROJECT_HUB_SOURCE_NOT_FOUND");
+  const basename = path.basename(source.path);
+  if (!READABLE_HUB_SOURCE_EXTENSION_RE.test(basename)) throw new WorkbenchWriteError("这个原件不是可页内阅读的文档", 415, "PROJECT_HUB_SOURCE_TYPE_DENIED");
+  let absolute;
+  try {
+    absolute = await resolveInsideRegisteredRoot(registered.root, source.path, { source: true });
+  } catch (error) {
+    throw new WorkbenchWriteError("项目原件路径不合法或不在白名单内", 400, `PROJECT_HUB_SOURCE_${String(error?.message || "PATH_REJECTED")}`);
+  }
+  let stat;
+  try {
+    stat = await fs.stat(absolute);
+  } catch {
+    throw new WorkbenchWriteError("项目原件当前找不到", 404, "PROJECT_HUB_SOURCE_MISSING");
+  }
+  if (!stat.isFile()) throw new WorkbenchWriteError("项目原件当前找不到", 404, "PROJECT_HUB_SOURCE_MISSING");
+  if (stat.size > MAX_HUB_SOURCE_BODY_BYTES) throw new WorkbenchWriteError("正文太长，页内阅读打不开", 413, "PROJECT_HUB_SOURCE_TOO_LARGE");
+  const text = await fs.readFile(absolute, "utf8");
+  return {
+    projectId: safeProjectId,
+    objectId: safeObjectId,
+    label: source.label || "项目原件",
+    path: source.path,
+    kind: "markdown",
+    text,
+  };
 }

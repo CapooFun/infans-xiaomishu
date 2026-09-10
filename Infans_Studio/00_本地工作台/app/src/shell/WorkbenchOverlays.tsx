@@ -9,6 +9,7 @@ import {
   getSecretarySpeechRatePreset,
   isSecretaryVoiceEnabled,
   onSecretarySpeechBlocked,
+  onSecretarySpeechFallback,
   onSecretarySpeechState,
   previewSecretaryHighQuality,
   resumeBlockedSecretarySpeech,
@@ -34,6 +35,7 @@ import { isHoldToTalkSpace, mergeVoiceTranscript, waitForVoiceTranscripts } from
 import { extractSecretarySwitchIntent, PUBLIC_USER_DISPLAY_NAME, secretaryDutyPortrait, secretaryProfileById, secretaryRefreshPortraitSrc } from "../secretary-identity.mjs";
 import { isDisplayModeHiddenSecretaryChat } from "../display-mode";
 import { archiveMessageSnapshot, chatOriginalMetadata, sameArchiveSnapshot, saveCurrentArchiveSnapshot, type ChatOriginalMetadata } from "../secretary-archive-save";
+import { PUBLIC_THREAD_KEY } from "../opensource-chat-session.mjs";
 import { createPublicThreadBuffer, mergeLoadedSession, shouldAutoApplyDiskArchive } from "../opensource-thread-buffer.mjs";
 
 type SpeechRecognitionResultLike = { isFinal: boolean; 0?: { transcript?: string } };
@@ -549,6 +551,14 @@ function actionNeedsConfirm(action: AiProposedAction, preview: WritePreview) {
   return aiWriteNeedsConfirmation(action, preview, action.kind === "editFile" && isWorkbenchCodePath(action.path));
 }
 
+function createLockedPublicThreadBuffer() {
+  const buffer = createPublicThreadBuffer();
+  if (buffer.sharedFallbackKey !== PUBLIC_THREAD_KEY) {
+    throw new Error("开源聊天壳必须使用公开一对一会话键");
+  }
+  return buffer;
+}
+
 export function IdentityOverlay({ data, onClose }: { data: WorkbenchSummary; onClose: () => void }) {
   return <PersonalGallery data={data} onClose={onClose}/>;
 }
@@ -585,7 +595,7 @@ export function AiPanel({
   const initialSession = useRef(emptyAiSession()).current;
   const [bufferReady, setBufferReady] = useState(false);
   const [identityError, setIdentityError] = useState<string | null>(null);
-  const threadBufferRef = useRef(createPublicThreadBuffer());
+  const threadBufferRef = useRef(createLockedPublicThreadBuffer());
   const [status, setStatus] = useState<AiRuntimeStatus | null>(null);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<AiThreadMessage[]>(() => initialSession.messages);
@@ -708,7 +718,7 @@ export function AiPanel({
   const privateSessionActiveRef = useRef(false);
   useEffect(() => {
     let cancelled = false;
-    const buffer = createPublicThreadBuffer();
+    const buffer = createLockedPublicThreadBuffer();
     threadBufferRef.current = buffer;
     void buffer.bind().then((bound) => {
       if (cancelled || bound.stale) return;
@@ -787,6 +797,7 @@ export function AiPanel({
     unlockSecretaryAudio();
     jsonFetch<typeof status>("/api/ai/status").then(setStatus);
     const offBlocked = onSecretarySpeechBlocked(setSpeechBlocked);
+    const offFallback = onSecretarySpeechFallback((event) => onToast(event.message));
     const offSpeechState = onSecretarySpeechState((next) => {
       setSpeakingSpeaker(next.active ? normalizeSecretarySpeaker(next.speaker) : null);
       if (!hybridVoiceActiveRef.current) return;
@@ -818,6 +829,7 @@ export function AiPanel({
       controller.current?.abort();
       stopSecretarySpeech();
       offBlocked();
+      offFallback();
       offSpeechState();
       window.removeEventListener(NATIVE_TRANSCRIPT_EVENT, onNativeTranscript);
       hybridVoiceActiveRef.current = false;
@@ -1606,6 +1618,8 @@ export function AiPanel({
       setShowArchives(false);
       onToast(`已载入「${data.title}」`);
     } catch (error) {
+      // 载入失败也要把确认框收掉，让列表回到可点状态，不能把人卡在空面板上。
+      setPendingLoad(null);
       onToast(error instanceof Error ? error.message : "载入失败");
     } finally {
       if (loadEpoch === archiveEpochRef.current || archiveIdRef.current === id) setLoadingArchiveId(null);
@@ -1629,6 +1643,10 @@ export function AiPanel({
 
   const requestLoadChat = (item: SecretaryChatListItem) => {
     if (loading || applying || pendingWrite || loadingArchiveId || archiveBusyId) return;
+    if (item.messageCount <= 0) {
+      onToast("这份存档是空的，删掉就行。");
+      return;
+    }
     if (item.id === activeArchiveId) {
       setShowArchives(false);
       onToast("就是当前这份聊天");
@@ -1647,7 +1665,14 @@ export function AiPanel({
     if (!pendingLoad || loadingArchiveId) return;
     const target = pendingLoad;
     const hasContent = messages.some((item) => !item.pending && (item.content.trim() || item.attachments?.length));
-    if (hasContent && !(await saveChat({ silent: true }))) return;
+    // 存不下当前这份就不能换，但必须说出来并把确认框收掉，否则界面看上去像是点了没反应。
+    if (hasContent && !(await saveChat({ silent: true }))) {
+      setPendingLoad(null);
+      onToast(archiveSaveConflictRef.current
+        ? "这份聊天在别处也改过，先点保存另存一份，再换。"
+        : "当前这份聊天没能保存，先保存再换。");
+      return;
+    }
     await applyLoadedChat(target.id);
   };
 
@@ -2294,6 +2319,8 @@ export function AiPanel({
                     .map((item) => {
                       const isCurrent = item.id === activeArchiveId;
                       const busy = archiveBusyId === item.id || loadingArchiveId === item.id;
+                      // 0 条的存档载入必定失败，直接标成空的、不给点，只留删除。
+                      const isEmpty = item.messageCount <= 0;
                       if (renamingId === item.id) {
                         return (
                           <div key={item.id} className={`ai-archive-item editing${isCurrent ? " current" : ""}`}>
@@ -2318,16 +2345,17 @@ export function AiPanel({
                         );
                       }
                       return (
-                        <article key={item.id} className={`ai-archive-item${isCurrent ? " current" : ""}`}>
+                        <article key={item.id} className={`ai-archive-item${isCurrent ? " current" : ""}${isEmpty ? " empty" : ""}`}>
                           <button
                             type="button"
                             className="ai-archive-item-main"
-                            disabled={busy}
+                            disabled={busy || isEmpty}
                             onClick={() => requestLoadChat(item)}
                           >
                             <strong>
                               {item.title}
                               {isCurrent ? <em>正在聊</em> : null}
+                              {isEmpty && !isCurrent ? <em>空的</em> : null}
                             </strong>
                             <small>{formatChatSavedAt(item.savedAt)} · {item.messageCount} 条</small>
                             <span>{item.preview}</span>

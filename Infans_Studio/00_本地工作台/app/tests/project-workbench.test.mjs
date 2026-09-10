@@ -471,7 +471,8 @@ test("完整产品项目把功能树放在第一行，其他工作线留在主�
   assert.ok(hubSource.includes('Number(right.workline.view.kind === "featureTree")'));
   assert.ok(hubSource.includes('worklines.find((workline) => workline.view.kind !== "featureTree")'));
   assert.ok(hubSource.includes('if (workline.view.kind === "featureTree") onOpenFeatureTree'));
-  assert.ok(hubSource.includes('else {\n                      setSelectedId(workline.id)'));
+  assert.ok(hubSource.includes('setSourceReading(false)'));
+  assert.ok(hubSource.includes('setSelectedId(workline.id)'));
   assert.ok(hubSource.includes('!selected || projectHubAssociationMatchesWorkline'));
   assert.ok(hubSource.includes('selected ? "当前工作线" : "项目整体"'));
   assert.equal(hubSource.includes("项目阻塞"), false);
@@ -481,6 +482,36 @@ test("完整产品项目把功能树放在第一行，其他工作线留在主�
   assert.ok(projectsPage.includes("项目目录内资料"));
   assert.equal(projectsPage.includes("externalProjectRoot"), false);
   assert.equal(projectsPage.includes("/api/project-hub?path="), false);
+});
+
+test("阅读正文时收起左侧工作线，收起后恢复原貌", () => {
+  const projectsPage = readFileSync(new URL("../src/pages/ProjectsPage.tsx", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const hubSource = projectsPage.slice(projectsPage.indexOf("function ProjectHubHome"), projectsPage.indexOf("function ManagedProjectWorkbenchView"));
+  assert.match(hubSource, /project-hub-layout\$\{sourceReading \? " is-reading" : ""\}/u);
+  assert.match(hubSource, /hidden=\{sourceReading\}/u);
+  assert.match(projectsPage, /收起正文/u);
+  assert.match(styles, /\.project-hub-layout\.is-reading \{ grid-template-columns:minmax\(0,1fr\)/u);
+  assert.match(styles, /\.project-hub-layout\.is-reading \.project-hub-worklines \{ display:none;/u);
+  assert.match(styles, /\.project-hub-layout\.is-reading \.project-hub-source-article \{ width:100%;max-width:none;/u);
+  assert.match(styles, /\.project-hub-layout\.is-reading \.project-hub-source-article table \{ display:table;width:max-content;min-width:100%/u);
+  assert.match(styles, /\.project-hub-layout\.is-reading \.project-hub-source-article :is\(th,td\):first-child \{[^}]*min-width:7em/u);
+  assert.match(styles, /\.project-hub-layout\.is-reading \.project-hub-source-article table:has\(tr > :nth-child\(4\):last-child\) :is\(th,td\):nth-child\(3\) \{[^}]*min-width:8\.5em/u);
+});
+
+test("工作线原件入口在最近完成下面，展示模式也不藏", () => {
+  const projectsPage = readFileSync(new URL("../src/pages/ProjectsPage.tsx", import.meta.url), "utf8");
+  const hubSource = projectsPage.slice(projectsPage.indexOf("function ProjectHubHome"), projectsPage.indexOf("function ManagedProjectWorkbenchView"));
+  assert.match(hubSource, /这条工作线近期暂无关联的完成记录/u);
+  assert.match(hubSource, /\{selected\?\.source \?/u);
+  assert.doesNotMatch(hubSource, /!displayMode && selected\?\.source/u);
+  assert.match(hubSource, /ProjectHubSourceReader/u);
+});
+
+test("工作线状态标签按文字收紧，不被右侧说明撑开", () => {
+  const styles = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.match(styles, /\.project-hub-workline \{[^}]*grid-template-columns:34px minmax\(0,1fr\) auto/u);
+  assert.match(styles, /\.project-hub-workline > \.project-hub-status \{[^}]*justify-self:end;[^}]*width:max-content;/u);
 });
 
 test("Project Hub 适配层保留末端 summary、状态与安全相对来源", () => {
@@ -541,13 +572,17 @@ test("首页只负责导航和回顶，刷新由主题胶囊中央圆环单击�
   assert.ok(main.includes('title="刷新工作台"'));
   assert.ok(main.includes("refreshSection(section)"));
   assert.ok(main.includes("await waitForWorkbenchRefresh(tasks)"));
-  assert.ok(main.includes('void loadCalendar({ force: true })'));
+  assert.ok(main.includes('void refreshCalendarWindows("all", { force: true })'));
   assert.ok(main.includes("WORKBENCH_REFRESH_TIMEOUT_MS = 12_000"));
   assert.ok(main.includes("刷新超时，已停止等待"));
   assert.ok(main.includes("workbenchRefreshFeedbackText(activeSecretary.name)"));
   assert.ok(main.includes("setRouteRefreshRevisions((revisions) => ({"));
   assert.ok(main.includes("[contentPath]: (revisions[contentPath] ?? 0) + 1"));
   assert.ok(main.includes('fetch("/api/frontend-refresh"'));
+  const routes = readFileSync(new URL("../src/server/workbench-routes.mjs", import.meta.url), "utf8");
+  const serve = readFileSync(new URL("../src/server/serve.mjs", import.meta.url), "utf8");
+  assert.ok(routes.includes('router.use("/api/frontend-refresh", handleFrontendRefresh);'));
+  assert.equal(serve.includes('router.use("/api/frontend-refresh"'), false);
   assert.ok(main.includes('method: "POST"'));
   assert.ok(main.includes("payload.rebuilt === true"));
   assert.ok(main.includes("frontendBuildNeedsHandoff({"));
@@ -778,7 +813,7 @@ test("全局搜索完整退出，局部搜索、日本活动提级和最终工�
   const overlays = readFileSync(new URL("../src/shell/WorkbenchOverlays.tsx", import.meta.url), "utf8");
   const tools = readFileSync(new URL("../src/pages/ToolsPage.tsx", import.meta.url), "utf8");
   const schedule = readFileSync(new URL("../src/pages/SchedulePage.tsx", import.meta.url), "utf8");
-  const japanActivities = readFileSync(new URL("../src/pages/tools/JapanActivitiesView.tsx", import.meta.url), "utf8");
+  const japanActivities = readFileSync(new URL("../src/pages/tools/LocalActivitiesView.tsx", import.meta.url), "utf8");
   const topics = readFileSync(new URL("../src/pages/TopicsPage.tsx", import.meta.url), "utf8");
   const projects = readFileSync(new URL("../src/pages/ProjectsPage.tsx", import.meta.url), "utf8");
   const music = readFileSync(new URL("../src/pages/tools/MusicPlayerView.tsx", import.meta.url), "utf8");
@@ -800,20 +835,21 @@ test("全局搜索完整退出，局部搜索、日本活动提级和最终工�
   assert.deepEqual([...tools.matchAll(/name: \"([^\"]+)\"/g)].slice(0, expectedOrder.length).map((match) => match[1]), expectedOrder);
   assert.match(tools, /id: "game-analytics",\s+group: "work",\s+name: "游戏数据表现"/);
   assert.equal(tools.includes('id: "game-dungeon"'), false);
-  assert.equal(tools.includes("import JapanActivitiesView"), false);
-  assert.ok(schedule.includes("JapanActivitiesView"));
-  assert.ok(tools.includes('/schedule?view=japan'));
+  assert.equal(tools.includes("import LocalActivitiesView"), false);
+  assert.ok(schedule.includes("LocalActivitiesView"));
+  assert.ok(tools.includes('/schedule?view=local'));
   assert.ok(tools.includes("RenewalExpiryView"));
   assert.equal(tools.includes("KitchenOrdersView"), false);
   assert.equal(tools.includes("活动组织"), false);
   assert.match(routes, /router\.use\("\/api\/tools\/diary-mode"[\s\S]*?protectAssetResponse\(response\);[\s\S]*?assertPrivateAssetAccess\(request\);/);
   assert.match(routes, /const handleDialogueDiaries = async[\s\S]*?protectAssetResponse\(response\);[\s\S]*?assertPrivateAssetAccess\(request\);/);
   assert.ok(routes.includes('router.use("/api/tools/dialogue-diaries", handleDialogueDiaries);'));
-  assert.ok(routes.includes('router.use("/api/tools/dialogue-logs", handleDialogueDiaries);'));
+  assert.equal(routes.includes('router.use("/api/tools/dialogue-logs", handleDialogueDiaries);'), false);
+  assert.equal(routes.includes("/api/tools/dialogue-logs"), false);
   assert.doesNotMatch(routes, /\/api\/tools\/hosted-activities|\/api\/tools\/kitchen-orders/u);
   assert.equal(japanActivities.includes("hosted-activities-panel"), false);
   assert.equal(japanActivities.includes("GameDungeonGuide"), false);
-  assert.ok(japanActivities.includes('import("./JapanActivityGuide")'));
+  assert.ok(japanActivities.includes('import("./LocalActivityGuide")'));
   assert.equal(tools.includes('role="listitem"'), false);
   assert.equal(topics.includes("topics-intro"), false);
   assert.equal(topics.includes("先进入学习专题"), false);

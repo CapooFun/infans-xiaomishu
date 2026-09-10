@@ -42,7 +42,8 @@ test("conversation chrome uses dynamic theme colors, larger role avatars and a p
   assert.match(conversation, /accessibilityLabel\("回到最新消息"\)/u);
   assert.doesNotMatch(conversation, /@Environment\(\\\.colorScheme\) private var colorScheme/u);
   assert.doesNotMatch(conversation, /colors: colorScheme == \.dark/u);
-  assert.match(composer, /"和\\\(store\.activeSecretaryName\)说说话…"/u);
+  assert.match(composer, /store\.composerStatusPlaceholder/u);
+  assert.doesNotMatch(composer, /和\\\(store\.activeSecretaryName\)说说话/u);
   assert.match(composer, /accessibilityLabel\("发送给\\\(store\.activeSecretaryName\)"\)/u);
   assert.match(catalog, /UserChatAvatar\.jpg/u);
 });

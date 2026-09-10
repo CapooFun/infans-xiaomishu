@@ -26,6 +26,8 @@ const MAX_CALL_MS = 10 * 60 * 1000;
  * 余额与密钥就绪后把这一处改为 true，即可恢复入口。
  */
 export const OPENAI_REALTIME_UI_ENABLED = false;
+/** 混合实时同样只留实现，不进按钮。余额与密钥就绪后再接。 */
+export const HYBRID_REALTIME_UI_ENABLED = false;
 
 const PHASE_LABELS: Record<CallPhase, string> = {
   idle: "还没有接通",
@@ -313,6 +315,8 @@ export function SecretaryRealtimeVoice({
   const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, "0");
   const seconds = (elapsedSeconds % 60).toString().padStart(2, "0");
 
+  if (!HYBRID_REALTIME_UI_ENABLED && !OPENAI_REALTIME_UI_ENABLED) return null;
+
   return (
     <>
       <button
@@ -349,19 +353,21 @@ export function SecretaryRealtimeVoice({
                 <span>低成本 · 文字或按段语音</span>
                 <small>保留现有文字对话和 TTS；按住说完一段再发送。</small>
               </button>
-              <button
-                type="button"
-                className={selectedMode === "hybrid" ? "selected" : ""}
-                aria-pressed={selectedMode === "hybrid"}
-                onClick={() => {
-                  if (active) stopCall();
-                  setSelectedMode("hybrid");
-                }}
-              >
-                <strong>混合实时</strong>
-                <span>免按住 · 可打断 · 外部模型</span>
-                <small>持续听你说；转写后交给你自行接入的模型，再把回复分段播出。低延迟，但不是端到端实时音频模型。</small>
-              </button>
+              {HYBRID_REALTIME_UI_ENABLED ? (
+                <button
+                  type="button"
+                  className={selectedMode === "hybrid" ? "selected" : ""}
+                  aria-pressed={selectedMode === "hybrid"}
+                  onClick={() => {
+                    if (active) stopCall();
+                    setSelectedMode("hybrid");
+                  }}
+                >
+                  <strong>混合实时</strong>
+                  <span>免按住 · 可打断 · 外部模型</span>
+                  <small>持续听你说；转写后交给你自行接入的模型，再把回复分段播出。低延迟，但不是端到端实时音频模型。</small>
+                </button>
+              ) : null}
               {OPENAI_REALTIME_UI_ENABLED ? (
                 <button
                   type="button"
@@ -379,7 +385,7 @@ export function SecretaryRealtimeVoice({
               ) : null}
             </div>
 
-            {selectedMode === "hybrid" ? (
+            {HYBRID_REALTIME_UI_ENABLED && selectedMode === "hybrid" ? (
               <>
                 <div className="realtime-voice-status">
                   <i className={hybridAvailable ? "online" : ""}/>

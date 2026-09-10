@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 import { HOME_PINS_PATH } from "./vault-paths.mjs";
 
 const PINS_RELATIVE = HOME_PINS_PATH;
@@ -37,8 +38,7 @@ async function writePinsFile(absolute, pins) {
   await fs.rename(temporary, absolute);
 }
 
-export async function readHomePins(vaultRoot) {
-  const absolute = homePinsPath(vaultRoot);
+async function readPinsFrom(absolute) {
   try {
     const text = await fs.readFile(absolute, "utf8");
     return normalizePins(JSON.parse(text));
@@ -48,14 +48,20 @@ export async function readHomePins(vaultRoot) {
   }
 }
 
+export async function readHomePins(vaultRoot) {
+  return readPinsFrom(homePinsPath(vaultRoot));
+}
+
 /** 缺省字段保留盘上原值，避免改一类策展时冲掉其他偏好。 */
 export async function writeHomePins(vaultRoot, payload = {}) {
-  const current = await readHomePins(vaultRoot);
-  const next = normalizePins({
-    topicIds: payload.topicIds !== undefined ? payload.topicIds : current.topicIds,
-    likedCourseIds: payload.likedCourseIds !== undefined ? payload.likedCourseIds : current.likedCourseIds,
-    researchDomainId: payload.researchDomainId !== undefined ? payload.researchDomainId : current.researchDomainId,
+  return withVaultFileWrite(vaultRoot, PINS_RELATIVE, async (absolute) => {
+    const current = await readPinsFrom(absolute);
+    const next = normalizePins({
+      topicIds: payload.topicIds !== undefined ? payload.topicIds : current.topicIds,
+      likedCourseIds: payload.likedCourseIds !== undefined ? payload.likedCourseIds : current.likedCourseIds,
+      researchDomainId: payload.researchDomainId !== undefined ? payload.researchDomainId : current.researchDomainId,
+    });
+    await writePinsFile(absolute, next);
+    return next;
   });
-  await writePinsFile(homePinsPath(vaultRoot), next);
-  return next;
 }

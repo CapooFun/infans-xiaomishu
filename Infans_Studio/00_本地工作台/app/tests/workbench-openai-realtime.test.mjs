@@ -125,7 +125,10 @@ test("paid OpenAI Realtime UI is hidden behind one restore switch while implemen
   assert.match(source, /混合实时/);
   assert.match(source, /不是端到端实时音频模型/);
   assert.match(source, /export const OPENAI_REALTIME_UI_ENABLED = false/);
+  assert.match(source, /export const HYBRID_REALTIME_UI_ENABLED = false/);
+  assert.match(source, /if \(!HYBRID_REALTIME_UI_ENABLED && !OPENAI_REALTIME_UI_ENABLED\) return null/);
   assert.match(source, /OPENAI_REALTIME_UI_ENABLED \? \(/);
+  assert.match(source, /HYBRID_REALTIME_UI_ENABLED \? \(/);
   assert.match(source, /OpenAI 原生实时/);
   assert.match(source, /gpt-realtime-2\.1-mini/);
   assert.match(source, /gpt-realtime-2\.1/);
@@ -137,7 +140,7 @@ test("hybrid voice keeps external text models and wires barge-in plus segmented 
   assert.match(source, /hybrid: true/);
   assert.match(source, /controller\.current\?\.abort\(\)/);
   assert.match(source, /takeHybridSpeechChunks\(hybridSpeechBuffer/);
-  assert.match(source, /speakSecretaryTurns\(fresh, \{[\s\S]*enabled: hybrid \|\| voiceOn/);
+  assert.match(source, /speakAsSecretary\(chunk, \{ enabled: true, speaker: activeSecretaryId, append: true \}/);
 });
 
 test("native hybrid recognition finalizes a spoken phrase after silence", async () => {

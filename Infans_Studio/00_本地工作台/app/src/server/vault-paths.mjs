@@ -132,8 +132,8 @@ export const SUNXIANG_HOLDINGS_FILE = path.posix.join(SUNXIANG_HOLDINGS_DIR, "�
 export const WECHAT_BILLS_DIR = path.posix.join(DIR_LIFE, "生活账单");
 /** 固定 / 大事开销备忘（JSON）；支出页只读展示。 */
 export const FIXED_EXPENSES_FILE = path.posix.join(WECHAT_BILLS_DIR, "固定开销.json");
-/** 日本活动官方来源介绍卡；定时任务只能覆盖这一份白名单原件。 */
-export const JAPAN_ACTIVITIES_SOURCE = path.posix.join(DIR_LIFE, "日本游玩攻略", "日本活动.md");
+/** 本地活动介绍卡（当前原件仍是东京活动卡）；定时任务只能覆盖这一份白名单原件。 */
+export const LOCAL_ACTIVITIES_SOURCE = path.posix.join(DIR_LIFE, "日本游玩攻略", "日本活动.md");
 /** 续费／到期管理元数据；不复制金额或完整账号。 */
 export const RENEWAL_EXPIRY_SOURCE = path.posix.join(DIR_LIFE, "日常杂务", "续费到期.md");
 /** 工行收入备忘（截图分类）；收入页只读展示。 */

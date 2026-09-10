@@ -154,7 +154,9 @@ struct SecretaryChatRootView: View {
             SecretarySettingsView(
                 secretaryID: store.displaySecretaryID,
                 secretaryName: store.activeSecretaryName,
-                secretaryAvatarURL: store.activeSecretaryAvatarURL
+                secretaryAvatarURL: store.activeSecretaryAvatarURL,
+                chatStore: store,
+                showsOrdinaryModelList: usesPhoneFrontend
             )
         }
     }
@@ -270,6 +272,7 @@ struct SecretaryChatRootView: View {
                     store: store,
                     conversationsPresented: padSidebar == .conversations,
                     onOpenConversations: {
+                        SecretaryKeyboard.resign()
                         togglePadSidebar(.conversations)
                     },
                     onOpenConnection: {
@@ -392,6 +395,7 @@ private struct SecretaryPadChatHeader: View {
                     Text(store.activeSecretaryName)
                         .font(.system(size: 18, weight: .semibold, design: .serif))
                         .foregroundStyle(Color.secretaryIvory)
+                        .onTapGesture { SecretaryKeyboard.resign() }
                 }
 
                 Spacer(minLength: 12)
@@ -489,7 +493,10 @@ struct SecretaryChatHeader: View {
     var body: some View {
         HStack(spacing: 0) {
             if let showsConversations {
-                Button { showsConversations.wrappedValue = true } label: {
+                Button {
+                    SecretaryKeyboard.resign()
+                    showsConversations.wrappedValue = true
+                } label: {
                     Image(systemName: "sidebar.left")
                         .frame(width: 40, height: 40)
                 }
@@ -504,10 +511,14 @@ struct SecretaryChatHeader: View {
                 .font(.system(size: 18, weight: .semibold, design: .serif))
                 .foregroundStyle(Color.secretaryIvory)
                 .lineLimit(1)
+                .onTapGesture { SecretaryKeyboard.resign() }
             Spacer(minLength: 10)
 
             if let showsInspector {
-                Button { showsInspector.wrappedValue = true } label: {
+                Button {
+                    SecretaryKeyboard.resign()
+                    showsInspector.wrappedValue = true
+                } label: {
                     Image(systemName: "ellipsis")
                         .frame(width: 40, height: 40)
                 }

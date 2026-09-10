@@ -1308,7 +1308,10 @@ export default function AssetsPage({ displayMode = false, onAskSecretary }: { di
           </div>
           <Kicker>资产保险库</Kicker>
           <h2>资产管理已锁定</h2>
-          <p>解锁前金额不会离开这台电脑。15 分钟后自动重新锁上。</p>
+          <p className="asset-unlock-hint">
+            <span>解锁前金额不会离开这台电脑</span>
+            <span>15 分钟后自动重新锁上</span>
+          </p>
           <form
             className="asset-unlock-form"
             autoComplete="off"

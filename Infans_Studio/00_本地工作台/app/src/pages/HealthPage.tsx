@@ -303,16 +303,10 @@ function useHealthDerived(data: HealthSectionData, today: string): BodyDerived {
 
 export default function HealthPage({
   data,
-  onImport,
-  onImportFromDownloads,
-  importing,
   onAskCoach,
   onWritePreview,
 }: {
   data: HealthSectionData;
-  onImport: (file: File) => void;
-  onImportFromDownloads: () => void;
-  importing: boolean;
   onAskCoach: (seedUser: string) => void;
   onWritePreview?: (action: WriteAction) => void;
 }) {

@@ -5,6 +5,7 @@ import { WORKBENCH_PREFERENCES_PATH, DIR_WORKBENCH } from './vault-paths.mjs';
 import { loadSecretaryVisualAssetCatalog } from './workbench-secretary-visual-assets.mjs';
 import { emptyPreferences, defaultDevice, normalizeScheme, normalizeDevice, validDeviceId } from '../workbench-preferences-model.mjs';
 import { WorkbenchWriteError } from './workbench-errors.mjs';
+import { withVaultFileWrite } from './workbench-file-write-guard.mjs';
 
 export async function preferenceBackgrounds(root) {
   const {catalog}=await loadSecretaryVisualAssetCatalog(root,{requireFiles:false});
@@ -21,9 +22,9 @@ export async function preferenceBackgrounds(root) {
   return assets.map(a=>{if(totals.get(a.name)===1)return a;const n=(seen.get(a.name)||0)+1;seen.set(a.name,n);return {...a,name:`${a.name} ${n}`};});
 }
 export function createPreferencesService(root,options={}) {
-  const statePath=path.resolve(root,options.statePath || WORKBENCH_PREFERENCES_PATH);
+  const relativeStatePath=options.statePath || WORKBENCH_PREFERENCES_PATH;
+  const statePath=path.resolve(root,relativeStatePath);
   const backgrounds=options.backgrounds || (()=>preferenceBackgrounds(root));
-  let serial=Promise.resolve();
   async function readState() {
     try {
       const raw=JSON.parse(await fs.readFile(statePath,'utf8'));
@@ -40,7 +41,7 @@ export function createPreferencesService(root,options={}) {
   }
   async function read() { const [state,assets]=await Promise.all([readState(),backgrounds()]);return {state,backgrounds:assets}; }
   async function write(body) {
-    const operation=serial.then(async()=>{
+    return withVaultFileWrite(root,relativeStatePath,async(target)=>{
       if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some(k=>!['action','deviceId','expectedRevision','device','scheme','schemeId'].includes(k))) throw new WorkbenchWriteError('保存请求包含未知设置',400,'PREFERENCES_INVALID');
       const snapshot=await read(),state=snapshot.state;
       if(!body||body.expectedRevision!==state.revision) throw new WorkbenchWriteError('设置已在另一处更新，请重新读取后再保存',409,'PREFERENCES_CONFLICT');
@@ -62,13 +63,12 @@ export function createPreferencesService(root,options={}) {
       if(body.device) state.devices[body.deviceId]=normalizeDevice(body.device,state.schemes);
       else if(!Object.hasOwn(state.devices,body.deviceId)) state.devices[body.deviceId]=defaultDevice();
       state.revision+=1;
-      await fs.mkdir(path.dirname(statePath),{recursive:true});
-      const temporary=`${statePath}.${crypto.randomUUID()}.tmp`;
-      try {await fs.writeFile(temporary,`${JSON.stringify(state,null,2)}\n`,{flag:'wx',mode:0o600});await fs.rename(temporary,statePath);}
+      await fs.mkdir(path.dirname(target),{recursive:true});
+      const temporary=`${target}.${crypto.randomUUID()}.tmp`;
+      try {await fs.writeFile(temporary,`${JSON.stringify(state,null,2)}\n`,{flag:'wx',mode:0o600});await fs.rename(temporary,target);}
       finally {await fs.unlink(temporary).catch(()=>{});}
       return {state,backgrounds:snapshot.backgrounds};
     });
-    serial=operation.catch(()=>{});return operation;
   }
   return {read,write,statePath};
 }

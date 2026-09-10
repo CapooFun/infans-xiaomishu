@@ -219,3 +219,18 @@ test("picks the newest numbered 导出 N.zip from Downloads", async (t) => {
   const picked = pickNewestAppleHealthDownload(await listAppleHealthDownloadCandidates(dir));
   assert.equal(picked?.filePath, newZip);
 });
+
+test("日常页不再挂 ZIP 导入入口，恢复实现仍留在后端", () => {
+  const main = readFileSync(new URL("../src/main.tsx", import.meta.url), "utf8");
+  const routes = readFileSync(new URL("../src/server/workbench-routes.mjs", import.meta.url), "utf8");
+  const importer = readFileSync(new URL("../src/server/workbench-apple-health.mjs", import.meta.url), "utf8");
+  const body = readFileSync(new URL("../src/pages/BodyPanel.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(main, /requestAppleHealthPreview/);
+  assert.doesNotMatch(main, /requestAppleHealthFromDownloads/);
+  assert.doesNotMatch(main, /healthImporting/);
+  assert.match(importer, /export function createAppleHealthImportService/);
+  assert.match(routes, /assertAppleHealthZipOps\(request\)/);
+  assert.match(routes, /\/api\/apple-health\/device-sync/);
+  assert.doesNotMatch(body, /type="file"/);
+  assert.match(body, /手工 ZIP 恢复只允许在这台 Mac 本机执行/);
+});

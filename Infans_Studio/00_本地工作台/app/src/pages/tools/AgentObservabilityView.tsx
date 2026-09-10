@@ -81,7 +81,7 @@ function isSingleRunGauge(task: AgentObservabilityTask) {
   return task.usageMode === "this-run" || (task.kind === "cursor" && task.hasChildren === false);
 }
 
-function cacheReadKnown(usage: AgentUsage | undefined) {
+function cacheReadKnown(usage: AgentUsage | null | undefined) {
   return usage?.fieldStatus?.cachedInputTokens !== "unknown" && Boolean(usage?.inputTokens);
 }
 

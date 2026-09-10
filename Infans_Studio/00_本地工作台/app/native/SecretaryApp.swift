@@ -1432,9 +1432,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             return
         }
         if type == "print-guide" {
-            let jobTitle = (payload["jobTitle"] as? String ?? "日本活动攻略")
+            let jobTitle = (payload["jobTitle"] as? String ?? "本地活动攻略")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            openGuidePrintPanel(jobTitle: jobTitle.isEmpty ? "日本活动攻略" : jobTitle)
+            openGuidePrintPanel(jobTitle: jobTitle.isEmpty ? "本地活动攻略" : jobTitle)
             return
         }
         guard type == "speech-state" else { return }

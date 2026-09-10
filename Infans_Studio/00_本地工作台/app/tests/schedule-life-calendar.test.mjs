@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
 import test from "node:test";
-import { calendarEventPlacement, calendarEventsByLane, calendarMarkerStackOffsets, calendarRange, companyTravelEventLabel, eventDays, eventTimeLabel, eventAxisPointStyle, groupCompanyTravel, groupLifeEvents, lifeCategoryDefaultOpen, lifeEvents, shiftMonth } from "../src/pages/schedule/calendar-model.ts";
+import { calendarEventHref, calendarEventKind, calendarEventListTitle, calendarEventPlacement, calendarEventsByLane, calendarEventsNotCoveredByRoutines, calendarMarkerStackOffsets, calendarRange, companyTravelEventLabel, eventDays, eventTimeLabel, eventAxisPointStyle, ganttExpandAllShouldShow, groupCompanyTravel, groupLifeEvents, lifeCategoryDefaultOpen, lifeCategoryIsOpen, lifeEvents, shiftMonth } from "../src/pages/schedule/calendar-model.ts";
 import { buildGanttModel, buildRoadmapMonths } from "../src/gantt-model.ts";
 import { createCalendarWriteService } from "../src/server/workbench-calendar.mjs";
 
@@ -38,6 +38,40 @@ test("industry events and business travel both live under company matters", () =
   assert.deepEqual(groupLifeEvents(rows).map((group) => [group.label, group.events.length]), [
     ["游玩娱乐", 2], ["其他事务", 1],
   ]);
+});
+test("game releases go to leisure with a 游戏 badge, while industry events stay company", () => {
+  assert.deepEqual(calendarEventPlacement({ ...event, title: "游戏发售 《示例园艺模拟》" }), { laneId: "life", categoryId: "leisure" });
+  assert.deepEqual(calendarEventPlacement({ ...event, title: "Tokyo Indies 游戏交流会" }), { laneId: "company", categoryId: "industry" });
+  assert.equal(calendarEventKind({ title: "游戏发售 《示例园艺模拟》" }), "游戏");
+  assert.equal(calendarEventKind({ title: "《只狼》新宿バルト9｜16:40到场・正式开始17:10" }), "事件");
+});
+test("gantt list titles keep the event and drop trailing times, and known items link out", () => {
+  const playbooks = [
+    { id: "example-garden-fair-2026", name: "示例园艺展 2026｜周末去市集", shareName: "示例园艺展｜9月19日周末市集一日" },
+    { id: "tokyo-autumn-bbq-2026", name: "东京秋季户外BBQ", shareName: "东京秋季户外BBQ｜十人电车出发" },
+  ];
+  assert.equal(calendarEventListTitle("示例园艺展｜市集三人同行｜正式开始09:30（东京时间）"), "示例园艺展｜市集三人同行");
+  assert.equal(calendarEventListTitle("东京秋季户外BBQ｜09:00高円寺集合・正式开始11:00｜昭和纪念公园（暂定）"), "东京秋季户外BBQ｜昭和纪念公园（暂定）");
+  assert.equal(calendarEventListTitle("游戏发售 《示例园艺模拟》"), "《示例园艺模拟》");
+  assert.equal(calendarEventListTitle("《只狼》新宿バルト9｜16:40到场・正式开始17:10"), "《只狼》新宿バルト9");
+  assert.equal(calendarEventHref("游戏发售 《示例园艺模拟》"), "/schedule?view=releases&q=%E7%A4%BA%E4%BE%8B%E5%9B%AD%E8%89%BA%E6%A8%A1%E6%8B%9F");
+  assert.equal(calendarEventHref("示例园艺展｜市集三人同行｜正式开始09:30（东京时间）", { playbooks }), "/schedule?view=local&guide=example-garden-fair-2026");
+  assert.equal(calendarEventHref("东京秋季户外BBQ｜09:00高円寺集合・正式开始11:00｜昭和纪念公园（暂定）", { playbooks }), "/schedule?view=local&guide=tokyo-autumn-bbq-2026");
+  assert.equal(calendarEventHref("取消 Apple Music 个人版免费试用", { playbooks }), null);
+});
+test("hiding a company routine does not unmask matching Apple Calendar copies", () => {
+  const events = [1, 2, 3, 4].map((index) => ({
+    ...event,
+    id: `tokyo-indies-${index}`,
+    title: "Tokyo Indies 游戏交流会",
+    start: `2026-${String(8 + index).padStart(2, "0")}-16T19:00:00+09:00`,
+    end: `2026-${String(8 + index).padStart(2, "0")}-16T21:00:00+09:00`,
+  }));
+  const covering = [{ displayText: "Tokyo Indies" }];
+  assert.equal(calendarEventsNotCoveredByRoutines(events, covering).length, 0);
+  assert.equal(calendarEventsNotCoveredByRoutines(events, []).length, 4);
+  assert.equal(lifeCategoryIsOpen({ id: "leisure", events: [event] }, {}), true);
+  assert.equal(ganttExpandAllShouldShow(false, [{ id: "leisure", events: [event] }], {}, [], {}), false);
 });
 test("company travel groups calendar moments under the matching range without swallowing industry events", () => {
   const model = buildGanttModel({
@@ -113,11 +147,11 @@ function fakeCalendar(initial = [event]) {
 async function withService(fn) {
   const cacheDir = await fs.mkdtemp(path.join(os.tmpdir(), "life-calendar-test-"));
   const fake = fakeCalendar();
-  const service = createCalendarWriteService({ cacheDir, readCurrent: async () => ({ available: true, permission: "granted", events: [event] }), runner: async (script) => ({ stdout: vm.runInNewContext(`${script};run()`, { Application: () => fake.app, Date }) }) });
+  const service = createCalendarWriteService({ cacheDir, osEnabled: true, readCurrent: async () => ({ available: true, permission: "granted", events: [event] }), runner: async (script) => ({ stdout: vm.runInNewContext(`${script};run()`, { Application: () => fake.app, Date }) }) });
   try { await fn(service, fake); } finally { await fs.rm(cacheDir, { recursive: true, force: true }); }
 }
 test("calendar write preview requires stable expected snapshot and rejects readonly changes", () => {
-  const service = createCalendarWriteService();
+  const service = createCalendarWriteService({ osEnabled: true, cacheDir: os.tmpdir() });
   assert.throws(() => service.preview({ kind: "delete", id: event.id }), /原日程快照/);
   for (const expected of [{ ...event, recurring: true }, { ...event, editable: false }, { ...event, calendar: "计划的提醒事项" }])
     assert.throws(() => service.preview({ kind: "delete", id: event.id, expected }), /只读/);
@@ -147,7 +181,7 @@ test("EventKit identity is resolved to a different JXA UID only by unique exact 
 }));
 test("missing native identity blocks writes before invoking Calendar.app", async () => {
   let calls = 0;
-  const service = createCalendarWriteService({ readCurrent: async () => ({ available: true, permission: "granted", events: [] }), runner: async () => { calls++; return { stdout: "{}" }; } });
+  const service = createCalendarWriteService({ osEnabled: true, cacheDir: os.tmpdir(), readCurrent: async () => ({ available: true, permission: "granted", events: [] }), runner: async () => { calls++; return { stdout: "{}" }; } });
   const preview = service.preview({ kind: "delete", id: event.id, expected: event });
   await assert.rejects(() => service.commit(preview.token), /别处修改/);
   assert.equal(calls, 0);
@@ -170,6 +204,17 @@ test("UI keeps life above work, uses original Gantt event stars, and leaves appo
   assert.match(page, /\[lifeLane, \.\.\.model.lanes.filter/);
   assert.match(page, /LifeCalendarSidebar/);
   assert.match(page, /expandedLifeCategories/);
+  assert.match(page, /calendarEventKind\(event\)/);
+  assert.match(page, /calendarEventListTitle/);
+  assert.match(page, /gantt-event-link/);
+  assert.match(page, /todayPx - 90/);
+  assert.match(page, /scrollLeft = left/);
+  assert.doesNotMatch(page, /calendar-company-travel-span/);
+  assert.match(page, /HideEyeButton label=\{event\.title\}/);
+  assert.match(page, /onHide=\{\(event\) => hideText\(event\.title\)\}/);
+  assert.match(page, /visibleLifeEvents/);
+  assert.match(page, /refreshLifeCalendar\(true\)/);
+  assert.match(page, /calendarEventsNotCoveredByRoutines\(laneAppointments, coveringRoutines\)/);
   assert.match(page, /CompanyTravelSidebar/);
   assert.match(page, /CompanyTravelAxis/);
   assert.match(page, /\{travelRows\}\{taskRows\}\{eventRows\}\{routineRows\}/);

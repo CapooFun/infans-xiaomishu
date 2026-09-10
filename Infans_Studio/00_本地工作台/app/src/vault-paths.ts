@@ -1,6 +1,6 @@
 /** Vault 一级目录名（与 server/vault-paths.mjs 保持同步）。 */
 export const DIR_WORKBENCH = "00_本地工作台";
-export const JAPAN_ACTIVITIES_SOURCE = "80_生活事务/日本游玩攻略/日本活动.md";
+export const LOCAL_ACTIVITIES_SOURCE = "80_生活事务/日本游玩攻略/日本活动.md";
 export const RENEWAL_EXPIRY_SOURCE = "80_生活事务/日常杂务/续费到期.md";
 export const MARKET_EVENT_TOPICS_DIR = "50_世界资讯/金融/重大事件专题";
 export const LANGUAGE_REACTOR_SOURCE = "55_语言学习/日语/收藏/沉浸语料/Language Reactor收藏.md";

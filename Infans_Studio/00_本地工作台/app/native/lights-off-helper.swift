@@ -5,12 +5,13 @@ import Foundation
 
 private let builtinTarget: Float = 0.07
 private let dimThreshold: Float = 0.12
-private let stateSchema = 1
+private let stateSchema = 2
 
 private typealias BrightnessGet = @convention(c) (CGDirectDisplayID, UnsafeMutablePointer<Float>) -> Int32
 private typealias BrightnessSet = @convention(c) (CGDirectDisplayID, Float) -> Int32
 private typealias BrightnessCan = @convention(c) (CGDirectDisplayID) -> Bool
 private typealias BrightnessChanged = @convention(c) (CGDirectDisplayID, Float) -> Void
+private typealias ConfigureEnabled = @convention(c) (CGDisplayConfigRef?, CGDirectDisplayID, Bool) -> Int32
 
 private struct DisplayServicesAPI {
   var get: BrightnessGet?
@@ -38,6 +39,18 @@ private struct DisplayServicesAPI {
   }
 }
 
+private struct SavedDisplay: Codable {
+  var displayID: UInt32
+  var vendorNumber: UInt32
+  var modelNumber: UInt32
+  var serialNumber: UInt32
+  var name: String
+  var originX: Double
+  var originY: Double
+  var width: Double
+  var height: Double
+}
+
 private struct LightsOffState: Codable {
   var schemaVersion: Int
   var applied: Bool
@@ -45,6 +58,32 @@ private struct LightsOffState: Codable {
   var builtinBrightness: Float?
   var toggleKeyCode: Int64?
   var toggleModifiers: Int64?
+  var disabledDisplays: [SavedDisplay]?
+}
+
+private struct DisplayInfo {
+  let id: CGDirectDisplayID
+  let name: String
+  let bounds: CGRect
+  let vendor: UInt32
+  let model: UInt32
+  let serial: UInt32
+  let builtin: Bool
+  let active: Bool
+
+  func saved() -> SavedDisplay {
+    SavedDisplay(
+      displayID: id,
+      vendorNumber: vendor,
+      modelNumber: model,
+      serialNumber: serial,
+      name: name,
+      originX: Double(bounds.origin.x),
+      originY: Double(bounds.origin.y),
+      width: Double(bounds.width),
+      height: Double(bounds.height)
+    )
+  }
 }
 
 private final class ShieldWindow: NSWindow {
@@ -87,15 +126,15 @@ enum LightsOffHelper {
 private final class LightsOffSession: NSObject {
   private let stateURL: URL
   private let api = DisplayServicesAPI.load()
+  private let configureEnabled = configureEnabledSymbol()
   private var overlays: [NSWindow] = []
   private var restored = false
   private var interruptReady = false
-  private var localKeyMonitor: Any?
-  private var globalKeyMonitor: Any?
   private var brightnessWatch: Timer?
   private var lastSeenBrightness: Float?
   private var originalDisplayID: CGDirectDisplayID?
   private var originalBrightness: Float?
+  private var disablingExternals = false
 
   init(stateURL: URL) {
     self.stateURL = stateURL
@@ -106,12 +145,17 @@ private final class LightsOffSession: NSObject {
     captureOriginal(&state)
     originalDisplayID = state.builtinDisplayID.map { CGDirectDisplayID($0) }
     originalBrightness = state.builtinBrightness
+    let externals = listOnlineDisplays().filter { !$0.builtin && $0.active }
+    state.disabledDisplays = mergeSaved(state.disabledDisplays ?? [], externals.map { $0.saved() })
     state.applied = true
     writeState(state)
+    if !externals.isEmpty, let error = setDisplaysEnabled(externals.map(\.id), enabled: false) {
+      FileHandle.standardError.write(Data("\(error)\n".utf8))
+      exit(1)
+    }
     dimBuiltin()
     rebuildOverlays()
     listenForDisplayChanges()
-    listenForToggleKey()
     startInterruptWatch()
     trapTermination()
   }
@@ -122,13 +166,12 @@ private final class LightsOffSession: NSObject {
     interruptReady = false
     brightnessWatch?.invalidate()
     brightnessWatch = nil
-    if let localKeyMonitor { NSEvent.removeMonitor(localKeyMonitor) }
-    if let globalKeyMonitor { NSEvent.removeMonitor(globalKeyMonitor) }
-    localKeyMonitor = nil
-    globalKeyMonitor = nil
     overlays.forEach { $0.orderOut(nil) }
     overlays.removeAll()
     let state = readState()
+    let targetIDs = restoreTargetIDs(state)
+    _ = setDisplaysEnabled(targetIDs, enabled: true)
+    restoreArrangement(state)
     let displayID = originalDisplayID ?? state.builtinDisplayID.map { CGDirectDisplayID($0) } ?? builtinDisplayID()
     let brightness = originalBrightness ?? state.builtinBrightness
     if let displayID, let brightness, brightness > dimThreshold {
@@ -142,7 +185,8 @@ private final class LightsOffSession: NSObject {
       builtinDisplayID: nil,
       builtinBrightness: nil,
       toggleKeyCode: state.toggleKeyCode,
-      toggleModifiers: state.toggleModifiers
+      toggleModifiers: state.toggleModifiers,
+      disabledDisplays: nil
     ))
   }
 
@@ -176,22 +220,6 @@ private final class LightsOffSession: NSObject {
     interrupt.resume()
   }
 
-  private func listenForToggleKey() {
-    localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-      guard let self, self.matchesToggle(event) else { return event }
-      self.restore()
-      NSApp.terminate(nil)
-      return nil
-    }
-    globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-      guard let self, self.matchesToggle(event) else { return }
-      DispatchQueue.main.async {
-        self.restore()
-        NSApp.terminate(nil)
-      }
-    }
-  }
-
   private func startInterruptWatch() {
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
       guard let self, !self.restored else { return }
@@ -218,30 +246,26 @@ private final class LightsOffSession: NSObject {
     NSApp.terminate(nil)
   }
 
-  private func matchesToggle(_ event: NSEvent) -> Bool {
-    let state = readState()
-    let expectedKey = state.toggleKeyCode ?? 53
-    let expectedMods = state.toggleModifiers ?? (1 << 20)
-    let flags = event.modifierFlags.intersection([.command, .shift, .option, .control])
-    var raw: Int64 = 0
-    if flags.contains(.command) { raw |= 1 << 20 }
-    if flags.contains(.shift) { raw |= 1 << 17 }
-    if flags.contains(.option) { raw |= 1 << 19 }
-    if flags.contains(.control) { raw |= 1 << 18 }
-    let keyCode = Int64(event.keyCode)
-    return (keyCode == expectedKey && raw == expectedMods)
-      || (keyCode == 53 && raw == (1 << 20))
-  }
-
   private func listenForDisplayChanges() {
     CGDisplayRegisterReconfigurationCallback({ _, _, context in
       guard let context else { return }
       let session = Unmanaged<LightsOffSession>.fromOpaque(context).takeUnretainedValue()
       DispatchQueue.main.async {
-        guard !session.restored else { return }
+        guard !session.restored, !session.disablingExternals else { return }
+        session.disableHotPluggedExternals()
         session.rebuildOverlays()
       }
     }, Unmanaged.passUnretained(self).toOpaque())
+  }
+
+  private func disableHotPluggedExternals() {
+    let externals = listOnlineDisplays().filter { !$0.builtin && $0.active }
+    guard !externals.isEmpty else { return }
+    var state = readState()
+    state.disabledDisplays = mergeSaved(state.disabledDisplays ?? [], externals.map { $0.saved() })
+    state.applied = true
+    writeState(state)
+    _ = setDisplaysEnabled(externals.map(\.id), enabled: false)
   }
 
   private func dimBuiltin() {
@@ -259,30 +283,29 @@ private final class LightsOffSession: NSObject {
     overlays.removeAll()
     let builtin = builtinDisplayID()
     let builtinCanDim = builtin.map { canChange($0) } ?? false
-    for screen in NSScreen.screens {
-      guard let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { continue }
-      let displayID = CGDirectDisplayID(number.uint32Value)
-      let isBuiltin = builtin.map { $0 == displayID } ?? false
-      if isBuiltin && builtinCanDim { continue }
-      let window = ShieldWindow(
-        contentRect: screen.frame,
-        styleMask: .borderless,
-        backing: .buffered,
-        defer: false,
-        screen: screen
-      )
-      window.onInterrupt = { [weak self] in self?.handleInterrupt() }
-      window.setFrame(screen.frame, display: true)
-      window.isOpaque = true
-      window.hasShadow = false
-      window.backgroundColor = .black
-      window.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
-      window.ignoresMouseEvents = false
-      window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenAuxiliary]
-      window.isReleasedWhenClosed = false
-      window.makeKeyAndOrderFront(nil)
-      overlays.append(window)
-    }
+    guard let builtin, !builtinCanDim else { return }
+    guard let screen = NSScreen.screens.first(where: { screen in
+      guard let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { return false }
+      return CGDirectDisplayID(number.uint32Value) == builtin
+    }) else { return }
+    let window = ShieldWindow(
+      contentRect: screen.frame,
+      styleMask: .borderless,
+      backing: .buffered,
+      defer: false,
+      screen: screen
+    )
+    window.onInterrupt = { [weak self] in self?.handleInterrupt() }
+    window.setFrame(screen.frame, display: true)
+    window.isOpaque = true
+    window.hasShadow = false
+    window.backgroundColor = .black
+    window.level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
+    window.ignoresMouseEvents = false
+    window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenAuxiliary]
+    window.isReleasedWhenClosed = false
+    window.makeKeyAndOrderFront(nil)
+    overlays.append(window)
     if NSApp.isRunning {
       NSApp.activate(ignoringOtherApps: true)
     }
@@ -295,6 +318,104 @@ private final class LightsOffSession: NSObject {
     var ids = Array(repeating: CGDirectDisplayID(0), count: Int(count))
     CGGetOnlineDisplayList(count, &ids, &count)
     return ids.first { CGDisplayIsBuiltin($0) != 0 }
+  }
+
+  private func displayName(_ id: CGDirectDisplayID) -> String {
+    for screen in NSScreen.screens {
+      if let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber,
+         number.uint32Value == id {
+        return screen.localizedName
+      }
+    }
+    return "Display \(id)"
+  }
+
+  private func listOnlineDisplays() -> [DisplayInfo] {
+    var count: UInt32 = 0
+    CGGetOnlineDisplayList(16, nil, &count)
+    var ids = [CGDirectDisplayID](repeating: 0, count: Int(max(count, 16)))
+    CGGetOnlineDisplayList(UInt32(ids.count), &ids, &count)
+    return ids.prefix(Int(count)).map { id in
+      DisplayInfo(
+        id: id,
+        name: displayName(id),
+        bounds: CGDisplayBounds(id),
+        vendor: CGDisplayVendorNumber(id),
+        model: CGDisplayModelNumber(id),
+        serial: CGDisplaySerialNumber(id),
+        builtin: CGDisplayIsBuiltin(id) != 0,
+        active: CGDisplayIsActive(id) != 0
+      )
+    }
+  }
+
+  private func restoreTargetIDs(_ state: LightsOffState) -> [CGDirectDisplayID] {
+    var ids: [CGDirectDisplayID] = (state.disabledDisplays ?? []).map { CGDirectDisplayID($0.displayID) }
+    let live = listOnlineDisplays()
+    for display in live where !display.builtin && !display.active {
+      if !ids.contains(display.id) { ids.append(display.id) }
+    }
+    return ids
+  }
+
+  private func restoreArrangement(_ state: LightsOffState) {
+    let saved = state.disabledDisplays ?? []
+    guard !saved.isEmpty else { return }
+    let live = listOnlineDisplays().filter(\.active)
+    var config: CGDisplayConfigRef?
+    guard CGBeginDisplayConfiguration(&config) == .success else { return }
+    var changed = false
+    for item in saved {
+      let match = live.first(where: { $0.id == item.displayID })
+        ?? live.first(where: { $0.vendor == item.vendorNumber && $0.model == item.modelNumber && (item.serialNumber == 0 || $0.serial == 0 || $0.serial == item.serialNumber) })
+      guard let match else { continue }
+      if CGConfigureDisplayOrigin(config, match.id, Int32(item.originX.rounded()), Int32(item.originY.rounded())) == .success {
+        changed = true
+      }
+    }
+    if changed {
+      _ = CGCompleteDisplayConfiguration(config, .forSession)
+    } else {
+      CGCancelDisplayConfiguration(config)
+    }
+  }
+
+  private func setDisplaysEnabled(_ ids: [CGDirectDisplayID], enabled: Bool) -> String? {
+    let unique = Array(Set(ids)).filter { CGDisplayIsBuiltin($0) == 0 }
+    guard !unique.isEmpty else { return nil }
+    guard let configure = configureEnabled else {
+      return "这台 Mac 不能单独关掉副屏。"
+    }
+    disablingExternals = true
+    defer { disablingExternals = false }
+    var config: CGDisplayConfigRef?
+    guard CGBeginDisplayConfiguration(&config) == .success else {
+      return "显示器配置没有开始。"
+    }
+    for id in unique {
+      let code = configure(config, id, enabled)
+      if code != 0 {
+        CGCancelDisplayConfiguration(config)
+        return "副屏\(enabled ? "恢复" : "切掉")失败（\(code)）。"
+      }
+    }
+    let complete = CGCompleteDisplayConfiguration(config, .forSession)
+    if complete != .success {
+      return "显示器配置没有完成。"
+    }
+    return nil
+  }
+
+  private func mergeSaved(_ existing: [SavedDisplay], _ incoming: [SavedDisplay]) -> [SavedDisplay] {
+    var result = existing
+    for item in incoming {
+      if let index = result.firstIndex(where: { $0.displayID == item.displayID }) {
+        result[index] = item
+      } else {
+        result.append(item)
+      }
+    }
+    return result
   }
 
   private func canChange(_ displayID: CGDirectDisplayID) -> Bool {
@@ -316,15 +437,15 @@ private final class LightsOffSession: NSObject {
 
   private func readState() -> LightsOffState {
     guard let data = try? Data(contentsOf: stateURL),
-          let state = try? JSONDecoder().decode(LightsOffState.self, from: data),
-          state.schemaVersion == stateSchema else {
+          let state = try? JSONDecoder().decode(LightsOffState.self, from: data) else {
       return LightsOffState(
         schemaVersion: stateSchema,
         applied: false,
         builtinDisplayID: nil,
         builtinBrightness: nil,
         toggleKeyCode: 53,
-        toggleModifiers: 1 << 20
+        toggleModifiers: 1 << 20,
+        disabledDisplays: nil
       )
     }
     return state
@@ -333,8 +454,16 @@ private final class LightsOffSession: NSObject {
   private func writeState(_ state: LightsOffState) {
     let directory = stateURL.deletingLastPathComponent()
     try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-    if let data = try? JSONEncoder().encode(state) {
+    var writing = state
+    writing.schemaVersion = stateSchema
+    if let data = try? JSONEncoder().encode(writing) {
       try? data.write(to: stateURL, options: .atomic)
     }
   }
+}
+
+private func configureEnabledSymbol() -> ConfigureEnabled? {
+  let handle = dlopen("/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight", RTLD_LAZY)
+  guard handle != nil, let symbol = dlsym(handle, "CGSConfigureDisplayEnabled") else { return nil }
+  return unsafeBitCast(symbol, to: ConfigureEnabled.self)
 }

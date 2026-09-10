@@ -63,7 +63,7 @@ test("馆藏、资产和工具箱不再把内部治理术语端上桌", () => {
   const food = source("pages/tools/FoodMapView.tsx");
   const meetings = source("pages/tools/MeetingMinutesView.tsx");
   const music = source("pages/tools/MusicPlayerView.tsx");
-  const activities = source("pages/tools/JapanActivityGuide.tsx");
+  const activities = source("pages/tools/LocalActivityGuide.tsx");
   const art = source("pages/tools/ArtLibraryView.tsx");
   const inbox = source("pages/tools/YingningInboxView.tsx");
 

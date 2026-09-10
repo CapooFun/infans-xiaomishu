@@ -14,16 +14,19 @@ test("mainline progress puts weekly view first and opens it by default", async (
 test("schedule exposes four stable time sections and keeps their URL state", async () => {
   const source = await fs.readFile(new URL("../src/pages/SchedulePage.tsx", import.meta.url), "utf8");
   const styles = await fs.readFile(new URL("../src/styles.css", import.meta.url), "utf8");
-  for (const label of ["今日事项", "主线进度", "日本活动", "新品发售"]) assert.match(source, new RegExp(label));
+  for (const label of ["今日事项", "主线进度", "本地活动", "新品发售"]) assert.match(source, new RegExp(label));
   const sectionDefinitions = source.match(/const SCHEDULE_SECTIONS = \[[\s\S]*?\n\] as const;/)?.[0] || "";
   assert.ok(sectionDefinitions.indexOf('id: "roadmap"') < sectionDefinitions.indexOf('id: "today"'));
-  assert.match(source, /\? candidate as ScheduleSectionId : "today"/);
-  assert.match(source, /type ScheduleSectionId = "today" \| "roadmap" \| "japan" \| "releases"/);
-  assert.match(source, /URLSearchParams\(window\.location\.search\)\.get\("view"\)/);
-  assert.match(source, /activeSection === "japan" \? <JapanActivitiesView active homeRequest=\{japanHomeRequest\} \/>/);
-  assert.match(source, /activeSection === "releases" \? <ReleaseWatchView active \/>/);
+  assert.match(source, /canonicalizeScheduleView/);
+  assert.match(source, /raw === "japan" \? "local"/);
+  assert.match(source, /type ScheduleSectionId = "today" \| "roadmap" \| "local" \| "releases"/);
+  assert.match(source, /new URLSearchParams\(window\.location\.search\)/);
+  assert.match(source, /params\.get\("view"\)/);
+  assert.match(source, /params\.get\("view"\) !== "japan"/);
+  assert.match(source, /activeSection === "local" \? <LocalActivitiesView active homeRequest=\{localHomeRequest\} openGuideId=\{scheduleGuide\} \/>/);
+  assert.match(source, /activeSection === "releases" \? <ReleaseWatchView active focusQuery=\{releaseQuery\} \/>/);
   assert.match(styles, /\.schedule-todo-board \{[^}]*width: min\(1120px, 100%\);[^}]*margin: 0 auto;/);
-  assert.match(styles, /@media \(min-width:901px\) and \(max-width:1366px\) \{\s*\.schedule-todo-board,\.japan-activities,\.renewal-expiry \{ width:100%; \}/);
+  assert.match(styles, /@media \(min-width:901px\) and \(max-width:1366px\) \{\s*\.schedule-todo-board,\.local-activities,\.renewal-expiry \{ width:100%; \}/);
 });
 
 test("today copy and AI tasks use the full row before falling back on narrow screens", async () => {
@@ -41,13 +44,21 @@ test("today copy and AI tasks use the full row before falling back on narrow scr
   assert.match(source, /需要你授权/);
 });
 
-test("Japan activity is absent from tools and its old route redirects to schedule", async () => {
+test("local activities can open a guide from the schedule URL", async () => {
+  const source = await fs.readFile(new URL("../src/pages/tools/LocalActivitiesView.tsx", import.meta.url), "utf8");
+  const schedule = await fs.readFile(new URL("../src/pages/SchedulePage.tsx", import.meta.url), "utf8");
+  assert.match(source, /openGuideId = ""/);
+  assert.match(source, /openPlaybook\(openGuideId, "playbooks"\)/);
+  assert.match(schedule, /params.delete\("guide"\)/);
+});
+
+test("local activity is absent from tools and its old route redirects to schedule", async () => {
   const source = await fs.readFile(new URL("../src/pages/ToolsPage.tsx", import.meta.url), "utf8");
   const toolDefinitions = source.match(/const TOOLS:[\s\S]*?\n\];/)?.[0] || "";
-  assert.doesNotMatch(toolDefinitions, /game-dungeon|日本活动/);
-  assert.doesNotMatch(source, /import JapanActivitiesView/);
+  assert.doesNotMatch(toolDefinitions, /game-dungeon|日本活动|本地活动/);
+  assert.doesNotMatch(source, /import LocalActivitiesView/);
   assert.match(source, /window\.location\.pathname === "\/tools\/game-dungeon"/);
-  assert.match(source, /window\.history\.replaceState\(\{\}, "", "\/schedule\?view=japan"\)/);
+  assert.match(source, /window\.history\.replaceState\(\{\}, "", "\/schedule\?view=local"\)/);
 });
 
 test("release watch separates certainty and never turns wishlisted games into todos", async () => {
@@ -65,6 +76,7 @@ test("release watch separates certainty and never turns wishlisted games into to
   assert.match(source, /width="460" height="215"/);
   assert.match(source, /期待多久/);
   assert.match(source, /wishlistAddedLabel\(item\.addedAt\)/);
+  assert.match(source, /focusQuery = ""/);
   assert.match(source, /useSyncExternalStore/);
   assert.match(source, /releaseWatchCacheState/);
   assert.match(source, /if \(releaseWatchCacheState\.data && !force\) return Promise\.resolve/);

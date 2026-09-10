@@ -24,6 +24,9 @@ test("语言学习用示例进度，不含真题练习跳转", async () => {
   assert.doesNotMatch(reading, /真题阅读|随便练几篇|真题原文/);
   assert.doesNotMatch(shared, /真题练习|launch-exam|openExamHall|127\.0\.0\.1:3000/);
   assert.doesNotMatch(exam, /真题练习 · 电子考场|独立电子考场/);
+  assert.doesNotMatch(exam, /kind: "formal"/);
+  assert.match(exam, /kind: "special"/);
+  assert.match(exam, /kind: "mistake"/);
   assert.doesNotMatch(modes, /Sites\/jlpt-exam|os\.homedir\(\)/);
   assert.doesNotMatch(routes, /launch-exam|JLPT_EXAM_LAUNCH_URL/);
   assert.doesNotMatch(languagesPage, /eggrolls|真题练习|openExamHall/);

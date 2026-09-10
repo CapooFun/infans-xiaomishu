@@ -110,8 +110,16 @@ test("native voice recovery polls NAS quietly, formats duration from millisecond
   assert.match(sharedConfiguration, /mailboxServerURLKey = "secretary\.mailboxServerURL"[\s\S]*fallbackMailboxServerURL = ""/u);
   assert.match(commandSettings, /@Published var mailboxServerURL: String/u);
   assert.match(conversation, /store\.retryPending\(messageId: message\.id\)/u);
-  assert.match(conversation, /Text\("未送达 · 点一下重试"\)/u);
-  assert.match(conversation, /if debugMode, let pendingError/u);
+  assert.match(conversation, /Text\(isVoiceTranscriptionFailure \? "听写没成功 · 点一下重试" : "未送达 · 点一下重试"\)/u);
+  assert.match(conversation, /if let pendingError, deliveryState == \.failedRetryPending, showsPendingError/u);
+  assert.match(conversation, /isVoiceTranscriptionFailure \|\| debugMode/u);
+  assert.match(settings, /InfansProductIdentity\.allowsCommandTokenPaste/u);
+  assert.match(settings, /if InfansProductIdentity\.allowsCommandTokenPaste \{[\s\S]*从剪贴板导入小秘书指令令牌/u);
+  assert.match(settings, /已由电脑配对/u);
+  assert.match(settings, /还没配对/u);
+  assert.match(settings, /正式包配对只靠电脑推送，不必在手机上粘贴/u);
+  const identity = await source("InfansProductIdentity.swift");
+  assert.match(identity, /static var allowsCommandTokenPaste: Bool \{ false \}/u);
   assert.match(attachment, /attachment\.presentationKind == \.audio, let durationMs = attachment\.durationMs[\s\S]*Double\(durationMs\) \/ 1_000[\s\S]*"语音 · %d:%02d"/u);
   assert.match(attachment, /setCategory\(\.playback, mode:\s*\.spokenAudio, options:\s*\[\.duckOthers\]\)/u);
   assert.match(conversation, /@State private var correctionTarget:\s*SecretaryVoiceCorrectionTarget\?/u);

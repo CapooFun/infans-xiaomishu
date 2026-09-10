@@ -6,7 +6,7 @@ import { ArrowLeft, BookOpenText, CalendarDays, CircleDotDashed, ExternalLink, S
 
 import { Card, Empty, Kicker, jsonFetch } from "../../page-shared";
 import { stripDisplayFrontmatter } from "../../markdown-display.mjs";
-import type { JapanActivityGuideDocument } from "../../types";
+import type { LocalActivityGuideDocument } from "../../types";
 import GuideOfficialImage from "./GuideOfficialImage";
 import { isMacDesktopBrowser } from "./guide-share-platform.mjs";
 
@@ -14,12 +14,12 @@ type GuideSection = { title: string; markdown: string };
 
 const WIDE_SECTIONS = new Set(["当前结论", "为什么值得去", "听讲抓手", "展览内容与看展抓手", "来源与核验边界"]);
 
-function shareDocumentTitle(data: JapanActivityGuideDocument) {
-  const base = (data.shareName || data.name || "日本活动攻略")
+function shareDocumentTitle(data: LocalActivityGuideDocument) {
+  const base = (data.shareName || data.name || "本地活动攻略")
     .replace(/[\\/:*?"<>|]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  return `${base || "日本活动攻略"}｜分享攻略`;
+  return `${base || "本地活动攻略"}｜分享攻略`;
 }
 
 function splitGuideSections(markdown: string): GuideSection[] {
@@ -51,8 +51,8 @@ const markdownComponents = {
   ),
 };
 
-export default function JapanActivityGuide({ id, onBack, backLabel }: { id: string; onBack: () => void; backLabel: string }) {
-  const [data, setData] = useState<JapanActivityGuideDocument | null>(null);
+export default function LocalActivityGuide({ id, onBack, backLabel }: { id: string; onBack: () => void; backLabel: string }) {
+  const [data, setData] = useState<LocalActivityGuideDocument | null>(null);
   const [error, setError] = useState("");
   const [preparingShare, setPreparingShare] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
@@ -62,7 +62,7 @@ export default function JapanActivityGuide({ id, onBack, backLabel }: { id: stri
     let cancelled = false;
     setData(null);
     setError("");
-    void jsonFetch<JapanActivityGuideDocument>(`/api/tools/japan-activity-guide?id=${encodeURIComponent(id)}`)
+    void jsonFetch<LocalActivityGuideDocument>(`/api/tools/local-activity-guide?id=${encodeURIComponent(id)}`)
       .then((document) => { if (!cancelled) setData(document); })
       .catch((reason) => { if (!cancelled) setError(reason instanceof Error ? reason.message : "攻略打不开"); });
     return () => { cancelled = true; };
@@ -161,14 +161,14 @@ export default function JapanActivityGuide({ id, onBack, backLabel }: { id: stri
   }
 
   return (
-    <div className="japan-guide-reader">
-      <div className="japan-guide-reader-toolbar">
+    <div className="local-guide-reader">
+      <div className="local-guide-reader-toolbar">
         <button type="button" className="activity-guide-back" onClick={onBack}>
           <ArrowLeft size={16} aria-hidden="true" />
           {backLabel}
         </button>
         {data && canSharePdf ? (
-          <div className="japan-guide-share-action">
+          <div className="local-guide-share-action">
             <span>完整攻略会整理成无侧栏的分页版</span>
             <button type="button" onClick={openShareSheet} disabled={preparingShare}>
               <Share2 size={16} aria-hidden="true" />
@@ -176,10 +176,10 @@ export default function JapanActivityGuide({ id, onBack, backLabel }: { id: stri
             </button>
           </div>
         ) : data ? (
-          <span className="japan-guide-share-availability">PDF 分享请在 Mac 上使用</span>
+          <span className="local-guide-share-availability">PDF 分享请在 Mac 上使用</span>
         ) : null}
       </div>
-      {shareMessage ? <p className="japan-guide-share-status" role="status" aria-live="polite">{shareMessage}</p> : null}
+      {shareMessage ? <p className="local-guide-share-status" role="status" aria-live="polite">{shareMessage}</p> : null}
 
       {error ? (
         <div className="vpn-warning" role="alert">
@@ -192,37 +192,37 @@ export default function JapanActivityGuide({ id, onBack, backLabel }: { id: stri
       {data ? (
         <>
           {departureSection ? (
-            <Card className="japan-guide-departure">
+            <Card className="local-guide-departure">
               <h2>{departureSection.title}</h2>
-              <div className="japan-guide-reader-markdown">
+              <div className="local-guide-reader-markdown">
                 <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]} components={markdownComponents}>
                   {departureSection.markdown}
                 </ReactMarkdown>
               </div>
             </Card>
           ) : null}
-          <Card className="japan-guide-reader-hero">
+          <Card className="local-guide-reader-hero">
             <GuideOfficialImage {...data} guideId={data.id} className="is-guide-hero" priority sourceLink />
             <div>
               <Kicker>{data.status.startsWith("已参加") ? "活动纪念 · 小秘书内阅读" : "攻略集 · 小秘书内阅读"}</Kicker>
               <h2>{data.name}</h2>
               <p>{data.description || "出发前需要确认的事实、路线与现场行动。"}</p>
             </div>
-            <div className="japan-guide-reader-facts">
+            <div className="local-guide-reader-facts">
               <span><CalendarDays size={16} /><strong>{data.dateLabel}</strong></span>
               <span><CircleDotDashed size={16} /><strong>{data.status}</strong></span>
               <small>攻略内容已与本地知识库同步 · {data.updatedAt || "更新日期待补"}</small>
             </div>
           </Card>
 
-          <div className="japan-guide-reader-grid">
+          <div className="local-guide-reader-grid">
             {readingSections.map((section, index) => (
-              <Card className={`japan-guide-reader-section${WIDE_SECTIONS.has(section.title) ? " is-wide" : ""}`} key={section.title}>
+              <Card className={`local-guide-reader-section${WIDE_SECTIONS.has(section.title) ? " is-wide" : ""}`} key={section.title}>
                 <header>
                   <Kicker>{String(index + 1).padStart(2, "0")} · {data.status.startsWith("已参加") ? (data.name.includes("观影") ? "观影纪念" : "活动纪念") : "出门攻略"}</Kicker>
                   <h2>{section.title}</h2>
                 </header>
-                <div className="japan-guide-reader-markdown">
+                <div className="local-guide-reader-markdown">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]} components={markdownComponents}>
                     {section.markdown}
                   </ReactMarkdown>

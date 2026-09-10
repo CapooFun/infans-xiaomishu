@@ -7,6 +7,7 @@ import {
   PROJECT_HUB_MANIFEST_PATH,
   parseProjectHubManifest,
   readExternalProjectHub,
+  readExternalProjectHubSource,
   validateExternalProjectRelativePath,
 } from "../src/server/workbench-project-hubs.mjs";
 
@@ -224,4 +225,108 @@ test("外部根或原件不可用时局部降级，符号链接不能逃出白�
   const missing = await readExternalProjectHub("garden-demo", { sources: { "garden-demo": { root: path.join(root, "不存在") } } });
   assert.equal(missing.hub, null);
   assert.equal(missing.warnings[0].code, "EXTERNAL_PROJECT_HUB_MISSING");
+});
+
+async function seedReadableProject(t, input, files = {}) {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "infans-hub-source-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, ".infans"), { recursive: true });
+  await fs.writeFile(path.join(root, PROJECT_HUB_MANIFEST_PATH), JSON.stringify(input));
+  for (const [relative, body] of Object.entries(files)) {
+    const absolute = path.join(root, relative);
+    await fs.mkdir(path.dirname(absolute), { recursive: true });
+    await fs.writeFile(absolute, body);
+  }
+  return { "garden-demo": { root } };
+}
+
+test("只读正文入口只按稳定 projectId+对象 ID 打开清单登记的 Markdown 原件", async (t) => {
+  const sources = await seedReadableProject(t, manifest(), {
+    "项目管理/玩法总纲.md": "---\ndescription: x\n---\n# 玩法\n正文可读。\n",
+    "项目管理/发行计划.md": "# 发行\n发行正文。\n",
+    "项目管理/孤身试炼.md": "# 孤身试炼\n试炼正文。\n",
+  });
+
+  const workline = await readExternalProjectHubSource("garden-demo", "release", { sources });
+  assert.equal(workline.kind, "markdown");
+  assert.equal(workline.path, "项目管理/发行计划.md");
+  assert.equal(workline.label, "发行原件");
+  assert.match(workline.text, /发行正文/u);
+  assert.equal(workline.projectId, "garden-demo");
+  assert.equal(workline.objectId, "release");
+
+  const feature = await readExternalProjectHubSource("garden-demo", "solo-trial", { sources });
+  assert.equal(feature.path, "项目管理/孤身试炼.md");
+  assert.match(feature.text, /试炼正文/u);
+});
+
+test("只读正文入口拒绝未注册项目、未知对象、无原件对象与非 Markdown 冻结类型", async (t) => {
+  const input = manifest();
+  input.worklines[1].source = { path: "docs/数据.json", label: "数据表" };
+  const sources = await seedReadableProject(t, input, {
+    "项目管理/玩法总纲.md": "# 玩法\n",
+    "项目管理/孤身试炼.md": "# 孤身试炼\n",
+    "docs/数据.json": "{\"a\":1}\n",
+  });
+
+  await assert.rejects(
+    () => readExternalProjectHubSource("not-registered", "product", { sources }),
+    (error) => error.code === "PROJECT_HUB_SOURCE_PROJECT_NOT_REGISTERED" && error.status === 404,
+  );
+  await assert.rejects(
+    () => readExternalProjectHubSource("garden-demo", "no-such-object", { sources }),
+    (error) => error.code === "PROJECT_HUB_SOURCE_NOT_FOUND" && error.status === 404,
+  );
+  await assert.rejects(
+    () => readExternalProjectHubSource("garden-demo", "combat", { sources }),
+    (error) => error.code === "PROJECT_HUB_SOURCE_NOT_FOUND",
+  );
+  await assert.rejects(
+    () => readExternalProjectHubSource("garden-demo", "release", { sources }),
+    (error) => error.code === "PROJECT_HUB_SOURCE_TYPE_DENIED" && error.status === 415,
+  );
+  await assert.rejects(
+    () => readExternalProjectHubSource("", "release", { sources }),
+    (error) => error.code === "PROJECT_HUB_SOURCE_PROJECT_ID_REQUIRED",
+  );
+  await assert.rejects(
+    () => readExternalProjectHubSource("garden-demo", "", { sources }),
+    (error) => error.code === "PROJECT_HUB_SOURCE_OBJECT_ID_REQUIRED",
+  );
+});
+
+test("只读正文入口绝不暴露清单里的凭据、日志、绝对路径或穿越原件", async (t) => {
+  for (const badPath of ["docs/access-token.md", "docs/run.log", "/etc/passwd", "../../外部.md", "docs\\反斜杠.md", ".git/config"]) {
+    const input = manifest();
+    input.worklines[1].source = { path: badPath, label: "危险原件" };
+    const sources = await seedReadableProject(t, input, {
+      "项目管理/玩法总纲.md": "# 玩法\n",
+      "项目管理/孤身试炼.md": "# 孤身试炼\n",
+    });
+    await assert.rejects(
+      () => readExternalProjectHubSource("garden-demo", "release", { sources }),
+      (error) => error.code === "PROJECT_HUB_SOURCE_NOT_FOUND",
+      badPath,
+    );
+  }
+});
+
+test("只读正文入口的原件符号链接不能逃出白名单根", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "infans-hub-source-"));
+  const outside = await fs.mkdtemp(path.join(os.tmpdir(), "infans-hub-outside-"));
+  t.after(() => Promise.all([fs.rm(root, { recursive: true, force: true }), fs.rm(outside, { recursive: true, force: true })]));
+  await fs.mkdir(path.join(root, ".infans"), { recursive: true });
+  await fs.mkdir(path.join(root, "docs"), { recursive: true });
+  await fs.mkdir(path.join(root, "项目管理"), { recursive: true });
+  await fs.writeFile(path.join(outside, "secret.md"), "机密不得读取\n");
+  await fs.symlink(path.join(outside, "secret.md"), path.join(root, "docs/正文.md"));
+  await fs.writeFile(path.join(root, "项目管理/玩法总纲.md"), "# 玩法\n");
+  await fs.writeFile(path.join(root, "项目管理/孤身试炼.md"), "# 孤身试炼\n");
+  const input = manifest();
+  input.worklines[1].source = { path: "docs/正文.md", label: "被劫持原件" };
+  await fs.writeFile(path.join(root, PROJECT_HUB_MANIFEST_PATH), JSON.stringify(input));
+  await assert.rejects(
+    () => readExternalProjectHubSource("garden-demo", "release", { sources: { "garden-demo": { root } } }),
+    (error) => error.code === "PROJECT_HUB_SOURCE_NOT_FOUND",
+  );
 });

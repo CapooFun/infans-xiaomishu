@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ComponentType, type RefObject } from 
 import { ArrowLeft, BookMarked, CalendarDays, ChevronRight, ExternalLink, Heart, Languages, MapPin, RefreshCw, Ticket } from "lucide-react";
 
 import { Card, Empty, Kicker, fmtDateTime, jsonFetch } from "../../page-shared";
-import type { JapanActivitiesSnapshot } from "../../types";
+import type { LocalActivitiesSnapshot } from "../../types";
 import GuideOfficialImage from "./GuideOfficialImage";
 
 const FILTER_TAGS = ["全部", "ACG", "历史人文", "AI 新知"] as const;
@@ -12,7 +12,7 @@ type ActivityGuideComponent = ComponentType<{ id: string; onBack: () => void; ba
 let activityGuidePromise: Promise<{ default: ActivityGuideComponent }> | null = null;
 
 function preloadActivityGuide() {
-  activityGuidePromise ||= import("./JapanActivityGuide");
+  activityGuidePromise ||= import("./LocalActivityGuide");
   return activityGuidePromise;
 }
 
@@ -22,48 +22,48 @@ function fmtUpdateDay(value: string) {
   return `${year}.${month}.${day}`;
 }
 
-function JapanPlaybookShelf({
+function LocalPlaybookShelf({
   playbooks,
   onOpen,
   carouselRef,
 }: {
-  playbooks: JapanActivitiesSnapshot["playbooks"];
+  playbooks: LocalActivitiesSnapshot["playbooks"];
   onOpen: (id: string) => void;
   carouselRef: RefObject<HTMLOListElement | null>;
 }) {
   return (
-    <section id="japan-playbook-shelf" className="japan-playbook-shelf-shell" aria-labelledby="japan-playbook-shelf-title">
-      <Card className="japan-playbook-shelf">
+    <section id="local-playbook-shelf" className="local-playbook-shelf-shell" aria-labelledby="local-playbook-shelf-title">
+      <Card className="local-playbook-shelf">
         <header>
           <div>
             <Kicker>出门前的行动册 · 最近更新在前</Kicker>
-            <h3 id="japan-playbook-shelf-title">选择一份攻略</h3>
+            <h3 id="local-playbook-shelf-title">选择一份攻略</h3>
           </div>
-          <div className="japan-playbook-shelf-meta">
+          <div className="local-playbook-shelf-meta">
             <strong>{playbooks.length} 份</strong>
             <small>向右滑动查看更多 <ChevronRight size={14} aria-hidden="true" /></small>
           </div>
         </header>
         {playbooks.length ? (
-          <ol ref={carouselRef} className="japan-playbook-carousel" aria-label="按更新时间从新到旧排列的攻略">
+          <ol ref={carouselRef} className="local-playbook-carousel" aria-label="按更新时间从新到旧排列的攻略">
             {playbooks.map((playbook, index) => (
               <li key={playbook.id}>
                 <button
                   type="button"
-                  className="japan-playbook-card"
+                  className="local-playbook-card"
                   onClick={() => onOpen(playbook.id)}
                   onPointerEnter={() => { void preloadActivityGuide(); }}
                   onFocus={() => { void preloadActivityGuide(); }}
                 >
-                  <span className="japan-playbook-card-meta">
+                  <span className="local-playbook-card-meta">
                     <span>{index === 0 ? "最近更新" : "继续翻阅"}</span>
                     <time dateTime={playbook.updatedAt}>{fmtUpdateDay(playbook.updatedAt)}</time>
                   </span>
                   <GuideOfficialImage {...playbook} guideId={playbook.id} className="is-playbook-card" />
                   <h3>{playbook.name}</h3>
                   <p>{playbook.dateLabel}</p>
-                  <span className="japan-playbook-card-status">{playbook.status}</span>
-                  <span className="japan-playbook-card-action">打开完整攻略 <ChevronRight size={16} aria-hidden="true" /></span>
+                  <span className="local-playbook-card-status">{playbook.status}</span>
+                  <span className="local-playbook-card-action">打开完整攻略 <ChevronRight size={16} aria-hidden="true" /></span>
                 </button>
               </li>
             ))}
@@ -74,8 +74,8 @@ function JapanPlaybookShelf({
   );
 }
 
-export default function JapanActivitiesView({ active, homeRequest = 0 }: { active: boolean; homeRequest?: number }) {
-  const [data, setData] = useState<JapanActivitiesSnapshot | null>(null);
+export default function LocalActivitiesView({ active, homeRequest = 0, openGuideId = "" }: { active: boolean; homeRequest?: number; openGuideId?: string }) {
+  const [data, setData] = useState<LocalActivitiesSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [error, setError] = useState("");
@@ -93,7 +93,7 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
     setLoading(true);
     setLoadError("");
     try {
-      setData(await jsonFetch<JapanActivitiesSnapshot>("/api/tools/japan-activities"));
+      setData(await jsonFetch<LocalActivitiesSnapshot>("/api/tools/local-activities"));
     } catch (reason) {
       setLoadError(reason instanceof SyntaxError
         ? "暂时没有收到活动资料，请稍后重新读取。"
@@ -109,7 +109,7 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
     setSavingInterestId(activityId);
     setError("");
     try {
-      setData(await jsonFetch<JapanActivitiesSnapshot>("/api/tools/japan-activities", {
+      setData(await jsonFetch<LocalActivitiesSnapshot>("/api/tools/local-activities", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ activityId, interested }),
@@ -166,8 +166,13 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
       });
   };
 
+  useEffect(() => {
+    if (!active || !openGuideId || guideId === openGuideId) return;
+    openPlaybook(openGuideId, "playbooks");
+  }, [active, openGuideId]);
+
   if (guideId) {
-    const backLabel = guideOrigin === "activities" ? "返回未过期活动" : guideOrigin === "attended" ? "返回日本活动" : "返回攻略集";
+    const backLabel = guideOrigin === "activities" ? "返回未过期活动" : guideOrigin === "attended" ? "返回本地活动" : "返回攻略集";
     return GuideView
       ? <GuideView id={guideId} onBack={closeGuide} backLabel={backLabel} />
       : <div className="activity-guide-detail"><button type="button" className="activity-guide-back" onClick={closeGuide}><ArrowLeft size={16} />{backLabel}</button><Empty>正在小秘书里打开完整攻略。</Empty></div>;
@@ -179,15 +184,15 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
     : (data?.activities.filter((activity) => activity.filterTag === tag).length ?? 0);
 
   return (
-    <section className="japan-activities" aria-labelledby="japan-activities-title">
-      <Card className="japan-activities-hero">
+    <section className="local-activities" aria-labelledby="local-activities-title">
+      <Card className="local-activities-hero">
         <div>
           <Kicker>隔周导览·官方来源</Kicker>
-          <h2 id="japan-activities-title">日本活动</h2>
-          <p>ACG、历史人文和 AI 新知。先翻介绍卡；真想去时，直接告诉 AI 把这张卡补成你的出门攻略。</p>
+          <h2 id="local-activities-title">本地活动</h2>
+          <p>身边能去的展览、讲座和聚会。先翻介绍卡；真想去时，直接告诉 AI 把这张卡补成你的出门攻略。</p>
         </div>
-        <div className="japan-activities-stamps">
-          <div className="japan-activities-stamp">
+        <div className="local-activities-stamps">
+          <div className="local-activities-stamp">
             <span>{data?.activities.length ?? "—"}</span>
             <small>未过期的</small>
             <button type="button" onClick={() => void load()} disabled={loading}>
@@ -195,13 +200,13 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
               刷新卡片
             </button>
           </div>
-          <div className="japan-activities-stamp">
+          <div className="local-activities-stamp">
             <span>{data?.playbooks.length ?? "—"}</span>
             <small>攻略集</small>
             <button
               type="button"
               aria-expanded={showPlaybooks}
-              aria-controls="japan-playbook-shelf"
+              aria-controls="local-playbook-shelf"
               onClick={() => {
                 if (showPlaybooks) playbookScrollLeftRef.current = playbookCarouselRef.current?.scrollLeft ?? playbookScrollLeftRef.current;
                 setShowPlaybooks((visible) => !visible);
@@ -212,7 +217,7 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
               {showPlaybooks ? "收起攻略" : "展开攻略"}
             </button>
           </div>
-          <div className="japan-activities-stamp">
+          <div className="local-activities-stamp">
             <span>{data?.attended.length ?? "—"}</span>
             <small>参加过的</small>
             <button type="button" onClick={() => {
@@ -229,7 +234,7 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
       </Card>
 
       {showPlaybooks && data ? (
-        <JapanPlaybookShelf
+        <LocalPlaybookShelf
           playbooks={data.playbooks}
           carouselRef={playbookCarouselRef}
           onOpen={(id) => openPlaybook(id, "playbooks")}
@@ -237,7 +242,7 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
       ) : null}
 
       {loadError ? (
-        <div className="vpn-warning japan-activities-read-error" role="alert">
+        <div className="vpn-warning local-activities-read-error" role="alert">
           <Ticket size={16} />
           <div><strong>暂时读不到活动卡</strong><span>{loadError}</span></div>
           <button type="button" onClick={() => void load()} disabled={loading}>
@@ -250,11 +255,11 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
 
       {data ? (
         <>
-          <div className="japan-activities-meta">
+          <div className="local-activities-meta">
             <span>{data.scope}</span>
             <small>资料更新 {fmtDateTime(data.updatedAt)}</small>
           </div>
-          <div className="japan-activity-filters" role="group" aria-label="按活动类别筛选">
+          <div className="local-activity-filters" role="group" aria-label="按活动类别筛选">
             {FILTER_TAGS.map((tag) => (
               <button
                 type="button"
@@ -268,24 +273,24 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
               </button>
             ))}
           </div>
-          <div className="japan-activity-grid">
+          <div className="local-activity-grid">
             {visibleActivities.map((activity) => (
-              <article className="japan-activity-ticket" key={activity.id}>
-                <div className="japan-activity-date">
+              <article className="local-activity-ticket" key={activity.id}>
+                <div className="local-activity-date">
                   <CalendarDays size={17} aria-hidden="true" />
                   <span>{activity.dateLabel}</span>
                   <small>{activity.region}</small>
                 </div>
-                <div className="japan-activity-copy">
+                <div className="local-activity-copy">
                   <header>
-                    <div className="japan-activity-tags">
+                    <div className="local-activity-tags">
                       <span>{activity.category}</span>
                       <span className={`pressure-${activity.languagePressure}`}><Languages size={12} />语言压力 {activity.languagePressure}</span>
                       {activity.hasPlaybook ? <span className="is-guide-ready"><BookMarked size={12} />攻略已做</span> : null}
                     </div>
                     <button
                       type="button"
-                      className={`japan-activity-interest${activity.interested ? " is-interested" : ""}`}
+                      className={`local-activity-interest${activity.interested ? " is-interested" : ""}`}
                       aria-label={activity.interested ? "取消感兴趣" : "标记感兴趣"}
                       title={activity.interested ? "取消感兴趣" : "标记感兴趣"}
                       aria-pressed={activity.interested}
@@ -296,14 +301,14 @@ export default function JapanActivitiesView({ active, homeRequest = 0 }: { activ
                     </button>
                   </header>
                   <h3>{activity.name}</h3>
-                  <p className="japan-activity-place"><MapPin size={14} />{activity.place}</p>
+                  <p className="local-activity-place"><MapPin size={14} />{activity.place}</p>
                   <dl>
                     <div><dt>费用／报名</dt><dd>{activity.cost}<br />{activity.registration}</dd></div>
                     <div><dt>语言／中文友好</dt><dd>{activity.language}<br />{activity.chineseFriendly}</dd></div>
                     <div><dt>为什么可能适合你</dt><dd>{activity.whyCapoo}</dd></div>
                   </dl>
                   <footer>
-                    <div className="japan-activity-card-actions">
+                    <div className="local-activity-card-actions">
                       {activity.hasPlaybook ? (
                         <button type="button" onClick={() => openPlaybook(activity.id, "activities")}>
                           <BookMarked size={13} />打开攻略

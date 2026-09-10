@@ -5,6 +5,7 @@ import {
   automationDispatchControl,
   buildEligibilityKey,
   computeEligibilityRevision,
+  CURRENT_AUTOMATION_EXECUTOR_ROLE_ID,
   doctorAgentTasks,
   eligibilityIntent,
   evaluateAgentTaskEligibility,
@@ -38,8 +39,8 @@ function task(overrides = {}) {
     id: "agent-task",
     idKind: "explicit",
     displayText: "AI· 核对自动推进契约",
-    text: "公司：验收：AI· 核对自动推进契约｜ID：agent-task｜执行器：codex-ai-acceptance",
-    executorId: "codex-ai-acceptance",
+    text: `公司：验收：AI· 核对自动推进契约｜ID：agent-task｜执行器：${CURRENT_AUTOMATION_EXECUTOR_ROLE_ID}`,
+    executorId: CURRENT_AUTOMATION_EXECUTOR_ROLE_ID,
     done: false,
     section: "doing",
     details: [
@@ -284,7 +285,7 @@ test("一次时间触发使用计划槽作稳定 triggerCursor，扫描时刻不
   assert.equal(first.candidates[0].eligibilityKey, muchLater.candidates[0].eligibilityKey);
   assert.deepEqual(JSON.parse(first.candidates[0].eligibilityKey), {
     eligibilityRevision: first.eligibilityRevision,
-    executorRoleId: "codex-ai-acceptance",
+    executorRoleId: CURRENT_AUTOMATION_EXECUTOR_ROLE_ID,
     taskId: "agent-task",
     triggerCursor: "time:2026-09-04T00:10:00.000Z",
     triggerId: "due",
@@ -314,7 +315,7 @@ test("依赖与证据谓词不成立时不生成资格键，成立时游标取�
   assert.equal(met.eligible, true);
   assert.equal(met.candidates.length, 2);
   assert.equal(met.candidates.find((item) => item.triggerId === "dep").triggerCursor, "dependency:upstream-task:state-2");
-  assert.equal(met.candidates.find((item) => item.triggerId === "evidence").triggerCursor, `evidence:30_%E4%BA%8B%E4%B8%9A%E9%A1%BA%E5%88%A9%2FAI%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F%2F30_%E8%AF%81%E6%8D%AE%2F%E7%BB%93%E6%9E%9C.md:${EVIDENCE_SHA}`);
+  assert.equal(met.candidates.find((item) => item.triggerId === "evidence").triggerCursor, `evidence:30_%E4%BA%8B%E4%B8%9A%E9%A1%BA%E5%88%A9%2F%E5%B0%8F%E7%A7%98%E4%B9%A6%2F30_%E8%AF%81%E6%8D%AE%2F%E7%BB%93%E6%9E%9C.md:${EVIDENCE_SHA}`);
 });
 
 test("all 复合触发必须全满足，组合游标会随任一声明事实版本变化", () => {
@@ -392,10 +393,22 @@ test("doctor 区分人工 AI 信息与旧执行器告警，并报告自动契约
   const report = doctorAgentTasks(tasks);
   assert.equal(report.issues.find((item) => item.taskId === "manual-ai" && item.code === "AI_TASK_MANUAL_DISPATCH")?.severity, "info");
   assert.equal(report.issues.find((item) => item.taskId === "legacy-executor" && item.code === "EXECUTOR_WITHOUT_AUTOMATION_CONTRACT")?.severity, "warning");
+  assert.equal(report.issues.find((item) => item.taskId === "legacy-executor" && item.code === "LEGACY_EXECUTOR_NOT_CURRENT")?.severity, "warning");
   assert.equal(report.issues.find((item) => item.taskId === "missing-executor" && item.code === "AUTOMATION_EXECUTOR_MISSING")?.severity, "error");
   assert.equal(report.issues.find((item) => item.taskId === "invalid-contract" && item.code === "AUTOMATION_CONTRACT_INVALID")?.severity, "error");
   assert.equal(report.issues.find((item) => item.taskId === "missing-completion-gate" && item.code === "AUTOMATION_COMPLETION_GATE_MISSING")?.severity, "error");
-  assert.deepEqual(report.summary, { tasksScanned: 5, errors: 3, warnings: 1, info: 1 });
+  assert.deepEqual(report.summary, { tasksScanned: 5, errors: 3, warnings: 2, info: 1 });
+});
+
+test("doctor 对仍开放的历史岗位契约票只警告，不把它当成现行自动入口", () => {
+  const subject = task({
+    id: "legacy-automatic",
+    executorId: "codex-ai-acceptance",
+    text: "公司：验收：AI· 历史岗位票｜ID：legacy-automatic｜执行器：codex-ai-acceptance",
+  });
+  const report = doctorAgentTasks([subject]);
+  assert.equal(report.issues.find((item) => item.taskId === "legacy-automatic" && item.code === "LEGACY_EXECUTOR_NOT_CURRENT")?.severity, "warning");
+  assert.equal(report.issues.some((item) => item.taskId === "legacy-automatic" && item.severity === "error"), false);
 });
 
 test("doctor 报告重复 ID、关系问题、复合触发缺失目标与可选证据清单缺口", () => {

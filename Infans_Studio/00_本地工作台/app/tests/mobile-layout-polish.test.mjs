@@ -21,7 +21,7 @@ test("mobile AI summaries clip their clamped lines and wrap long task identifier
 });
 
 test("single-column quadrants use natural page scrolling", () => {
-  assert.match(styles, /@media \(max-width: 900px\) \{\s*\.market-layout[\s\S]*?\.schedule-quadrant \.schedule-todo-rows \{ max-height: none; overflow: visible; \}/);
+  assert.match(styles, /@media \(max-width: 900px\) \{\s*\.market-layout[\s\S]*?\.schedule-quadrant \.schedule-todo-rows \{ min-height: 0; max-height: none; overflow: visible; \}/);
   assert.doesNotMatch(refinements, /schedule-quadrant\.is-empty[^\{]*\{[^}]*min-height/u);
 });
 

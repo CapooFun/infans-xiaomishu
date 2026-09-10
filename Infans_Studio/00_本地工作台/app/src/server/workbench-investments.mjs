@@ -755,6 +755,126 @@ async function fetchSohuDailySeries(symbol, from, to) {
   return points;
 }
 
+function parseEastmoneyFundNavPayload(raw) {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed) throw new Error("公开基金净值源没有返回数据");
+  const body = trimmed.startsWith("{") || trimmed.startsWith("[")
+    ? trimmed
+    : trimmed.match(/^[A-Za-z0-9_$]+\((.*)\)\s*;?\s*$/su)?.[1];
+  if (!body) throw new Error("公开基金净值源返回无法解析");
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw new Error("公开基金净值源返回无法解析");
+  }
+}
+
+function shanghaiDateFromMs(value) {
+  const ms = Number(value);
+  if (!Number.isFinite(ms)) return "";
+  return new Date(ms).toLocaleDateString("en-CA", { timeZone: "Asia/Shanghai" });
+}
+
+function uniqueSortedNavPoints(points) {
+  const ordered = [...points].sort((a, b) => a.date.localeCompare(b.date));
+  const unique = [];
+  for (const point of ordered) {
+    if (unique.at(-1)?.date === point.date) unique[unique.length - 1] = point;
+    else unique.push(point);
+  }
+  return unique;
+}
+
+function parseEastmoneyNetWorthTrend(raw) {
+  const match = String(raw || "").match(/var Data_netWorthTrend\s*=\s*(\[[\s\S]*?\]);/);
+  if (!match) throw new Error("公开基金净值源返回无法解析");
+  let rows;
+  try {
+    rows = JSON.parse(match[1]);
+  } catch {
+    throw new Error("公开基金净值源返回无法解析");
+  }
+  if (!Array.isArray(rows)) throw new Error("公开基金净值源返回无法解析");
+  return uniqueSortedNavPoints(rows.flatMap((row) => {
+    const date = shanghaiDateFromMs(row?.x);
+    const close = finiteNumber(row?.y, Number.NaN);
+    return /^\d{4}-\d{2}-\d{2}$/u.test(date) && Number.isFinite(close) && close > 0 ? [{ date, close: round4(close) }] : [];
+  }));
+}
+
+async function fetchJsonWithRetries(url, headers) {
+  let response = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    response = await fetch(url, {
+      headers,
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (response.ok || ![429, 502, 503, 504].includes(response.status) || attempt === 2) break;
+    await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+  }
+  if (!response?.ok) throw new Error(`公开基金净值源响应 ${response?.status || "失败"}`);
+  return response;
+}
+
+async function fetchEastmoneyFundNavByLsjz(code, from, to) {
+  const pageSize = 20;
+  const rows = [];
+  let pageIndex = 1;
+  let totalCount = Infinity;
+  while (rows.length < totalCount && pageIndex <= 80) {
+    const url = new URL("https://api.fund.eastmoney.com/f10/lsjz");
+    url.searchParams.set("fundCode", code);
+    url.searchParams.set("pageIndex", String(pageIndex));
+    url.searchParams.set("pageSize", String(pageSize));
+    url.searchParams.set("startDate", from);
+    url.searchParams.set("endDate", to);
+    const response = await fetchJsonWithRetries(url, {
+      "User-Agent": "Mozilla/5.0 InfansWorkbench/1.0",
+      Accept: "application/json,text/javascript,*/*",
+      Referer: `https://fundf10.eastmoney.com/jjjz_${code}.html`,
+    });
+    const payload = parseEastmoneyFundNavPayload(await response.text());
+    if (Number(payload?.ErrCode) && Number(payload.ErrCode) !== 0) {
+      throw new Error(text(payload?.ErrMsg, "公开基金净值源暂时不可用", 80));
+    }
+    totalCount = finiteNumber(payload?.TotalCount, 0);
+    const list = Array.isArray(payload?.Data?.LSJZList) ? payload.Data.LSJZList : [];
+    if (!list.length) break;
+    rows.push(...list);
+    pageIndex += 1;
+  }
+  return uniqueSortedNavPoints(rows.flatMap((row) => {
+    const date = text(row?.FSRQ, "", 16);
+    const close = finiteNumber(row?.DWJZ, Number.NaN);
+    return /^\d{4}-\d{2}-\d{2}$/u.test(date) && Number.isFinite(close) && close > 0 ? [{ date, close: round4(close) }] : [];
+  }));
+}
+
+async function fetchEastmoneyFundNavSeries(symbol, from, to) {
+  const code = String(symbol || "").replace(/\D/gu, "").padStart(6, "0");
+  if (!/^\d{6}$/u.test(code)) throw new Error("这只基金缺少可识别的公开代码");
+  const key = `eastmoney-fund:${code}:${from}:${to}`;
+  const cached = investmentSeriesCache.get(key);
+  if (cached && Date.now() - cached.at < INVESTMENT_SERIES_CACHE_MS) return cached.points;
+  let points = [];
+  try {
+    const response = await fetchJsonWithRetries(`https://fund.eastmoney.com/pingzhongdata/${code}.js`, {
+      "User-Agent": "Mozilla/5.0 InfansWorkbench/1.0",
+      Accept: "application/javascript,text/javascript,*/*",
+      Referer: `https://fund.eastmoney.com/${code}.html`,
+    });
+    points = parseEastmoneyNetWorthTrend(await response.text()).filter((row) => row.date >= from && row.date <= to);
+  } catch {
+    points = [];
+  }
+  if (!points.length) {
+    points = (await fetchEastmoneyFundNavByLsjz(code, from, to)).filter((row) => row.date >= from && row.date <= to);
+  }
+  if (!points.length) throw new Error("这只基金暂时读不到历史净值");
+  investmentSeriesCache.set(key, { at: Date.now(), points });
+  return points;
+}
+
 function unixSeconds(value) {
   const parsed = Date.parse(`${value}T00:00:00Z`);
   return Number.isFinite(parsed) ? Math.floor(parsed / 1000) : 0;
@@ -802,6 +922,16 @@ function subtractOneYear(value) {
 function marketSeriesConfig(instrument) {
   if (/^CN\.(SH|SZ)\./u.test(instrument.id)) {
     return { sourceLabel: "搜狐证券日线 · 仅价格走势", priceCurrency: instrument.listingCurrency || "CNY", fetch: fetchSohuDailySeries };
+  }
+  if (/^CN\.FUND\./u.test(instrument.id) || instrument.assetClass === "MutualFund") {
+    const numeric = String(instrument.symbol || "").replace(/\D/gu, "").padStart(6, "0");
+    if (!/^\d{6}$/u.test(numeric)) return null;
+    return {
+      quoteSymbol: numeric,
+      sourceLabel: "东方财富基金单位净值 · 仅净值走势",
+      priceCurrency: instrument.listingCurrency || "CNY",
+      fetch: fetchEastmoneyFundNavSeries,
+    };
   }
   if (/^US\.(NASDAQ|NYSE|NYSEARCA)\./u.test(instrument.id)) {
     return { yahooSymbol: instrument.symbol, sourceLabel: "Yahoo Finance 日线 · 仅价格走势", priceCurrency: instrument.listingCurrency || "USD", fetch: fetchYahooDailySeries };
@@ -1007,7 +1137,7 @@ export async function readInvestmentInstrumentSeries(root, instrumentId) {
       ? "现有成交与当前数量之间仍有期初仓或遗漏流水，只显示公开价格走势和已确认买卖点；这不是本人收益率。"
       : "当前只有可确认的成交点，先显示公开价格走势；这不是本人收益率。";
   try {
-    const quoteSymbol = config.yahooSymbol || instrument.symbol;
+    const quoteSymbol = config.yahooSymbol || config.quoteSymbol || instrument.symbol;
     const prices = await config.fetch(quoteSymbol, from, to);
     const rows = buildMarketOnlySeries(prices.filter((row) => row.date >= from && row.date <= to), currentQuantity);
     return {

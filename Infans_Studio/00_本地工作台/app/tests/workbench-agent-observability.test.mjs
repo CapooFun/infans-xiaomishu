@@ -82,11 +82,13 @@ async function fixture() {
   db.close();
   await fs.writeFile(path.join(codexHome, "session_index.jsonl"), `${JSON.stringify({ id: "parent-1", thread_name: "小秘书密码管理功能整理" })}\n`);
 
-  const featureDir = path.join(root, "00_本地工作台/10_设计/20_模块");
-  await fs.mkdir(featureDir, { recursive: true });
+  const toolsDir = path.join(root, "00_本地工作台/10_设计/实用工具");
+  const automationDir = path.join(root, "00_本地工作台/10_设计/定时与自动化");
+  await fs.mkdir(toolsDir, { recursive: true });
+  await fs.mkdir(automationDir, { recursive: true });
   await fs.writeFile(path.join(root, "00_本地工作台/10_设计/小秘书_产品功能树.md"), `# 小秘书功能树\n\n| 模块 | ID | 说明 | 原件 |\n|---|---|---|---|\n| 实用工具 | tools | 工具 | [[00_本地工作台/10_设计/实用工具/小秘书模块_实用工具]] |\n| 定时与自动化 | automation | 自动任务 | [[00_本地工作台/10_设计/定时与自动化/小秘书模块_定时与自动化]] |\n`);
-  await fs.writeFile(path.join(featureDir, "小秘书模块_实用工具.md"), `# 实用工具\n\n## 实用工具｜ID：tools\n\n| 小模块 | 状态 | 说明 | 功能点 | 当前进度 | 原件 | ID |\n|---|---|---|---|---|---|---|\n| 智能体观测 | 开发中 | 任务账册 | 任务链 | 当前：开发 | 本模块 | tools-agent-observability |\n| 产品功能 Wiki 树 | 稳定 | 按模块查看功能 Wiki | 自动归属 | 完成：可用 | 本模块 | projects-feature-tree |\n| NAS 相册 | 稳定 | 查看和预览照片 | 下载与全屏 | 完成：可用 | 本模块 | tools-photo |\n`);
-  await fs.writeFile(path.join(featureDir, "小秘书模块_定时与自动化.md"), `# 定时与自动化\n\n## 定时与自动化｜ID：automation\n\n| 小模块 | 状态 | 说明 | 功能点 | 当前进度 | 原件 | ID |\n|---|---|---|---|---|---|---|\n| 小秘书每日版本收口 | 稳定 | Cursor 每日收口 | 任务角色 | 完成：可用 | 本模块 | automation-daily-release |\n`);
+  await fs.writeFile(path.join(toolsDir, "小秘书模块_实用工具.md"), `# 实用工具\n\n## 实用工具｜ID：tools\n\n| 小模块 | 状态 | 说明 | 功能点 | 当前进度 | 原件 | ID |\n|---|---|---|---|---|---|---|\n| 智能体观测 | 开发中 | 任务账册 | 任务链 | 当前：开发 | 本模块 | tools-agent-observability |\n| 产品功能 Wiki 树 | 稳定 | 按模块查看功能 Wiki | 自动归属 | 完成：可用 | 本模块 | projects-feature-tree |\n| NAS 相册 | 稳定 | 查看和预览照片 | 下载与全屏 | 完成：可用 | 本模块 | tools-photo |\n`);
+  await fs.writeFile(path.join(automationDir, "小秘书模块_定时与自动化.md"), `# 定时与自动化\n\n## 定时与自动化｜ID：automation\n\n| 小模块 | 状态 | 说明 | 功能点 | 当前进度 | 原件 | ID |\n|---|---|---|---|---|---|---|\n| 小秘书每日轻量检查 | 稳定 | 每天轻量检查 | 不调用模型 | 完成：可用 | 本模块 | automation-daily-health |\n| 小秘书每周版本收口 | 稳定 | Cursor 每周收口 | 任务角色 | 完成：可用 | 本模块 | automation-daily-release |\n`);
 
   const runDir = path.join(root, "00_本地工作台/30_证据/AI定时任务运行包/daily");
   await fs.mkdir(runDir, { recursive: true });
@@ -116,7 +118,7 @@ test("任务链按会话累计快照汇总，自身与子任务不重复", async
   assert.equal(snapshot.scheduledRuns.runCount, 2);
   assert.equal(snapshot.scheduledRuns.measuredRunCount, 1);
   assert.equal(snapshot.scheduledRuns.usage.totalTokens, 100);
-  assert.deepEqual(snapshot.scheduledRuns.runs.map((item) => item.roleName), ["版本收口", "金融简报"]);
+  assert.deepEqual(snapshot.scheduledRuns.runs.map((item) => item.roleName), ["每周版本收口", "金融简报"]);
   assert.equal(snapshot.scheduledRuns.runs[1].measured, false);
   assert.equal(snapshot.agents.find((item) => item.id === "cursor").usage.totalTokens, 100);
   assert.equal(snapshot.tasks.find((item) => item.id === "cursor:brief-old").totalUsage, null);
@@ -401,17 +403,33 @@ test("Cursor 定时任务按稳定角色直接归属功能", async (t) => {
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const snapshot = await readAgentObservability(root, { days: 7, nowMs: NOW, codexHome });
   const task = snapshot.tasks.find((item) => item.kind === "cursor");
-  assert.equal(task.title, "版本收口");
+  assert.equal(task.title, "每周版本收口");
   assert.equal(task.usageMode, "this-run");
   assert.equal(task.hasChildren, false);
   assert.deepEqual(task.featureIds, ["automation-daily-release"]);
   assert.equal(task.featureMatches[0].basis, "role");
 });
 
+test("晨检和每周收口在 Token 账册里是两个名字", async (t) => {
+  const { root, codexHome } = await fixture();
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const healthDir = path.join(root, "00_本地工作台/30_证据/AI定时任务运行包/daily-health");
+  await fs.mkdir(healthDir, { recursive: true });
+  await fs.writeFile(path.join(healthDir, "run.md"), `---\nrunId: "health-1"\nroleId: "workbench-daily-health"\nadapter: "cursor-cli"\nmodel: "cursor-test"\nstartedAt: "2026-09-01T02:10:00+09:00"\nprocessState: exited\nfinishedAt: "2026-09-01T02:11:00+09:00"\nexitCode: 0\nusageSource: "cursor-headless-json"\ninputTokens: 10\noutputTokens: 2\ntotalTokens: 12\n---\n`);
+  const snapshot = await readAgentObservability(root, { days: 7, nowMs: NOW, codexHome });
+  const health = snapshot.scheduledRuns.runs.find((item) => item.roleId === "workbench-daily-health");
+  const release = snapshot.scheduledRuns.runs.find((item) => item.roleId === "workbench-daily-release");
+  assert.equal(health.roleName, "每日轻量检查");
+  assert.equal(release.roleName, "每周版本收口");
+  const healthTask = snapshot.tasks.find((item) => item.id === "cursor:health-1");
+  assert.deepEqual(healthTask.featureIds, ["automation-daily-health"]);
+  assert.notEqual(healthTask.featureIds[0], release.featureIds?.[0] || snapshot.tasks.find((item) => item.id === "cursor:daily-1").featureIds[0]);
+});
+
 test("整张账册写入派生缓存，二次进入无需重新扫描", async (t) => {
   const { root, codexHome } = await fixture();
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const fresh = await readAgentObservabilityCached(root, { days: 7, force: true, codexHome, skipCursorSync: true });
+  const fresh = await readAgentObservabilityCached(root, { days: 7, force: true, nowMs: NOW, codexHome, skipCursorSync: true });
   const cacheFile = JSON.parse(await fs.readFile(path.join(root, "00_本地工作台/派生数据/agent-observability-cache.json"), "utf8"));
   assert.equal(cacheFile.schemaVersion, 18);
   const index = JSON.parse(await fs.readFile(path.join(root, "00_本地工作台/派生数据/agent-observability-index.json"), "utf8"));
@@ -426,7 +444,7 @@ test("整张账册写入派生缓存，二次进入无需重新扫描", async (t
 test("已核实的功能关联立即更新 Wiki 索引并使账册缓存失效", async (t) => {
   const { root, codexHome } = await fixture();
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  await readAgentObservabilityCached(root, { days: 7, force: true, codexHome, skipCursorSync: true });
+  await readAgentObservabilityCached(root, { days: 7, force: true, nowMs: NOW, codexHome, skipCursorSync: true });
   await writeAgentObservabilityLink(root, { taskId: "parent-1", featureIds: ["tools-agent-observability", "projects-feature-tree"] });
   const index = JSON.parse(await fs.readFile(path.join(root, "00_本地工作台/派生数据/agent-observability-index.json"), "utf8"));
   const cache = JSON.parse(await fs.readFile(path.join(root, "00_本地工作台/派生数据/agent-observability-cache.json"), "utf8"));

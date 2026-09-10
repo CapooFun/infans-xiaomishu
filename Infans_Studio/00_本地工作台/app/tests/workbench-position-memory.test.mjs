@@ -12,7 +12,7 @@ import {
 
 test("页面位置 URL 只保留登记过的稳定状态，不保存搜索、AI 参数或 hash", () => {
   assert.equal(
-    sanitizeWorkbenchLocation("/projects?project=quit-to-cultivate&tree=features&module=combat&feature=timing&node=node%3Aprecision&q=secret&askSecretary=1#askSecretary=private"),
+    sanitizeWorkbenchLocation("/projects?project=quit-to-cultivate&tree=features&module=combat&feature=timing&node=node%3Aprecision&q=secret&extra=1#note=private"),
     "/projects?project=quit-to-cultivate&tree=features&module=combat&feature=timing&node=node%3Aprecision",
   );
   assert.equal(sanitizeWorkbenchLocation("/projects?project=game&from=todo&query=private"), "/projects?project=game&from=todo");

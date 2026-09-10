@@ -4,6 +4,16 @@ import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
 
+enum SecretaryKeyboard {
+    static let dismissNotification = Notification.Name("SecretaryKeyboard.dismiss")
+
+    @MainActor
+    static func resign() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        NotificationCenter.default.post(name: dismissNotification, object: nil)
+    }
+}
+
 struct SecretaryMessageComposer: View {
     @ObservedObject var store: SecretaryChatStore
     var accessoryActions: SecretaryComposerAccessoryActions = .unavailable
@@ -92,7 +102,7 @@ struct SecretaryMessageComposer: View {
                 Button {
                     usesHoldToTalk.toggle()
                     showsMoreActions = false
-                    focused = !usesHoldToTalk
+                    setComposerFocused(!usesHoldToTalk)
                 } label: {
                     ZStack {
                         if voiceInput.phase == .queueing {
@@ -146,7 +156,7 @@ struct SecretaryMessageComposer: View {
                         return .handled
                     }
                     .onKeyPress(.escape, phases: .down) { _ in
-                        focused = false
+                        setComposerFocused(false)
                         return .handled
                     }
                     .padding(.horizontal, 12)
@@ -161,7 +171,7 @@ struct SecretaryMessageComposer: View {
                 Button {
                     showsEmojiPicker = true
                     showsMoreActions = false
-                    focused = false
+                    setComposerFocused(false)
                 } label: {
                     Image(systemName: "face.smiling")
                         .frame(width: 40, height: 44)
@@ -198,7 +208,7 @@ struct SecretaryMessageComposer: View {
                     Button {
                         withAnimation(.easeOut(duration: 0.16)) {
                             showsMoreActions.toggle()
-                            focused = false
+                            setComposerFocused(false)
                         }
                     } label: {
                         Image(systemName: "plus")
@@ -312,11 +322,17 @@ struct SecretaryMessageComposer: View {
                 onOpenKeyboard: {
                     showsEmojiPicker = false
                     usesHoldToTalk = false
-                    focused = true
+                    setComposerFocused(true)
                 }
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: SecretaryKeyboard.dismissNotification)) { _ in
+            focused = false
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in
+            focused = false
         }
     }
 
@@ -487,7 +503,14 @@ struct SecretaryMessageComposer: View {
     private func appendEmoji(_ emoji: String) {
         if usesHoldToTalk { usesHoldToTalk = false }
         store.updateDraft(store.draft + emoji)
-        focused = true
+        setComposerFocused(true)
+    }
+
+    private func setComposerFocused(_ next: Bool) {
+        focused = next
+        if !next {
+            SecretaryKeyboard.resign()
+        }
     }
 
     private func isUserCancellation(_ error: Error) -> Bool {

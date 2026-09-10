@@ -6,6 +6,17 @@ import { WorkbenchWriteError } from "./workbench-errors.mjs";
 // External editors/processes do not participate in this queue.
 const pendingWrites = new Map();
 
+/** Turn an absolute or relative target into a POSIX path under the Vault root. */
+export function toVaultRelativePath(vaultRoot, targetPath) {
+  const root = path.resolve(vaultRoot);
+  const target = path.resolve(root, targetPath);
+  const relative = path.relative(root, target);
+  if (!relative || relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new WorkbenchWriteError("写入路径越出 Vault", 403, "PATH_OUTSIDE_VAULT");
+  }
+  return relative.split(path.sep).join("/");
+}
+
 /** Resolve the Vault root, then reject links at every component below it. */
 export async function resolveWritableVaultPath(vaultRoot, relativePath) {
   const root = await fs.realpath(path.resolve(vaultRoot));

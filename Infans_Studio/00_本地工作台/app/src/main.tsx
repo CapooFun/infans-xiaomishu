@@ -16,10 +16,12 @@ import {
   GripVertical, HeartPulse, Home, Languages, LibraryBig, LockKeyhole, Monitor, Moon, MoreHorizontal, Music2, Newspaper, Pause, Plus, RefreshCw, Smartphone, Sparkles, Sun, UserRound, Wrench, X,
   type LucideIcon,
 } from "lucide-react";
-import type { CalendarSnapshot, HealthSectionData, HomePins, LanguagesSectionData, LibrarySectionData, MarketsSectionData, WeatherAlert, WeatherSnapshot, WorkbenchSummary, WriteAction, WritePreview } from "./types";
+import type { HealthSectionData, HomePins, LanguagesSectionData, LibrarySectionData, MarketsSectionData, WeatherAlert, WeatherSnapshot, WorkbenchSummary, WriteAction, WritePreview } from "./types";
 import { invalidateSection, preloadSection, refreshSection, useSectionData } from "./workbench-data-cache";
 import { invalidateAllToolSessionCaches } from "./tool-session-cache";
 import { jsonFetch, navigate, navigateWithPositionRestore, shouldSoftNavigate, softNavigate } from "./page-shared";
+import { homeCalendarWindow } from "./calendar-windows";
+import { useCalendarWindows } from "./use-calendar-windows";
 import { shouldShowLocalWeatherAlert } from "./weather-alert-state";
 import { isWorkbenchNewsHash } from "./world-news-target";
 import { directWriteSuccessMessage, skipsWorkbenchWriteConfirmation } from "./write-confirmation-policy";
@@ -46,7 +48,6 @@ import { AiPanel, IdentityOverlay, PreviewModal, type AiPanelBootstrap, type Pre
 import { ProfileSwitcher } from "./shell/ProfileSwitcher";
 import { SelectionAskFab } from "./shell/SelectionAskFab";
 import { SelectionAskMenu } from "./shell/SelectionAskMenu";
-import { buildAskSelectionSeedUser } from "./shell/ask-selection";
 import { applyWorkbenchTheme, getPageScene, PAGE_SCENES_BY_THEME, readInitialTheme, WORKBENCH_THEMES, type WorkbenchTheme, type WorkbenchThemeIcon } from "./workbench-theme";
 import {
   consumeActiveWorkbenchNavigation,
@@ -373,9 +374,9 @@ function KeepAliveSlot({ active, children }: { active: boolean; children: React.
   );
 }
 
-function HealthRoute({ onImport, onImportFromDownloads, importing, onAskCoach, onWritePreview }: { onImport: (file: File) => void; onImportFromDownloads: () => void; importing: boolean; onAskCoach: (seedUser: string) => void; onWritePreview: (action: WriteAction) => void }) {
+function HealthRoute({ onAskCoach, onWritePreview }: { onAskCoach: (seedUser: string) => void; onWritePreview: (action: WriteAction) => void }) {
   const state = useSectionData("health");
-  return <SectionState<HealthSectionData> {...state} render={(data) => <LazyHealthPage data={data} onImport={onImport} onImportFromDownloads={onImportFromDownloads} importing={importing} onAskCoach={onAskCoach} onWritePreview={onWritePreview}/>}/>;
+  return <SectionState<HealthSectionData> {...state} render={(data) => <LazyHealthPage data={data} onAskCoach={onAskCoach} onWritePreview={onWritePreview}/>}/>;
 }
 function LanguagesRoute({
   onImport,
@@ -494,9 +495,16 @@ function TopbarWeatherChip({ alert }: { alert: WeatherAlert | null }) {
 }
 
 function App() {
-  const [path, setPath] = useState(routePath()); const [pendingPath, setPendingPath] = useState(""); const [data, setData] = useState<WorkbenchSummary | null>(null); const [error, setError] = useState(""); const [calendar, setCalendar] = useState<CalendarSnapshot>({ available: false, permission: "unknown", calendars: [], events: [], loading: true, message: "正在读取苹果日历…" }); const [identity, setIdentity] = useState(false); const [ai, setAi] = useState(false); const [aiPeeked, setAiPeeked] = useState(false); const [aiBootstrap, setAiBootstrap] = useState<AiPanelBootstrap | null>(null); const [preview, setPreview] = useState<PreviewState>(null); const [toast, setToast] = useState(""); const [healthImporting, setHealthImporting] = useState(false); const [moreOpen, setMoreOpen] = useState(false);
+  const [path, setPath] = useState(routePath()); const [pendingPath, setPendingPath] = useState(""); const [data, setData] = useState<WorkbenchSummary | null>(null); const [error, setError] = useState(""); const [identity, setIdentity] = useState(false); const [ai, setAi] = useState(false); const [aiPeeked, setAiPeeked] = useState(false); const [aiBootstrap, setAiBootstrap] = useState<AiPanelBootstrap | null>(null); const [preview, setPreview] = useState<PreviewState>(null); const [toast, setToast] = useState(""); const [moreOpen, setMoreOpen] = useState(false);
   const musicPlayer = useSyncExternalStore(subscribeMusicPlayer, getMusicPlayerSnapshot);
   const { weather, alert: weatherAlert } = useTokyoWeather();
+  const homeWindow = homeCalendarWindow();
+  const { home: calendar, refresh: refreshCalendarWindows } = useCalendarWindows({
+    home: { from: homeWindow.from, to: homeWindow.to, active: true },
+    onVisibleRefresh: () => {
+      if (routePath() === "/health") void refreshSection("health");
+    },
+  });
   const [sidebarMode, setSidebarMode] = useState<"navigation" | "bookmarks">(() => {
     try { return window.localStorage.getItem("infans-sidebar-mode-v1") === "bookmarks" ? "bookmarks" : "navigation"; }
     catch { return "navigation"; }
@@ -612,59 +620,6 @@ function App() {
   // 那次更新不在 transition 内，于是又会露出骨架屏、又吃满 300ms 节流。
   const visitedRoutes = cachedRoutes.includes(contentPath) ? cachedRoutes : touchVisitedRoute(cachedRoutes, contentPath);
   const load = () => jsonFetch<WorkbenchSummary>("/api/summary").then((next) => { setData(next); setError(""); }).catch((e) => setError(e.message));
-  const fetchCalendarOnce = async (force = false) => {
-    const from = new Date(); from.setHours(0, 0, 0, 0);
-    const to = new Date(from); to.setDate(to.getDate() + 8);
-    return jsonFetch<CalendarSnapshot>(`/api/calendar?from=${from.toISOString()}&to=${to.toISOString()}${force ? "&force=1" : ""}`);
-  };
-  const calendarLoadRevisionRef = useRef(0);
-  const loadCalendar = (opts: { force?: boolean; silent?: boolean } = {}) => {
-    const revision = ++calendarLoadRevisionRef.current;
-    const force = Boolean(opts.force);
-    const silent = Boolean(opts.silent);
-    setCalendar((old) => {
-      if (silent && old.available) return old;
-      if (old.available) return { ...old, loading: force || Boolean(old.stale), message: old.message };
-      return { ...old, loading: true, message: "正在读取苹果日历…" };
-    });
-    return fetchCalendarOnce(force)
-      .then((next) => {
-        if (revision !== calendarLoadRevisionRef.current) return;
-        if (next.permission === "denied") {
-          setCalendar({ ...next, loading: false });
-          return;
-        }
-        if (!next.available && (force || silent)) {
-          setCalendar((old) => (old.available
-            ? { ...old, loading: false, stale: true, message: next.message || "没连上，还显示上次的数据。" }
-            : { ...next, loading: false }));
-          return;
-        }
-        setCalendar({ ...next, loading: false, stale: Boolean(next.stale) });
-        // 跨日缓存先上屏后，静默 force 一次把后台结果拉进界面；有事件时不打断展示
-        if (next.available && next.stale && !force) void loadCalendar({ force: true, silent: true });
-      })
-      .catch((e) => {
-        if (revision !== calendarLoadRevisionRef.current) return;
-        setCalendar((old) => (old.available ? { ...old, loading: false, stale: true, message: e.message } : { available: false, permission: "unknown", calendars: [], events: [], loading: false, message: e.message }));
-      });
-  };
-  useEffect(() => {
-    const changes = new EventSource("/api/calendar/changes");
-    const refresh = () => {
-      if (document.visibilityState === "hidden") return;
-      void loadCalendar({ silent: true });
-      if (routePath() === "/health") void refreshSection("health");
-    };
-    changes.onmessage = refresh;
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    return () => {
-      changes.close();
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", refresh);
-    };
-  }, []);
   const refreshCurrentPage = async (): Promise<boolean> => {
     if (refreshingRef.current) return false;
     refreshingRef.current = true;
@@ -689,7 +644,7 @@ function App() {
     const tasks: Array<Promise<unknown>> = [load()];
     if (section) tasks.push(refreshSection(section));
     // macOS 日历权限链偶尔会长时占住请求；它保持后台更新，不阻塞当前页刷新的反馈。
-    if (contentPath === "/" || contentPath === "/schedule") void loadCalendar({ force: true });
+    if (contentPath === "/" || contentPath === "/schedule") void refreshCalendarWindows("all", { force: true });
     try {
       await waitForWorkbenchRefresh(tasks);
       setToast(workbenchRefreshFeedbackText(activeSecretary.name));
@@ -704,7 +659,7 @@ function App() {
       setRefreshing(false);
     }
   };
-  useEffect(() => { void preloadRoute(path, themeRef.current); load(); loadCalendar(); let disposed = false; const pop = () => {
+  useEffect(() => { void preloadRoute(path, themeRef.current); load(); let disposed = false; const pop = () => {
     const nextPath = routePath();
     const active = consumeActiveWorkbenchNavigation();
     const revision = ++routePreparationRevisionRef.current;
@@ -740,75 +695,6 @@ function App() {
     };
     window.addEventListener("storage", syncDisplayMode);
     return () => window.removeEventListener("storage", syncDisplayMode);
-  }, []);
-  useEffect(() => {
-    const openAsk = (seedUser: string) => {
-      const seed = seedUser.trim();
-      if (!seed) return;
-      setAiBootstrap({ mode: "askSelection", seedUser: seed });
-      setAiPeeked(false);
-      setAi(true);
-    };
-    const readHashPayload = () => {
-      const hash = window.location.hash;
-      if (!hash.startsWith("#askSecretary=")) return "";
-      try {
-        const raw = decodeURIComponent(hash.slice("#askSecretary=".length));
-        const data = JSON.parse(raw) as { selectedText?: string; pageUrl?: string; pageTitle?: string; route?: string };
-        return buildAskSelectionSeedUser(data);
-      } catch {
-        return "";
-      }
-    };
-    const clearAskParams = () => {
-      const url = new URL(window.location.href);
-      let dirty = false;
-      if (url.searchParams.has("askSecretary")) {
-        url.searchParams.delete("askSecretary");
-        dirty = true;
-      }
-      if (url.hash.startsWith("#askSecretary=")) {
-        url.hash = "";
-        dirty = true;
-      }
-      if (dirty) window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-    };
-    const consumePending = async (force = false) => {
-      const params = new URLSearchParams(window.location.search);
-      const fromQuery = params.get("askSecretary") === "1";
-      const fromHash = window.location.hash.startsWith("#askSecretary=");
-      const onLoopback = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
-      if (!force && !fromQuery && !fromHash && document.visibilityState !== "visible") return;
-      if (!onLoopback && !fromQuery && !fromHash) return;
-      try {
-        const data = await jsonFetch<{ pending: { seedUser?: string } | null }>("/api/ai/pending-selection");
-        const seed = data.pending?.seedUser?.trim() || "";
-        if (seed) {
-          clearAskParams();
-          openAsk(seed);
-          return;
-        }
-      } catch {
-        /* 服务未就绪时再试 hash */
-      }
-      if (fromHash) {
-        const seed = readHashPayload();
-        clearAskParams();
-        if (seed) openAsk(seed);
-      } else if (fromQuery) {
-        clearAskParams();
-      }
-    };
-    void consumePending(true);
-    const tick = () => { void consumePending(false); };
-    const timer = window.setInterval(tick, 1500);
-    window.addEventListener("focus", tick);
-    document.addEventListener("visibilitychange", tick);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("focus", tick);
-      document.removeEventListener("visibilitychange", tick);
-    };
   }, []);
   useEffect(() => data ? scheduleIdlePrefetch(theme) : undefined, [Boolean(data), theme]);
 
@@ -855,16 +741,12 @@ function App() {
       setToast(error instanceof Error ? error.message : "没写进去");
     }
   };
-  const refreshHealth = () => { invalidateSection("health"); preloadSection("health"); load(); };
   const refreshLanguages = () => { invalidateSection("languages"); preloadSection("languages"); load(); };
-  const showAppleHealthPreview = (body: WritePreview) => { setToast(""); setPreview({ preview: body, commitUrl: "/api/apple-health/commit", afterCommit: refreshHealth }); };
-  const requestAppleHealthFromDownloads = async () => { setHealthImporting(true); try { setToast("正在读下载文件夹里的苹果健康导出…"); showAppleHealthPreview(await jsonFetch<WritePreview>("/api/apple-health/preview-local", { method: "POST" })); } catch (e) { setToast(`导入失败：${e instanceof Error ? e.message : "无法读取下载目录中的健康导出"}`); } finally { setHealthImporting(false); } };
-  const requestAppleHealthPreview = async (file: File) => { if (/^export_cda\.xml$/i.test(file.name)) { setToast("导入失败：选错文件了。export_cda.xml 不是健康数据，请回上一层选「导出.zip」。"); return; } if (file.size > 256 * 1024 * 1024) { setToast("导入失败：文件太大，浏览器传不过去。请点「读取下载目录」，让本机直接解析。"); return; } setHealthImporting(true); try { setToast("正在这台电脑上解析苹果健康导出，稍等…"); const response = await fetch("/api/apple-health/preview", { method: "POST", headers: { "Content-Type": file.type || "application/octet-stream", "X-Infans-Filename": encodeURIComponent(file.name), "X-Infans-File-Modified": String(file.lastModified || "") }, body: file }); const body = await response.json(); if (!response.ok) throw new Error(body.error || "读不懂这个苹果健康导出"); showAppleHealthPreview(body); } catch (e) { const message = e instanceof TypeError ? "传输中断了，请改用「读取下载目录」" : e instanceof Error ? e.message : "读不懂这个苹果健康导出"; setToast(`导入失败：${message}`); } finally { setHealthImporting(false); } };
   const requestLanguageReactorPreview = async (file: File) => { try { setToast("正在整理 Language Reactor 收藏…"); const response = await fetch("/api/language-reactor/preview", { method: "POST", headers: { "Content-Type": file.type || "application/octet-stream", "X-Infans-Filename": encodeURIComponent(file.name), "X-Infans-File-Modified": String(file.lastModified || "") }, body: file }); const body = await response.json(); if (!response.ok) throw new Error(body.error || "读不懂这个 Language Reactor 导出"); setToast(""); setPreview({ preview: body, commitUrl: "/api/language-reactor/commit", afterCommit: refreshLanguages }); } catch (e) { setToast(e instanceof Error ? e.message : "读不懂这个 Language Reactor 导出"); } };
   const commit = async () => { if (!preview) return; try { await jsonFetch(preview.commitUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: preview.preview.token }) }); preview.afterCommit?.(); window.dispatchEvent(new Event("infans:vault-updated")); setToast("改好了，文件已经更新。"); setPreview(null); } catch (e) { setToast(e instanceof Error ? e.message : "没写进去"); } };
   useEffect(() => { if (!toast) return; const t = window.setTimeout(() => setToast(""), toast.endsWith(WORKBENCH_REFRESH_FEEDBACK_SUFFIX) ? 2350 : 3800); return () => clearTimeout(t); }, [toast]);
   const summaryFallback = error ? <RouteError message={error} onRetry={() => { void load(); }}/> : <RouteSkeleton/>;
-  const syncCalendar = () => loadCalendar({ force: true });
+  const syncCalendar = () => { void refreshCalendarWindows("all", { force: true }); };
   const openAi = (bootstrap?: AiPanelBootstrap) => {
     if (bootstrap) setAiBootstrap(bootstrap);
     setAiPeeked(false);
@@ -876,9 +758,9 @@ function App() {
     setAiBootstrap(null);
   };
   const routeContent = (route: string, active: boolean) => {
-    if (route === "/schedule") return data ? <LazySchedulePage data={data} onWritePreview={requestPreview} calendarSignal={calendar} active={active} onCalendarChanged={() => void loadCalendar({ force: true, silent: true })}/> : summaryFallback;
+    if (route === "/schedule") return data ? <LazySchedulePage data={data} onWritePreview={requestPreview} active={active}/> : summaryFallback;
     if (route === "/projects") return data ? <LazyProjectsPage data={data} displayMode={displayMode} onWritePreview={requestPreview}/> : summaryFallback;
-    if (route === "/health") return <HealthRoute onImport={requestAppleHealthPreview} onImportFromDownloads={requestAppleHealthFromDownloads} importing={healthImporting} onAskCoach={(seedUser) => { openAi({ mode: "healthCoach", seedUser, include: ["health"] }); }} onWritePreview={requestPreview}/>;
+    if (route === "/health") return <HealthRoute onAskCoach={(seedUser) => { openAi({ mode: "healthCoach", seedUser, include: ["health"] }); }} onWritePreview={requestPreview}/>;
     if (route === "/languages") return <LanguagesRoute onImport={requestLanguageReactorPreview} onOpenExamAi={(bootstrap) => { openAi(bootstrap); }}/>;
     if (route === "/library") return <LibraryRoute displayMode={displayMode}/>;
     if (route === "/topics") return <TopicsRoute onAskSecretary={(seedUser) => { openAi({ mode: "askSelection", seedUser, teaching: true }); }}/>;

@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 import { GANTT_HIDDEN_PATH } from "./vault-paths.mjs";
 
 const MAX_TEXTS = 200;
@@ -37,8 +38,7 @@ async function writeHiddenFile(absolute, payload) {
   await fs.rename(temporary, absolute);
 }
 
-export async function readGanttHidden(vaultRoot) {
-  const absolute = ganttHiddenPath(vaultRoot);
+async function readHiddenFrom(absolute) {
   try {
     const text = await fs.readFile(absolute, "utf8");
     return normalizeHidden(JSON.parse(text));
@@ -48,13 +48,19 @@ export async function readGanttHidden(vaultRoot) {
   }
 }
 
+export async function readGanttHidden(vaultRoot) {
+  return readHiddenFrom(ganttHiddenPath(vaultRoot));
+}
+
 /** 日程页本地隐藏清单：不改 Vault 待办正文，只影响工作台展示。 */
 export async function writeGanttHidden(vaultRoot, payload = {}) {
-  const next = normalizeHidden({
-    texts: payload.texts !== undefined ? payload.texts : (await readGanttHidden(vaultRoot)).texts,
+  return withVaultFileWrite(vaultRoot, GANTT_HIDDEN_PATH, async (absolute) => {
+    const next = normalizeHidden({
+      texts: payload.texts !== undefined ? payload.texts : (await readHiddenFrom(absolute)).texts,
+    });
+    await writeHiddenFile(absolute, next);
+    return next;
   });
-  await writeHiddenFile(ganttHiddenPath(vaultRoot), next);
-  return next;
 }
 
 export function todoHideKey(text) {

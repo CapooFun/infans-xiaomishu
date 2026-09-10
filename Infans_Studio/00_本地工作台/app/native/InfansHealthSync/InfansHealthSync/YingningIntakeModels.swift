@@ -11,6 +11,7 @@ enum InboxIntakeSource: String, Codable, CaseIterable, Sendable {
 enum InboxIntakeSourceSemantic: String, Codable, Sendable {
     case sharedContent = "shared_content"
     case photoShare = "photo_share"
+    case fileShare = "file_share"
     case quickPhotoInbox = "quick_photo_inbox"
 }
 
@@ -36,7 +37,24 @@ struct YingningIntakeAttachment: Codable, Equatable, Identifiable, Sendable {
     static let maximumCount = 4
     static let maximumBytesPerFile = 24 * 1_024 * 1_024
     static let maximumTotalBytes = 32 * 1_024 * 1_024
-    static let allowedContentTypes = Set(["image/jpeg", "image/png", "image/heic", "image/heif", "image/webp"])
+    static let allowedImageTypes = Set(["image/jpeg", "image/png", "image/heic", "image/heif", "image/webp"])
+    static let allowedFileTypes = Set([
+        "application/pdf",
+        "text/plain",
+        "text/markdown",
+        "text/csv",
+        "application/json",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ])
+    static var allowedContentTypes: Set<String> { allowedImageTypes.union(allowedFileTypes) }
+
+    var isImage: Bool { Self.allowedImageTypes.contains(contentType) }
+    var isFile: Bool { Self.allowedFileTypes.contains(contentType) }
 
     let id: String
     let role: String

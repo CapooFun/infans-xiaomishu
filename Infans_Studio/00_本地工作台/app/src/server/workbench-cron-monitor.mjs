@@ -168,8 +168,8 @@ const TASKS = [
   },
   {
     id: "japan-activities",
-    name: "日本活动",
-    blurb: "官方一手来源的未来活动卡",
+    name: "本地活动",
+    blurb: "身边能去的活动卡；当前按官方源刷新",
     scheduleLabel: "隔周一 09:00",
     cadence: "weekly",
     hour: 9,

@@ -24,6 +24,14 @@ const ROUTE_QUERY_KEYS = Object.freeze({
   "/topics": ["tab", "domain", "branch", "node", "card", "open", "course"],
   "/markets": ["topic", "lane"],
   "/markets/assets": ["tab"],
+  "/tools/inbox": ["section"],
+});
+
+const INBOX_SECTION_LABELS = Object.freeze({
+  bookmarks: "书签",
+  files: "文件",
+  projects: "项目收件",
+  trash: "回收站",
 });
 
 const TOOL_LABELS = Object.freeze({
@@ -45,7 +53,7 @@ const TOOL_LABELS = Object.freeze({
   renewals: "续费到期",
 });
 
-const SCHEDULE_LABELS = Object.freeze({ today: "今日事项", roadmap: "主线进度", japan: "日本活动", releases: "新品发售" });
+const SCHEDULE_LABELS = Object.freeze({ today: "今日事项", roadmap: "主线进度", local: "本地活动", japan: "本地活动", releases: "新品发售" });
 const HEALTH_LABELS = Object.freeze({ body: "体魄", mind: "心理", life: "人生平衡" });
 const LANGUAGE_LABELS = Object.freeze({ exploration: "探索成就", course: "课程", vocabulary: "单词", grammar: "文法", reading: "阅读", collection: "收藏" });
 const ASSET_LABELS = Object.freeze({ networth: "资产", investments: "投资", income: "收入", expense: "支出" });
@@ -83,6 +91,7 @@ function normalizedPathname(pathname) {
 }
 
 function routeKey(pathname) {
+  if (ROUTE_QUERY_KEYS[pathname]) return pathname;
   return pathname.startsWith("/tools/") ? "/tools" : pathname;
 }
 
@@ -116,7 +125,13 @@ export function defaultSidebarBookmarkLabel(input, options = {}) {
   if (!location) return "具体页面";
   const url = new URL(location, "http://127.0.0.1");
   const toolMatch = url.pathname.match(/^\/tools\/([a-z0-9-]+)$/);
-  if (toolMatch) return TOOL_LABELS[toolMatch[1]] || "实用工具";
+  if (toolMatch) {
+    if (toolMatch[1] === "inbox") {
+      const sectionLabel = INBOX_SECTION_LABELS[url.searchParams.get("section")];
+      return sectionLabel ? `秘书收件箱 · ${sectionLabel}` : "秘书收件箱";
+    }
+    return TOOL_LABELS[toolMatch[1]] || "实用工具";
+  }
   const root = ROOT_LABELS[url.pathname] || "具体页面";
   const project = url.searchParams.get("project");
   if (url.pathname === "/projects" && project) {

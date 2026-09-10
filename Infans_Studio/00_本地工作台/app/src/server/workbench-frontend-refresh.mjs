@@ -213,3 +213,46 @@ export function createFrontendRefreshGate(options) {
   ensureFreshFrontend.refreshIfStale = refreshIfStale;
   return ensureFreshFrontend;
 }
+
+/**
+ * 深度刷新的 HTTP 处理留在本文件；由唯一路由表登记。
+ * 不传入 refreshIfStale / distDir 时只回报未重建，避免 Vite 开发薄壳跑生产构建。
+ */
+export function createFrontendRefreshRouteHandlers(options = {}) {
+  const refreshIfStale = options.refreshIfStale;
+  const distDir = options.distDir;
+  const assertTrustedOrigin = options.assertTrustedOrigin;
+
+  return {
+    handleFrontendRefresh: async (request, response) => {
+      if (request.method !== "POST") {
+        response.statusCode = 405;
+        response.setHeader("Content-Type", "application/json; charset=utf-8");
+        response.setHeader("Cache-Control", "no-store");
+        return response.end(JSON.stringify({ error: "只允许刷新请求" }));
+      }
+      assertTrustedOrigin?.(request);
+      const rebuilt = refreshIfStale ? await refreshIfStale() : false;
+      const buildId = distDir ? await readFrontendBuildId(distDir) : null;
+      const body = Buffer.from(JSON.stringify({ ok: true, rebuilt, buildId }));
+      response.statusCode = 200;
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
+      response.setHeader("Cache-Control", "no-store");
+      response.setHeader("Content-Length", body.length);
+      response.end(body);
+    },
+    handleFrontendHandoff: (request, response) => {
+      if (request.method !== "GET") {
+        response.statusCode = 405;
+        response.setHeader("Cache-Control", "no-store");
+        return response.end();
+      }
+      const url = new URL(request.url || "/", "http://workbench.local");
+      response.statusCode = 302;
+      response.setHeader("Location", frontendHandoffTarget(url.searchParams.get("to"), url.searchParams.get("v")));
+      response.setHeader("Cache-Control", "no-store");
+      response.setHeader("Content-Length", "0");
+      response.end();
+    },
+  };
+}

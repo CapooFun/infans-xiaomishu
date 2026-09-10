@@ -15,8 +15,8 @@ export const LIGHTS_OFF_SWIFTC_ARGS = Object.freeze([
   "-framework",
   "CoreGraphics",
 ]);
-export const LIGHTS_OFF_NOTE_OFF = "副屏熄掉，Mac 只留一点光。";
-export const LIGHTS_OFF_NOTE_ON = "副屏已熄，Mac 只留一点光。再按一次或点按钮恢复。";
+export const LIGHTS_OFF_NOTE_OFF = "副屏切掉，Mac 只留一点光。";
+export const LIGHTS_OFF_NOTE_ON = "副屏已切掉，Mac 只留一点光。再按一次或点按钮恢复。";
 
 function resolvePath(root, relativePath) {
   return path.resolve(root, relativePath);

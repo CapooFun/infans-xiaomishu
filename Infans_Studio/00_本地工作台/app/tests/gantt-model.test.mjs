@@ -7,6 +7,7 @@ import {
   buildGanttModel,
   buildLanes,
   buildRoadmapMonths,
+  buildWeekColumns,
   familyForLane,
   formatHomeTodoSummary,
   milestoneStyle,
@@ -346,6 +347,19 @@ test("barStyle uses day precision instead of whole weeks", () => {
   assert.equal(pin.left, `${((4.5 + 0.5 / 7) / 8) * 100}%`);
 });
 
+test("week labels restart each month as 第N周 instead of window-wide W numbers", () => {
+  const starts = ["2026-08-31", "2026-09-07", "2026-09-14", "2026-09-21", "2026-09-28", "2026-10-05"];
+  const weeks = buildWeekColumns(starts);
+  assert.equal(weeks[0].monthLabel, "8月");
+  assert.equal(weeks[0].label, "第5周");
+  assert.equal(weeks[1].monthLabel, "9月");
+  assert.equal(weeks[1].label, "第1周");
+  assert.equal(weeks[2].label, "第2周");
+  assert.equal(weeks[4].label, "第4周");
+  assert.equal(weeks[5].monthLabel, "10月");
+  assert.equal(weeks[5].label, "第1周");
+});
+
 test("stripTaskDecorators drops workbench lane, kind and 待排 placeholder", () => {
   assert.equal(
     stripTaskDecorators("工作台：节点：待排 · 把事业顺利改成「点进项目就进工作台」"),
@@ -398,8 +412,19 @@ test("formatHomeTodoSummary keeps only the actionable title for the near-term ho
     "明年事项",
   );
   assert.equal(
-    formatHomeTodoSummary("游戏：待办：S：2026-08-26 · 联系 Steamworks 客服｜ID：quit-to-cultivate-steam-support｜工作线：board.qtc.steam_release"),
+    formatHomeTodoSummary("游戏：待办：S：2026-08-26 · 联系 Steamworks 客服｜ID：garden-demo-steam-support｜工作线：board.garden.steam_release"),
     "联系 Steamworks 客服",
+  );
+  assert.equal(
+    formatHomeTodoSummary("公司：待办：给罗勒浇水｜ID：demo-garden-water｜等级：A"),
+    "给罗勒浇水",
+  );
+});
+
+test("stripTaskDecorators hides 计划日期 tail notes", () => {
+  assert.equal(
+    stripTaskDecorators("游戏：节点：A：9/10 · 给罗勒浇水｜计划日期：2026-09-10"),
+    "给罗勒浇水",
   );
 });
 

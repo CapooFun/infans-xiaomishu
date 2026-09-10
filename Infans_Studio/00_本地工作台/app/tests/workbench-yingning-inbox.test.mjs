@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { assertCodexCommandDeviceAccess } from "../src/server/workbench-codex-command-inbox.mjs";
-import { createYingningInboxService, normalizeYingningIntake } from "../src/server/workbench-yingning-inbox.mjs";
+import { createYingningInboxService, normalizeYingningIntake, pasteboardCopyScript } from "../src/server/workbench-yingning-inbox.mjs";
 
 const TOKEN = "x".repeat(43);
 
@@ -66,7 +66,7 @@ test("统一来件契约保持首版兼容并仅接受受控来源", () => {
   assert.equal(normalized.fingerprint.length, 64);
   assert.throws(() => normalizeYingningIntake(sample({ source: "browser_history_monitor" })), /来源不在白名单/u);
   assert.throws(() => normalizeYingningIntake(sample({ url: "file:///tmp/private", text: "" })), /HTTP 或 HTTPS/u);
-  assert.throws(() => normalizeYingningIntake(sample({ url: "", text: "" })), /至少需要网址、分享文字或照片/u);
+  assert.throws(() => normalizeYingningIntake(sample({ url: "", text: "" })), /至少需要网址、分享文字、照片或文件/u);
   assert.throws(() => normalizeYingningIntake(sample({ attachments: [{ name: "video.mp4" }] })), /首版来件不接收附件/u);
 });
 
@@ -279,6 +279,7 @@ test("生产路由将设备投递与私有查看分开保护", async () => {
   assert.match(routes, /router\.use\("\/api\/tools\/inbox"[\s\S]*?request\.method === "DELETE"[\s\S]*?assertPersistentWrite\(request\)[\s\S]*?yingningInbox\.remove/u);
   assert.match(routes, /router\.use\("\/api\/tools\/inbox"[\s\S]*?action === "restore"[\s\S]*?yingningInbox\.restore/u);
   assert.match(routes, /router\.use\("\/api\/tools\/inbox"[\s\S]*?action === "empty-trash"[\s\S]*?yingningInbox\.emptyTrash/u);
+  assert.match(routes, /router\.use\("\/api\/tools\/inbox"[\s\S]*?action === "copy-to-pasteboard"[\s\S]*?yingningInbox\.copyToPasteboard/u);
   assert.match(routes, /readJson\(request, 48 \* 1024 \* 1024\)/u);
   assert.match(routes, /query\.get\("share"\) === "1"/u);
   assert.match(routes, /yingningInbox\.readShareCopy/u);
@@ -299,7 +300,7 @@ test("实用工具接入独立收件箱，页面只将 Mac 持久化称为已送
   assert.match(view, /Mac 已安全保存/u);
   assert.match(view, /已合并 \{item\.duplicateCount\} 次重复投递/u);
   assert.match(styles, /\.inbox-postmark/u);
-  assert.match(view, /inbox-tab-photos[\s\S]*inbox-tab-bookmarks[\s\S]*inbox-tab-projects[\s\S]*inbox-tab-trash/u);
+  assert.match(view, /inbox-tab-photos[\s\S]*inbox-tab-bookmarks[\s\S]*inbox-tab-files[\s\S]*inbox-tab-projects[\s\S]*inbox-tab-trash/u);
   assert.match(view, />项目收件</u);
   assert.match(view, /id="inbox-panel-projects"/u);
   assert.match(view, /还没有项目来件/u);
@@ -311,13 +312,16 @@ test("实用工具接入独立收件箱，页面只将 Mac 持久化称为已送
   assert.match(view, /id="inbox-panel-trash"/u);
   assert.match(view, /createPortal/u);
   assert.match(view, /inbox-lightbox/u);
-  assert.match(view, /aria-label="关闭全图"/u);
+  assert.match(view, /关闭全图/u);
   assert.match(view, /inbox-lightbox-copy/u);
   assert.match(view, /inbox-lightbox-save/u);
   assert.match(view, /isAppleMobileBrowser/u);
   assert.match(view, /showSaveImage/u);
   assert.match(view, /if \(!showSaveImage\) return null/u);
-  assert.match(view, /\{showSaveImage \?/u);
+  assert.match(view, /const fileSaveSlot[\s\S]*?if \(!showSaveImage\) return null/u);
+  assert.match(view, /const showSave = showSaveImage/u);
+  assert.doesNotMatch(view, /isFile \|\| showSaveImage/u);
+  assert.doesNotMatch(view, /文件在 Mac 也可下载/u);
   assert.match(view, /prepareOriginalFile/u);
   assert.match(view, /async function prepareOriginalFile[\s\S]*?attachmentURL\(item, attachment\.attachmentId\), \{ credentials/u);
   assert.match(view, /navigator\.share\(\{/u);
@@ -328,7 +332,18 @@ test("实用工具接入独立收件箱，页面只将 Mac 持久化称为已送
   assert.match(styles, /\.inbox-savenote/u);
   assert.match(view, /aria-label=\{`复制 \$\{titleFor\(item\)\}`\}/u);
   assert.match(view, /copyShareImage/u);
+  assert.match(view, /copyInboxFile/u);
+  assert.match(view, /copyMacPasteboard/u);
+  assert.match(view, /copyPlainTextSoon/u);
+  assert.match(view, /copy-to-pasteboard/u);
+  assert.match(view, /if \(isMacDesktopBrowser\(\)\) \{\s*await copyMacPasteboard/u);
+  assert.match(view, /"text\/plain": textPromise/u);
+  assert.match(view, /clipboard\?\.writeText[\s\S]*catch \{/u);
+  assert.match(view, /\[\\u4e00-\\u9fff\]\/u\.test\(message\)\) return message/u);
+  assert.match(view, /isPlainTextFile/u);
+  assert.match(view, /decodeTextFileBytes/u);
   assert.match(view, /new ClipboardItem\(\{ "image\/png": shareImagePng\(url\) \}\)/u);
+  assert.doesNotMatch(view, /isFileContentType\(attachment\.contentType\)\) await copyText\(item\.url \|\| attachment\.fileName\)/u);
   assert.match(view, /params\.set\("share", "1"\)/u);
   assert.doesNotMatch(view, /确认删除/u);
   assert.match(view, />回收站</u);
@@ -343,10 +358,10 @@ test("实用工具接入独立收件箱，页面只将 Mac 持久化称为已送
   assert.match(styles, /\.inbox-lightbox/u);
   assert.match(styles, /\.inbox-lightbox-close/u);
   assert.match(styles, /\.inbox-lightbox > header > div span/u);
-  assert.match(styles, /\.inbox-lightbox-close,\.inbox-lightbox-copy,\.inbox-lightbox-save \{[^}]*white-space:nowrap/u);
+  assert.match(styles, /\.inbox-lightbox-close,\.inbox-lightbox-copy \{[^}]*white-space:nowrap/u);
   assert.match(styles, /@media \(max-width: 520px\)[\s\S]*\.inbox-lightbox > header > div span \{ display:none; \}/u);
-  assert.match(styles, /\.inbox-tabs \{[^}]*repeat\(4,/u);
-  assert.match(styles, /@media \(max-width: 520px\)[\s\S]*\.inbox-tabs \{[^}]*repeat\(4,/u);
+  assert.match(styles, /\.inbox-tabs \{[^}]*repeat\(5,/u);
+  assert.match(styles, /@media \(max-width: 520px\)[\s\S]*\.inbox-tabs \{[^}]*overflow-x:auto/u);
   assert.match(styles, /@media \(max-width: 400px\)[\s\S]*\.inbox-tabs button svg \{ display:none; \}/u);
   assert.match(styles, /\.inbox-bookmark-tab/u);
   assert.match(styles, /\.inbox-bookmark-list \{[^}]*grid-auto-rows:1fr/u);
@@ -367,7 +382,236 @@ test("实用工具接入独立收件箱，页面只将 Mac 持久化称为已送
   assert.doesNotMatch(styles, /\.inbox-trash-row/u);
   assert.match(styles, /@media \(max-width: 520px\)[\s\S]*\.inbox-item-actions button \{ min-height:44px; \}/u);
   assert.match(styles, /@media \(max-width: 720px\)/u);
+  assert.match(styles, /\.inbox-photo-grid \{[^}]*align-items:stretch/u);
+  assert.match(styles, /\.inbox-judgment \{[^}]*flex:1/u);
+  assert.match(styles, /\.inbox-lightbox-previous/u);
+  assert.match(styles, /\.inbox-checkpoint-chip \{ color:var\(--teal\)/u);
+  assert.match(view, /from "\.\/yingning-inbox-save"/u);
+  assert.match(view, /from "\.\/yingning-inbox-checkpoint-filter"/u);
+  assert.match(view, /from "\.\/yingning-inbox-section"/u);
+  assert.match(view, /resolveInboxSection\(window\.location\.search/u);
+  assert.match(view, /inboxLocationForSection/u);
+  assert.match(view, /chooseSection\("projects"\)/u);
+  assert.match(view, /useLayoutEffect/u);
+  assert.match(view, /history\.replaceState/u);
+  assert.doesNotMatch(view, /useState<"photos" \| "bookmarks" \| "files" \| "projects" \| "trash">\("photos"\)/u);
+  assert.match(view, /CheckpointFilterBar/u);
+  assert.match(view, /checkpointFilterChips/u);
+  assert.match(view, /projectInboxCardCopy/u);
+  assert.match(view, /flattenInboxImageSlides/u);
+  assert.match(view, /inboxSlideStep/u);
+  assert.match(view, /inbox-lightbox-previous/u);
+  assert.match(view, /ArrowLeft/u);
+  assert.match(view, /inbox-related-task/u);
+  assert.match(view, /inbox-judgment/u);
+  assert.match(view, />请你判断</u);
+  assert.match(view, />关联任务</u);
+  assert.match(view, /id="inbox-tab-files"/u);
+  assert.match(view, /URLSearchParams\(\{ projectId: id/u);
+  assert.match(view, /inbox-project-tabs/u);
+  assert.doesNotMatch(view, /className="inbox-evidence-chip"/u);
+  assert.doesNotMatch(view, /inbox-project-entry/u);
+  assert.doesNotMatch(view, /水箭|3D辞职修仙传|rtc3d|裸辞/u);
   assert.match(bookmarks, /"inbox": "秘书收件箱"/u);
+  assert.match(bookmarks, /"\/tools\/inbox": \["section"\]/u);
   assert.match(bookmarks, /DISPLAY_MODE_BLOCKED_TOOLS = new Set\(\[[^\]]*"inbox"/u);
   assert.doesNotMatch(`${view}\n${styles}`, /\/Users\//u);
+});
+
+function pdfAttachment(data = Buffer.from("%PDF-1.4 test-file")) {
+  return {
+    attachmentId: "9d55b9db-1dd3-4d75-a644-2fe8951cd1a7",
+    role: "original",
+    fileName: "notes.pdf",
+    contentType: "application/pdf",
+    byteCount: data.length,
+    createdAt: "2026-09-10T03:00:00.000Z",
+    sha256: crypto.createHash("sha256").update(data).digest("hex"),
+    data: data.toString("base64"),
+  };
+}
+
+test("第二版文件来件接收 PDF 并拒绝做成发送照片", async (context) => {
+  const attachment = pdfAttachment();
+  const normalized = normalizeYingningIntake(sample({
+    schemaVersion: 2, url: "", text: "", source: "ios_share_extension", sourceSemantic: "file_share", attachments: [attachment],
+  }));
+  assert.equal(normalized.sourceSemantic, "file_share");
+  assert.equal(normalized.attachments[0].fileName, "notes.pdf");
+  assert.equal(normalized.attachmentPayloads[0].data.toString(), "%PDF-1.4 test-file");
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "inbox-pdf-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const service = createYingningInboxService(root, { inboxDir: path.join(root, "runtime") });
+  await service.accept(sample({
+    schemaVersion: 2, url: "", text: "", source: "ios_share_extension", sourceSemantic: "file_share", attachments: [attachment],
+  }));
+  const stored = await service.readAttachment(sample().intakeId, attachment.attachmentId);
+  assert.equal(stored.contentType, "application/pdf");
+  assert.equal(stored.data.toString(), "%PDF-1.4 test-file");
+  await assert.rejects(service.readShareCopy(sample().intakeId, attachment.attachmentId), (error) => error.code === "YINGNING_SHARE_COPY_UNAVAILABLE");
+});
+
+test("电脑复制 PDF 会按原文件名放到剪贴板暂存，不走文件名字符串", async (context) => {
+  const attachment = pdfAttachment();
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "inbox-clip-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  let staged = "";
+  let pasteOptions = null;
+  const service = createYingningInboxService(root, {
+    inboxDir: path.join(root, "runtime"),
+    copyFileToPasteboard: async (filePath, options) => {
+      staged = filePath;
+      pasteOptions = options;
+    },
+  });
+  await service.accept(sample({
+    schemaVersion: 2, url: "", text: "", source: "ios_share_extension", sourceSemantic: "file_share", attachments: [attachment],
+  }));
+  const copied = await service.copyToPasteboard(sample().intakeId, attachment.attachmentId);
+  assert.equal(copied.ok, true);
+  assert.equal(copied.mode, "mac-file");
+  assert.equal(copied.fileName, "notes.pdf");
+  assert.equal(pasteOptions?.alsoText, false);
+  assert.equal(path.basename(staged), "notes.pdf");
+  assert.equal(await fs.readFile(staged, "utf8"), "%PDF-1.4 test-file");
+  await assert.rejects(service.copyToPasteboard("not-a-uuid", attachment.attachmentId), (error) => error.code === "YINGNING_ATTACHMENT_ID_INVALID");
+});
+
+test("电脑复制文本文档会把正文和原文件名一起放进系统剪贴板", async (context) => {
+  const data = Buffer.from("date,amount\n1,2\n");
+  const attachment = {
+    attachmentId: "ad55b9db-1dd3-4d75-a644-2fe8951cd1a8",
+    role: "original",
+    fileName: "layout-copy.csv",
+    contentType: "text/csv",
+    byteCount: data.length,
+    createdAt: "2026-09-10T03:00:00.000Z",
+    sha256: crypto.createHash("sha256").update(data).digest("hex"),
+    data: data.toString("base64"),
+  };
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "inbox-csv-clip-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  let staged = "";
+  let pasteOptions = null;
+  const service = createYingningInboxService(root, {
+    inboxDir: path.join(root, "runtime"),
+    copyFileToPasteboard: async (filePath, options) => {
+      staged = filePath;
+      pasteOptions = options;
+    },
+  });
+  await service.accept(sample({
+    schemaVersion: 2, url: "", text: "", source: "ios_share_extension", sourceSemantic: "file_share", attachments: [attachment],
+  }));
+  const copied = await service.copyToPasteboard(sample().intakeId, attachment.attachmentId);
+  assert.equal(copied.ok, true);
+  assert.equal(copied.mode, "mac-file-and-text");
+  assert.equal(copied.fileName, "layout-copy.csv");
+  assert.equal(pasteOptions?.alsoText, true);
+  assert.equal(path.basename(staged), "layout-copy.csv");
+  assert.equal(await fs.readFile(staged, "utf8"), "date,amount\n1,2\n");
+});
+
+test("系统剪贴板脚本：文本文档带正文，PDF 只带文件", () => {
+  const withText = pasteboardCopyScript(true);
+  const fileOnly = pasteboardCopyScript(false);
+  assert.match(withText, /NSPasteboardTypeString/u);
+  assert.match(withText, /writeObjects:\{theURL\}/u);
+  assert.doesNotMatch(fileOnly, /NSPasteboardTypeString/u);
+  assert.match(fileOnly, /writeObjects:\{theURL\}/u);
+});
+
+function projectPhoto(overrides = {}, data = Buffer.from("evidence-shot-bytes")) {
+  return sample({
+    schemaVersion: 2, url: "", text: "",
+    source: "ios_share_extension", sourceSemantic: "photo_share",
+    projectId: "demo-project", projectName: "示例项目", checkpointId: "cp-01",
+    checkpoint: { name: "封面检查", source: "snapshot-demo", build: "example-1", manifestSha: "a".repeat(64) },
+    attachments: [{ ...photoAttachment(data), evidenceId: "cover-01" }],
+    ...overrides,
+  });
+}
+
+test("项目字段：校验并保存项目/检查点/证据身份，检查点必须带项目", () => {
+  const normalized = normalizeYingningIntake(projectPhoto());
+  assert.equal(normalized.projectId, "demo-project");
+  assert.equal(normalized.projectName, "示例项目");
+  assert.equal(normalized.checkpointId, "cp-01");
+  assert.equal(normalized.checkpoint.build, "example-1");
+  assert.equal(normalized.attachments[0].evidenceId, "cover-01");
+  assert.throws(() => normalizeYingningIntake(projectPhoto({ projectId: "", checkpointId: "cp-01" })), (error) => error.code === "YINGNING_INTAKE_PROJECT_REQUIRED");
+  assert.throws(() => normalizeYingningIntake(projectPhoto({ projectId: "非法 ID" })), (error) => error.code === "YINGNING_INTAKE_PROJECT_INVALID");
+  assert.throws(() => normalizeYingningIntake(projectPhoto({ attachments: [{ ...photoAttachment(), evidenceId: "有空格 编号" }] })), (error) => error.code === "YINGNING_ATTACHMENT_EVIDENCE_INVALID");
+});
+
+test("相同字节跨检查点不误并，日常来件指纹保持旧版兼容", () => {
+  const daily = normalizeYingningIntake(sample());
+  const dailyBase = crypto.createHash("sha256").update(JSON.stringify({
+    url: daily.url, title: daily.title, text: daily.text, note: daily.note, attachments: [],
+  })).digest("hex");
+  assert.equal(daily.fingerprint, dailyBase);
+  const first = normalizeYingningIntake(projectPhoto());
+  const second = normalizeYingningIntake(projectPhoto({ checkpointId: "cp-02" }));
+  assert.notEqual(first.fingerprint, second.fingerprint);
+});
+
+test("服务端先分流再分页：默认只回日常并附项目汇总，项目视图按检查点筛选", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "inbox-project-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const service = createYingningInboxService(root, { inboxDir: path.join(root, "runtime") });
+  await service.accept(sample());
+  await service.accept(projectPhoto({ intakeId: "11111111-1111-4111-8111-111111111111" }));
+  await service.accept(projectPhoto({
+    intakeId: "22222222-2222-4222-8222-222222222222", checkpointId: "cp-02",
+    attachments: [{ ...photoAttachment(Buffer.from("evidence-shot-bytes")), attachmentId: "33333333-3333-4333-8333-333333333333", evidenceId: "cover-02" }],
+  }));
+
+  const daily = await service.list();
+  assert.equal(daily.scope, "daily");
+  assert.equal(daily.total, 1);
+  assert.equal(daily.items.length, 1);
+  assert.equal(daily.projectItemCount, 2);
+  assert.equal(daily.projects.length, 1);
+  assert.equal(daily.projects[0].projectId, "demo-project");
+  assert.equal(daily.projects[0].checkpointCount, 2);
+  assert.equal(daily.projects[0].attachmentCount, 2);
+
+  const project = await service.list({ projectId: "demo-project" });
+  assert.equal(project.scope, "project");
+  assert.equal(project.total, 2);
+  assert.equal(project.projectName, "示例项目");
+  assert.equal(project.checkpoints.length, 2);
+
+  const scoped = await service.list({ projectId: "demo-project", checkpointId: "cp-02" });
+  assert.equal(scoped.total, 1);
+  assert.equal(scoped.items[0].checkpointId, "cp-02");
+  assert.equal(scoped.items[0].attachments[0].evidenceId, "cover-02");
+});
+
+test("项目历史分页：服务端筛选后按 offset/limit 取页", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "inbox-project-page-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const service = createYingningInboxService(root, { inboxDir: path.join(root, "runtime") });
+  for (let index = 0; index < 5; index += 1) {
+    const data = Buffer.from(`evidence-shot-${index}`);
+    await service.accept(projectPhoto({
+      intakeId: crypto.randomUUID(),
+      checkpointId: index % 2 ? "cp-02" : "cp-01",
+      attachments: [{ ...photoAttachment(data), attachmentId: crypto.randomUUID(), evidenceId: `cover-${index}` }],
+    }));
+  }
+  const page1 = await service.list({ projectId: "demo-project", limit: 2, offset: 0 });
+  assert.equal(page1.total, 5);
+  assert.equal(page1.items.length, 2);
+  assert.equal(page1.nextOffset, 2);
+  const page2 = await service.list({ projectId: "demo-project", limit: 2, offset: 2 });
+  assert.equal(page2.items.length, 2);
+  const page3 = await service.list({ projectId: "demo-project", limit: 2, offset: 4 });
+  assert.equal(page3.items.length, 1);
+  assert.equal(page3.nextOffset, null);
+});
+
+test("生产路由按项目/检查点参数在服务端筛选列表", async () => {
+  const routes = await fs.readFile(new URL("../src/server/workbench-routes.mjs", import.meta.url), "utf8");
+  assert.match(routes, /yingningInbox\.list\(\{[\s\S]*projectId: query\.get\("projectId"\)[\s\S]*checkpointId: query\.get\("checkpointId"\)/u);
 });

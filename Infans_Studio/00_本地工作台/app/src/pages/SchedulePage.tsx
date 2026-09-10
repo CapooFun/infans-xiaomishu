@@ -27,20 +27,22 @@ import {
   Empty,
   jsonFetch,
   navigate,
+  softNavigate,
   tokyoDateKey,
 } from "../page-shared";
 import { currentWorkbenchLocation, rememberTodoReturnLocation, readScheduleTodosOpen, writeScheduleTodosOpen } from "../workbench-position-memory.ts";
-import type { CalendarEvent, CalendarSnapshot, ProjectManagementSnapshot, ProjectManagementTask, WorkbenchSummary, WriteAction } from "../types";
-import JapanActivitiesView from "./tools/JapanActivitiesView";
+import type { CalendarEvent, LocalActivitiesSnapshot, ProjectManagementSnapshot, ProjectManagementTask, WorkbenchSummary, WriteAction } from "../types";
+import LocalActivitiesView from "./tools/LocalActivitiesView";
 import ReleaseWatchView from "./schedule/ReleaseWatchView";
 import { focusBattleGanttItems, focusBattleIdSet } from "../focus-battle-model";
-import { calendarEventsByLane, calendarMarkerStackOffsets, calendarRange, companyTravelEventLabel, eventAxisPointStyle, eventDays, eventKey, eventTimeLabel, groupCompanyTravel, groupLifeEvents, lifeCategoryDefaultOpen, lifeEvents, type CompanyTravelGroup, type LifeEventGroup } from "./schedule/calendar-model";
-import { useLifeCalendar } from "./schedule/use-life-calendar";
+import { calendarEventHref, calendarEventKind, calendarEventListTitle, calendarEventsByLane, calendarEventsNotCoveredByRoutines, eventAxisPointStyle, eventDays, eventKey, eventTimeLabel, ganttExpandAllShouldShow, groupCompanyTravel, groupLifeEvents, lifeCategoryIsOpen, lifeEvents, type CalendarEventLinkCatalog, type CompanyTravelGroup, type LifeEventGroup } from "./schedule/calendar-model";
+import { useCalendarWindows } from "../use-calendar-windows";
+import { lifeCalendarWindow } from "../calendar-windows";
 import "./schedule/calendar.css";
 
 type GanttHiddenState = { texts: string[] };
 type TimelineMode = "roadmap" | "weeks";
-type ScheduleSectionId = "today" | "roadmap" | "japan" | "releases";
+type ScheduleSectionId = "today" | "roadmap" | "local" | "releases";
 const TODO_PRIORITIES = ["S", "A", "B", "C"] as const;
 const AI_EXECUTION_LABEL = {
   "not-run": "等待自动运行",
@@ -52,13 +54,34 @@ const AI_EXECUTION_LABEL = {
 const SCHEDULE_SECTIONS = [
   { id: "roadmap", label: "主线进度", hint: "长期在推", icon: Route },
   { id: "today", label: "今日事项", hint: "现在要做", icon: ListChecks },
-  { id: "japan", label: "日本活动", hint: "近期可去", icon: MapPinned },
+  { id: "local", label: "本地活动", hint: "近期可去", icon: MapPinned },
   { id: "releases", label: "新品发售", hint: "正在期待", icon: PackageOpen },
 ] as const;
 
+function canonicalizeScheduleView(raw: string | null): ScheduleSectionId {
+  const candidate = raw === "japan" ? "local" : raw;
+  return SCHEDULE_SECTIONS.some((item) => item.id === candidate) ? candidate as ScheduleSectionId : "today";
+}
+
+function rewriteLegacyScheduleView() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("view") !== "japan") return;
+  params.set("view", "local");
+  const query = params.toString();
+  window.history.replaceState({}, "", `/schedule${query ? `?${query}` : ""}`);
+}
+
+function scheduleSearchFromLocation() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    section: canonicalizeScheduleView(params.get("view")),
+    guide: params.get("guide") || "",
+    releaseQuery: params.get("q") || "",
+  };
+}
+
 function scheduleSectionFromLocation(): ScheduleSectionId {
-  const candidate = new URLSearchParams(window.location.search).get("view");
-  return SCHEDULE_SECTIONS.some((section) => section.id === candidate) ? candidate as ScheduleSectionId : "today";
+  return scheduleSearchFromLocation().section;
 }
 
 type FeatureNode = { id?: string; children?: FeatureNode[] };
@@ -232,6 +255,25 @@ function HideEyeButton({ label, onHide }: { label: string; onHide: () => void })
   );
 }
 
+function GanttEventTitle({
+  event,
+  catalog,
+  kind,
+  displayTitle,
+}: {
+  event: CalendarEvent;
+  catalog: CalendarEventLinkCatalog;
+  kind?: string;
+  displayTitle?: string;
+}) {
+  const title = displayTitle ?? calendarEventListTitle(event.title);
+  const href = calendarEventHref(event.title, catalog);
+  const tooltip = `${event.title}\n${eventTimeLabel(event)}`;
+  const inner = <><em className="gantt-kind-badge">{kind ?? calendarEventKind(event)}</em>{title}</>;
+  if (!href) return <span title={tooltip}>{inner}</span>;
+  return <a className="gantt-event-link" href={href} title={`查看详情\n${tooltip}`} onClick={(click) => softNavigate(click, href)}>{inner}</a>;
+}
+
 function AxisGlyph({
   task,
   weekCount,
@@ -332,10 +374,10 @@ function lifeCategoryHeight(group: LifeEventGroup, open: boolean) {
   return LIFE_CATEGORY_HEIGHT + (open ? group.events.length * LIFE_EVENT_HEIGHT : 0);
 }
 
-function CalendarEventSidebarRow({ event }: { event: CalendarEvent }) {
-  return <div className="gantt-task-row calendar-event-readonly" title={`${event.title}\n${eventTimeLabel(event)}`}>
+function CalendarEventSidebarRow({ event, catalog }: { event: CalendarEvent; catalog: CalendarEventLinkCatalog }) {
+  return <div className="gantt-task-row calendar-event-readonly">
     <span aria-hidden="true" />
-    <span><em className="gantt-kind-badge">事件</em>{event.title}</span>
+    <GanttEventTitle event={event} catalog={catalog} kind="事件" />
   </div>;
 }
 
@@ -346,7 +388,7 @@ function calendarEventVisual(event: CalendarEvent, todayKey: string) {
   return "active";
 }
 
-function CalendarEventAxisRow({ event, family, todayKey, months, firstWeek, weekCount, mode }: {
+function CalendarEventAxisRow({ event, family, todayKey, months, firstWeek, weekCount, mode, catalog }: {
   event: CalendarEvent;
   family: "work" | "cultivate" | "life" | "mist";
   todayKey: string;
@@ -354,21 +396,25 @@ function CalendarEventAxisRow({ event, family, todayKey, months, firstWeek, week
   firstWeek: string;
   weekCount: number;
   mode: TimelineMode;
+  catalog: CalendarEventLinkCatalog;
 }) {
+  const href = calendarEventHref(event.title, catalog);
+  const tooltip = `${event.title}\n${eventTimeLabel(event)} · 苹果日历`;
+  const className = `gantt-milestone family-${family} visual-${calendarEventVisual(event, todayKey)} marker-star`;
+  const style = eventAxisPointStyle(event, months, firstWeek, weekCount, mode);
   return <div className="gantt-bar-row">
-    <div
-      className={`gantt-milestone family-${family} visual-${calendarEventVisual(event, todayKey)} marker-star`}
-      style={eventAxisPointStyle(event, months, firstWeek, weekCount, mode)}
-      title={`${event.title}\n${eventTimeLabel(event)} · 苹果日历`}
-    ><i aria-hidden="true">★</i></div>
+    {href
+      ? <a className={`${className} is-link`} href={href} style={style} title={`查看详情\n${tooltip}`} onClick={(click) => softNavigate(click, href)}><i aria-hidden="true">★</i></a>
+      : <div className={className} style={style} title={tooltip}><i aria-hidden="true">★</i></div>}
   </div>;
 }
 
-function CompanyTravelSidebar({ group, open, onToggle, onHide }: {
+function CompanyTravelSidebar({ group, open, onToggle, onHide, catalog }: {
   group: CompanyTravelGroup;
   open: boolean;
   onToggle: () => void;
   onHide: () => void;
+  catalog: CalendarEventLinkCatalog;
 }) {
   return <div className={`calendar-company-travel${open ? " is-open" : ""}`} style={{ height: LIFE_CATEGORY_HEIGHT + (open ? group.events.length * LIFE_EVENT_HEIGHT : 0) }}>
     <div className="gantt-task-row calendar-company-travel-head">
@@ -378,27 +424,22 @@ function CompanyTravelSidebar({ group, open, onToggle, onHide }: {
       <HideEyeButton label={group.task.displayText} onHide={onHide} />
       <span title={`${group.task.displayText}\n${formatSpanLabel(group.task)}`}>
         <em className="gantt-kind-badge">差旅</em>{group.task.displayText}
-        <small className="calendar-company-travel-span">{formatSpanLabel(group.task)}</small>
       </span>
     </div>
     <div className="calendar-company-travel-events" aria-hidden={!open}>
-      {group.events.map((event, index) => {
-        const displayLabel = companyTravelEventLabel(event);
-        return <div
+      {group.events.map((event, index) => <div
           className="gantt-task-row calendar-life-row"
           style={{ transitionDelay: `${index * 18}ms` }}
           key={eventKey(event)}
-          title={`${displayLabel}\n${eventTimeLabel(event)}`}
         >
           <span aria-hidden="true" />
-          <span><em className="gantt-kind-badge">事件</em>{displayLabel}</span>
-        </div>;
-      })}
+          <GanttEventTitle event={event} catalog={catalog} kind="事件" displayTitle={calendarEventListTitle(event.title)} />
+        </div>)}
     </div>
   </div>;
 }
 
-function CompanyTravelAxis({ group, open, months, firstWeek, weekCount, mode, todayKey }: {
+function CompanyTravelAxis({ group, open, months, firstWeek, weekCount, mode, todayKey, catalog }: {
   group: CompanyTravelGroup;
   open: boolean;
   months: RoadmapMonth[];
@@ -406,42 +447,41 @@ function CompanyTravelAxis({ group, open, months, firstWeek, weekCount, mode, to
   weekCount: number;
   mode: TimelineMode;
   todayKey: string;
+  catalog: CalendarEventLinkCatalog;
 }) {
-  const offsets = calendarMarkerStackOffsets(group.events, mode);
   return <div className={`calendar-company-travel-axis${open ? " is-open" : ""}`} style={{ height: LIFE_CATEGORY_HEIGHT + (open ? group.events.length * LIFE_EVENT_HEIGHT : 0) }}>
     <AxisGlyph task={group.task} weekCount={weekCount} mode={mode} months={months} />
     {group.events.map((event, index) => <div className="gantt-bar-row calendar-company-travel-event-axis-row" style={{ top: LIFE_CATEGORY_HEIGHT + index * LIFE_EVENT_HEIGHT }} key={`row:${eventKey(event)}`} />)}
     {group.events.map((event, index) => {
-      const offset = offsets[index] || { x: 0, y: 0 };
-      const displayLabel = companyTravelEventLabel(event);
-      return <span
-        className="calendar-event-marker-slot calendar-company-travel-marker"
-        style={{
-          ...eventAxisPointStyle(event, months, firstWeek, weekCount, mode),
-          top: open ? LIFE_CATEGORY_HEIGHT + index * LIFE_EVENT_HEIGHT : 0,
-          marginLeft: open ? 0 : offset.x,
-          transform: open ? undefined : `translateY(${offset.y}px)`,
-        }}
-        key={eventKey(event)}
-        title={`${displayLabel}\n${eventTimeLabel(event)}`}
-      ><span className={`gantt-milestone family-work visual-${calendarEventVisual(event, todayKey)} marker-star routine-star`}><i aria-hidden="true">★</i></span></span>;
+      const href = calendarEventHref(event.title, catalog);
+      const tooltip = `${event.title}\n${eventTimeLabel(event)}`;
+      const style = {
+        ...eventAxisPointStyle(event, months, firstWeek, weekCount, mode),
+        top: open ? LIFE_CATEGORY_HEIGHT + index * LIFE_EVENT_HEIGHT : 0,
+      };
+      const star = <span className={`gantt-milestone family-work visual-${calendarEventVisual(event, todayKey)} marker-star routine-star`}><i aria-hidden="true">★</i></span>;
+      return href
+        ? <a className="calendar-event-marker-slot calendar-company-travel-marker is-link" href={href} style={style} key={eventKey(event)} title={`查看详情\n${tooltip}`} onClick={(click) => softNavigate(click, href)}>{star}</a>
+        : <span className="calendar-event-marker-slot calendar-company-travel-marker" style={style} key={eventKey(event)} title={tooltip}>{star}</span>;
     })}
   </div>;
 }
 
-function LifeCalendarSidebar({ groups, expanded, loading, available, stale, onToggle }: {
+function LifeCalendarSidebar({ groups, expanded, loading, available, stale, catalog, onToggle, onHide }: {
   groups: LifeEventGroup[];
   expanded: Record<string, boolean>;
   loading: boolean;
   available: boolean;
   stale?: boolean;
+  catalog: CalendarEventLinkCatalog;
   onToggle: (id: string, open: boolean) => void;
+  onHide: (event: CalendarEvent) => void;
 }) {
   if (!groups.length) {
     return <div className="calendar-life-empty">{loading ? "正在读取行程…" : !available || stale ? "日历暂未同步" : "近期没有生活行程"}</div>;
   }
   return <>{groups.map((group) => {
-    const open = expanded[group.id] ?? lifeCategoryDefaultOpen(group);
+    const open = lifeCategoryIsOpen(group, expanded);
     return <div className={`calendar-life-category${open ? " is-open" : ""}`} style={{ height: lifeCategoryHeight(group, open) }} key={group.id}>
       <div className="gantt-task-row calendar-life-category-head">
         <button type="button" className={`gantt-stage-toggle${open ? " is-open" : ""}`} aria-expanded={open} onClick={() => onToggle(group.id, open)} title={open ? `收起${group.label}` : `展开${group.label}`}>
@@ -456,17 +496,16 @@ function LifeCalendarSidebar({ groups, expanded, loading, available, stale, onTo
           className="gantt-task-row calendar-life-row"
           style={{ transitionDelay: `${index * 18}ms` }}
           key={eventKey(event)}
-          title={`${event.title}\n${eventTimeLabel(event)}`}
         >
-          <span aria-hidden="true" />
-          <span><em className="gantt-kind-badge">事件</em>{event.title}</span>
+          <HideEyeButton label={event.title} onHide={() => onHide(event)} />
+          <GanttEventTitle event={event} catalog={catalog} />
         </div>)}
       </div>
     </div>;
   })}</>;
 }
 
-function LifeCalendarAxis({ groups, expanded, months, firstWeek, weekCount, mode, todayKey }: {
+function LifeCalendarAxis({ groups, expanded, months, firstWeek, weekCount, mode, todayKey, catalog }: {
   groups: LifeEventGroup[];
   expanded: Record<string, boolean>;
   months: RoadmapMonth[];
@@ -474,37 +513,44 @@ function LifeCalendarAxis({ groups, expanded, months, firstWeek, weekCount, mode
   weekCount: number;
   mode: TimelineMode;
   todayKey: string;
+  catalog: CalendarEventLinkCatalog;
 }) {
   if (!groups.length) return <div className="calendar-life-axis-empty" />;
   return <>{groups.map((group) => {
-    const open = expanded[group.id] ?? lifeCategoryDefaultOpen(group);
+    const open = lifeCategoryIsOpen(group, expanded);
     return <div className={`calendar-life-category-axis${open ? " is-open" : ""}`} style={{ height: lifeCategoryHeight(group, open) }} key={group.id}>
       <div className="gantt-bar-row calendar-life-axis-row" />
       {group.events.map((event, index) => <div className="gantt-bar-row calendar-life-axis-row calendar-life-event-axis-row" style={{ top: LIFE_CATEGORY_HEIGHT + index * LIFE_EVENT_HEIGHT }} key={`row:${eventKey(event)}`} />)}
-      {group.events.map((event, index) => <span
-        className="calendar-event-marker-slot"
-        style={{
+      {group.events.map((event, index) => {
+        const href = calendarEventHref(event.title, catalog);
+        const tooltip = `${event.title}\n${eventTimeLabel(event)}`;
+        const style = {
           ...eventAxisPointStyle(event, months, firstWeek, weekCount, mode),
           top: open ? LIFE_CATEGORY_HEIGHT + index * LIFE_EVENT_HEIGHT : 0,
-        }}
-        key={eventKey(event)}
-        title={`${event.title}\n${eventTimeLabel(event)}`}
-      ><span className={`gantt-milestone family-life visual-${calendarEventVisual(event, todayKey)} marker-star routine-star`}><i aria-hidden="true">★</i></span></span>)}
+        };
+        const star = <span className={`gantt-milestone family-life visual-${calendarEventVisual(event, todayKey)} marker-star routine-star`}><i aria-hidden="true">★</i></span>;
+        return href
+          ? <a className="calendar-event-marker-slot is-link" href={href} style={style} key={eventKey(event)} title={`查看详情\n${tooltip}`} onClick={(click) => softNavigate(click, href)}>{star}</a>
+          : <span className="calendar-event-marker-slot" style={style} key={eventKey(event)} title={tooltip}>{star}</span>;
+      })}
     </div>;
   })}</>;
 }
 
-export default function SchedulePage({ data, onWritePreview, calendarSignal, active = true }: { data: WorkbenchSummary; onWritePreview: (action: WriteAction) => Promise<void>; calendarSignal?: CalendarSnapshot; onCalendarChanged?: () => void; active?: boolean }) {
+export default function SchedulePage({ data, onWritePreview, active = true }: { data: WorkbenchSummary; onWritePreview: (action: WriteAction) => Promise<void>; active?: boolean }) {
   const todayKey = tokyoDateKey(new Date());
-  const [activeSection, setActiveSection] = useState<ScheduleSectionId>(() => scheduleSectionFromLocation());
-  const range = useMemo(() => calendarRange(todayKey.slice(0, 7)), [todayKey]);
-  const { snapshot: lifeCalendar } = useLifeCalendar(range.from, range.to, active && activeSection === "roadmap", `${calendarSignal?.revision || ""}:${calendarSignal?.refreshedAt || ""}:${calendarSignal?.permission || ""}`);
+  const [activeSection, setActiveSection] = useState<ScheduleSectionId>(() => scheduleSearchFromLocation().section);
+  const [scheduleGuide, setScheduleGuide] = useState(() => scheduleSearchFromLocation().guide);
+  const [releaseQuery, setReleaseQuery] = useState(() => scheduleSearchFromLocation().releaseQuery);
+  const [eventCatalog, setEventCatalog] = useState<CalendarEventLinkCatalog>({ playbooks: [] });
+  const range = useMemo(() => lifeCalendarWindow(todayKey), [todayKey]);
+  const { life: lifeCalendar, refresh } = useCalendarWindows({ life: { from: range.from, to: range.to, active: active && activeSection === "roadmap" } });
+  const refreshLifeCalendar = (force = false) => refresh("life", { force });
   const appointments = useMemo(() => lifeEvents(lifeCalendar.events, range.from, range.to), [lifeCalendar.events, range.from, range.to]);
   const appointmentLanes = useMemo(() => calendarEventsByLane(appointments), [appointments]);
-  const lifeGroups = useMemo(() => groupLifeEvents(appointmentLanes.life), [appointmentLanes.life]);
   const [expandedLifeCategories, setExpandedLifeCategories] = useState<Record<string, boolean>>({});
   const [expandedCompanyTravel, setExpandedCompanyTravel] = useState<Record<string, boolean>>({});
-  const [japanHomeRequest, setJapanHomeRequest] = useState(0);
+  const [localHomeRequest, setLocalHomeRequest] = useState(0);
   const [hiddenTexts, setHiddenTexts] = useState<string[]>([]);
   const [hiddenSaving, setHiddenSaving] = useState(false);
   const [timelineMode, setTimelineMode] = useState<TimelineMode>("weeks");
@@ -517,7 +563,14 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
   const [recentlyCompletedProjectTodos, setRecentlyCompletedProjectTodos] = useState<RecentlyCompletedProjectTodo[]>([]);
 
   useEffect(() => {
-    const sync = () => setActiveSection(scheduleSectionFromLocation());
+    const sync = () => {
+      rewriteLegacyScheduleView();
+      const next = scheduleSearchFromLocation();
+      setActiveSection(next.section);
+      setScheduleGuide(next.guide);
+      setReleaseQuery(next.releaseQuery);
+    };
+    sync();
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
   }, []);
@@ -527,6 +580,21 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
       .then((payload) => setHiddenTexts(payload.texts || []))
       .catch(() => setHiddenTexts([]));
   }, []);
+
+  useEffect(() => {
+    if (!active || activeSection !== "roadmap") return;
+    let disposed = false;
+    jsonFetch<LocalActivitiesSnapshot>("/api/tools/local-activities")
+      .then((snapshot) => {
+        if (!disposed) setEventCatalog({ playbooks: snapshot.playbooks || [] });
+      })
+      .catch(() => {
+        if (!disposed) setEventCatalog({ playbooks: [] });
+      });
+    return () => {
+      disposed = true;
+    };
+  }, [active, activeSection]);
 
   useEffect(() => {
     jsonFetch<ProjectTaskFollowState>("/api/project-task-follows")
@@ -568,6 +636,11 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
     () => new Set(hiddenTexts.map((text) => normalizeTodoKey(text)).filter(Boolean)),
     [hiddenTexts],
   );
+  const visibleLifeEvents = useMemo(
+    () => appointmentLanes.life.filter((event) => !hiddenKeys.has(normalizeTodoKey(event.title))),
+    [appointmentLanes.life, hiddenKeys],
+  );
+  const lifeGroups = useMemo(() => groupLifeEvents(visibleLifeEvents), [visibleLifeEvents]);
 
   const persistHidden = async (texts: string[]) => {
     setHiddenTexts(texts);
@@ -579,6 +652,7 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
         body: JSON.stringify({ texts }),
       });
       setHiddenTexts(next.texts || []);
+      void refreshLifeCalendar(true);
     } catch {
       const fresh = await jsonFetch<GanttHiddenState>("/api/gantt-hidden").catch(() => ({ texts: [] as string[] }));
       setHiddenTexts(fresh.texts || []);
@@ -759,14 +833,20 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
     writeScheduleTodosOpen(next);
   };
 
-  const openScheduleSection = (section: ScheduleSectionId) => {
-    if (section === "japan" && activeSection === "japan") {
-      setJapanHomeRequest((request) => request + 1);
+  const openScheduleSection = (section: ScheduleSectionId, extras: { guide?: string; q?: string } = {}) => {
+    if (section === "local" && activeSection === "local" && !extras.guide) {
+      setLocalHomeRequest((request) => request + 1);
     }
     setActiveSection(section);
+    setScheduleGuide(extras.guide || "");
+    setReleaseQuery(extras.q || "");
     const params = new URLSearchParams(window.location.search);
     if (section === "today") params.delete("view");
     else params.set("view", section);
+    if (extras.guide) params.set("guide", extras.guide);
+    else params.delete("guide");
+    if (extras.q) params.set("q", extras.q);
+    else params.delete("q");
     const query = params.toString();
     navigate(`/schedule${query ? `?${query}` : ""}`);
   };
@@ -785,17 +865,51 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
     });
   };
 
-  const scrollToToday = () => {
-    const marker = bodyXRef.current?.querySelector<HTMLElement>(".gantt-today-line");
-    marker?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  };
-
   const weekCount = model.weeks.length;
   const roadmapMonths = useMemo(() => buildRoadmapMonths(model.tasks, range.firstDay, 6, range.lastDay), [model.tasks, range.firstDay, range.lastDay]);
   const todayInWindow = todayKey >= range.firstDay && todayKey <= range.lastDay;
   const weeklyTodayLeft = ((model.todayWeekIndex + model.todayOffset + 0.5 / 7) / Math.max(weekCount, 1)) * 100;
   const roadmapTodayLeft = roadmapDateLeft(model.todayKey, roadmapMonths);
   const todayLeft = timelineMode === "roadmap" ? roadmapTodayLeft : weeklyTodayLeft;
+
+  const scrollToToday = () => {
+    const body = bodyXRef.current;
+    const head = headXRef.current;
+    if (!body) return false;
+    const axis = body.querySelector<HTMLElement>(".gantt-axis");
+    if (!axis) return false;
+    const maxScroll = Math.max(0, axis.scrollWidth - body.clientWidth);
+    if (maxScroll <= 0) return false;
+    const todayPx = (todayLeft / 100) * axis.scrollWidth;
+    const centered = todayPx - body.clientWidth / 2;
+    // 窗口开头几天若硬居中会停在 0，看起来像卡在上个月；这时只留约两天的过去，把本月后面的日子让出来。
+    const leading = todayPx - 90;
+    const left = Math.max(0, Math.min(maxScroll, centered < 8 ? leading : centered));
+    syncingX.current = true;
+    body.scrollLeft = left;
+    if (head) head.scrollLeft = left;
+    requestAnimationFrame(() => {
+      syncingX.current = false;
+    });
+    return true;
+  };
+
+  useEffect(() => {
+    if (!active || activeSection !== "roadmap") return;
+    let cancelled = false;
+    const run = () => {
+      if (!cancelled) scrollToToday();
+    };
+    const frame = window.requestAnimationFrame(() => window.requestAnimationFrame(run));
+    const timer = window.setTimeout(run, 240);
+    const late = window.setTimeout(run, 700);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.clearTimeout(late);
+    };
+  }, [active, activeSection, timelineMode, weekCount, todayLeft, roadmapMonths.length, lifeCalendar.loading, visibleLifeEvents.length]);
   const taskByPlanId = useMemo(() => {
     const index = new Map<string, GanttTask>();
     for (const task of model.tasks) if (task.planId) index.set(task.planId, task);
@@ -830,12 +944,11 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
       .map((lane) => {
         const routines = routinesByLane.get(lane.id) ?? [];
         const laneAppointments = lane.id === "company" || lane.id === "life" ? appointmentLanes[lane.id] : [];
+        const coveringRoutines = lane.id === "company"
+          ? model.routines.filter((series) => series.laneId === "company" && !series.done)
+          : [];
         const deduplicatedCalendarEvents = lane.id === "company"
-          ? laneAppointments.filter((event) => !routines.some((series) => {
-            const eventTitle = normalizeTodoKey(event.title);
-            const routineTitle = normalizeTodoKey(series.displayText);
-            return eventTitle.includes(routineTitle) || routineTitle.includes(eventTitle);
-          }))
+          ? calendarEventsNotCoveredByRoutines(laneAppointments, coveringRoutines)
           : lane.id === "life" ? [] : laneAppointments;
         const allTasks = [...(tasksByLane.get(lane.id) ?? [])].sort((left, right) => {
           const leftRank = left.planId && focusBattleIds.has(left.planId) ? 0 : left.parentId && focusBattleIds.has(left.parentId) ? 1 : 2;
@@ -848,21 +961,33 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
         const tasks = timelineMode === "roadmap"
           ? companyTravel.tasks.filter((task) => task.depth === 0 || (task.parentId ? expandedStages[task.parentId] : false))
           : companyTravel.tasks;
-        const lifeEventCount = lane.id === "life" ? appointmentLanes.life.length : 0;
+        const lifeEventCount = lane.id === "life" ? visibleLifeEvents.length : 0;
         return { lane, routines, tasks, travelGroups: companyTravel.groups, calendarEvents: companyTravel.events, count: routines.length + allTasks.length + deduplicatedCalendarEvents.length + lifeEventCount };
       })
       .filter((row) => row.count > 0 || row.lane.id === "life");
-  }, [model.lanes, model.routines, model.tasks, hiddenKeys, timelineMode, expandedStages, focusBattleIds, appointmentLanes]);
+  }, [model.lanes, model.routines, model.tasks, hiddenKeys, timelineMode, expandedStages, focusBattleIds, appointmentLanes, visibleLifeEvents.length]);
   const unfinished = laneRows.reduce((sum, row) => sum + row.count, 0);
-  const allCollapsed = laneRows.length > 0 && laneRows.every((row) => collapsed[row.lane.id]);
+  const allLanesCollapsed = laneRows.length > 0 && laneRows.every((row) => collapsed[row.lane.id]);
+  const travelGroupIds = laneRows.flatMap((row) => row.travelGroups.map((group) => group.id));
+  const showExpandAll = ganttExpandAllShouldShow(
+    allLanesCollapsed,
+    lifeGroups,
+    expandedLifeCategories,
+    travelGroupIds,
+    expandedCompanyTravel,
+  );
   const toggleAllLanes = () => {
-    if (allCollapsed) {
+    if (showExpandAll) {
       setCollapsed({});
+      setExpandedLifeCategories(Object.fromEntries(lifeGroups.map((group) => [group.id, true])));
+      setExpandedCompanyTravel(Object.fromEntries(travelGroupIds.map((id) => [id, true])));
       return;
     }
     const next: Record<string, boolean> = {};
     for (const row of laneRows) next[row.lane.id] = true;
     setCollapsed(next);
+    setExpandedLifeCategories(Object.fromEntries(lifeGroups.map((group) => [group.id, false])));
+    setExpandedCompanyTravel(Object.fromEntries(travelGroupIds.map((id) => [id, false])));
   };
 
   const weekHead = (
@@ -925,7 +1050,7 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
       <Card className={`schedule-todo-board${todoCollapsed ? " is-collapsed" : ""}`}>
         <header className="schedule-todo-head">
           <h2>今日事项</h2>
-          <details className="schedule-todo-help"><summary>事项怎样归类</summary><p>只有具备有效自动契约的 AI 任务才单列；其余 AI 票仍按人工派发处理，需要你确认的验收会一直保留。</p></details>
+          <p>只有具备有效自动契约的 AI 任务才单列；其余 AI 票仍按人工派发处理，需要你确认的验收会一直保留。</p>
           <div className="schedule-todo-meta">
             <small>{weekOpenCount} 项未完成</small>
             <button
@@ -1304,11 +1429,11 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
                   className="gantt-fold-all"
                   onClick={toggleAllLanes}
                   disabled={!laneRows.length}
-                  aria-label={allCollapsed ? "展开全部项目" : "折叠全部项目"}
-                  title={allCollapsed ? "展开全部项目" : "折叠全部项目"}
+                  aria-label={showExpandAll ? "展开全部项目" : "折叠全部项目"}
+                  title={showExpandAll ? "展开全部项目" : "折叠全部项目"}
                 >
-                  {allCollapsed ? <ChevronsUpDown size={12} /> : <ChevronsDownUp size={12} />}
-                  <span>{allCollapsed ? "展开" : "折叠"}</span>
+                  {showExpandAll ? <ChevronsUpDown size={12} /> : <ChevronsDownUp size={12} />}
+                  <span>{showExpandAll ? "展开" : "折叠"}</span>
                 </button>
                 <button type="button" className="gantt-today-jump" onClick={scrollToToday} aria-label="回到今天" title="回到今天">
                   <i />
@@ -1332,7 +1457,7 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
               <div className="gantt-sidebar">
                 {laneRows.map(({ lane, routines, tasks, travelGroups, calendarEvents, count }) => {
                   const open = !collapsed[lane.id];
-                  const eventRows = calendarEvents.map((event) => <CalendarEventSidebarRow event={event} key={`calendar:${eventKey(event)}`} />);
+                  const eventRows = calendarEvents.map((event) => <CalendarEventSidebarRow event={event} catalog={eventCatalog} key={`calendar:${eventKey(event)}`} />);
                   const routineRows = routines.map((series) => (
                     <div className="gantt-task-row" key={series.id}>
                       <HideEyeButton label={series.displayText} onHide={() => hideText(series.text)} />
@@ -1373,6 +1498,7 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
                     open={Boolean(expandedCompanyTravel[group.id])}
                     onToggle={() => setExpandedCompanyTravel((old) => ({ ...old, [group.id]: !old[group.id] }))}
                     onHide={() => hideText(group.task.text)}
+                    catalog={eventCatalog}
                     key={group.id}
                   />);
                   return (
@@ -1390,7 +1516,7 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
                       {open
                         ? (
                           <>
-                            {lane.id === "life" ? <LifeCalendarSidebar groups={lifeGroups} expanded={expandedLifeCategories} loading={Boolean(lifeCalendar.loading)} available={lifeCalendar.available} stale={lifeCalendar.stale} onToggle={(id, open) => setExpandedLifeCategories((old) => ({ ...old, [id]: !open }))} /> : null}
+                            {lane.id === "life" ? <LifeCalendarSidebar groups={lifeGroups} expanded={expandedLifeCategories} loading={Boolean(lifeCalendar.loading)} available={lifeCalendar.available} stale={lifeCalendar.stale} catalog={eventCatalog} onToggle={(id, open) => setExpandedLifeCategories((old) => ({ ...old, [id]: !open }))} onHide={(event) => hideText(event.title)} /> : null}
                             {lane.id === "company" ? <>{travelRows}{taskRows}{eventRows}{routineRows}</> : <>{eventRows}{routineRows}{taskRows}</>}
                           </>
                         )
@@ -1409,7 +1535,7 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
 
                   {laneRows.map(({ lane, routines, tasks, travelGroups, calendarEvents }) => {
                     const open = !collapsed[lane.id];
-                    const eventRows = calendarEvents.map((event) => <CalendarEventAxisRow event={event} family={lane.tone} todayKey={todayKey} months={roadmapMonths} firstWeek={model.weeks[0].start} weekCount={weekCount} mode={timelineMode} key={`calendar-axis:${eventKey(event)}`} />);
+                    const eventRows = calendarEvents.map((event) => <CalendarEventAxisRow event={event} family={lane.tone} todayKey={todayKey} months={roadmapMonths} firstWeek={model.weeks[0].start} weekCount={weekCount} mode={timelineMode} catalog={eventCatalog} key={`calendar-axis:${eventKey(event)}`} />);
                     const routineRows = routines.map((series) => <RoutineAxisRow key={`bar-${series.id}`} series={series} weekCount={weekCount} mode={timelineMode} months={roadmapMonths} />);
                     const taskRows = tasks.map((task) => (
                       <AxisGlyph
@@ -1430,6 +1556,7 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
                       weekCount={weekCount}
                       mode={timelineMode}
                       todayKey={todayKey}
+                      catalog={eventCatalog}
                       key={`axis:${group.id}`}
                     />);
                     return (
@@ -1438,7 +1565,7 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
                         {open
                           ? (
                             <>
-                              {lane.id === "life" ? <LifeCalendarAxis groups={lifeGroups} expanded={expandedLifeCategories} months={roadmapMonths} firstWeek={model.weeks[0].start} weekCount={weekCount} mode={timelineMode} todayKey={todayKey} /> : null}
+                              {lane.id === "life" ? <LifeCalendarAxis groups={lifeGroups} expanded={expandedLifeCategories} months={roadmapMonths} firstWeek={model.weeks[0].start} weekCount={weekCount} mode={timelineMode} todayKey={todayKey} catalog={eventCatalog} /> : null}
                               {lane.id === "company" ? <>{travelRows}{taskRows}{eventRows}{routineRows}</> : <>{eventRows}{routineRows}{taskRows}</>}
                             </>
                           )
@@ -1464,8 +1591,8 @@ export default function SchedulePage({ data, onWritePreview, calendarSignal, act
       </Card>
       ) : null}
 
-      {activeSection === "japan" ? <JapanActivitiesView active homeRequest={japanHomeRequest} /> : null}
-      {activeSection === "releases" ? <ReleaseWatchView active /> : null}
+      {activeSection === "local" ? <LocalActivitiesView active homeRequest={localHomeRequest} openGuideId={scheduleGuide} /> : null}
+      {activeSection === "releases" ? <ReleaseWatchView active focusQuery={releaseQuery} /> : null}
     </div>
   );
 }

@@ -127,6 +127,58 @@ export function onSecretarySpeechState(listener: SpeechStateListener) {
   };
 }
 
+type FallbackListener = (event: SecretarySpeechFallback) => void;
+export type SecretarySpeechFallback = {
+  speaker: SecretarySpeaker;
+  from: string;
+  to: string;
+  code: string;
+  message: string;
+};
+const fallbackListeners = new Set<FallbackListener>();
+
+export function onSecretarySpeechFallback(listener: FallbackListener) {
+  fallbackListeners.add(listener);
+  return () => {
+    fallbackListeners.delete(listener);
+  };
+}
+
+export function secretarySpeechFallbackMessage(event: Pick<SecretarySpeechFallback, "from" | "to" | "code" | "speaker">) {
+  if (event.to === "stop") {
+    return event.speaker === "meining" ? "梅凝朗读失败，先看文字" : "银月朗读失败，先看文字";
+  }
+  if (event.from === "elevenlabs" && event.to === "edge") {
+    if (event.code.includes("VOICE_NOT_CONFIGURED")) return "这位还没选高质声线，先改用普通朗读";
+    if (event.code.includes("KEY_NOT_CONFIGURED")) return "本机还没配高质朗读密钥，先改用普通朗读";
+    return "高质朗读失败，先改用普通朗读";
+  }
+  if (event.to === "webspeech") return "普通朗读失败，先改用本机声线";
+  return "朗读失败";
+}
+
+function publishSecretarySpeechFallback(event: Omit<SecretarySpeechFallback, "message"> & { message?: string }) {
+  const next: SecretarySpeechFallback = {
+    ...event,
+    message: event.message || secretarySpeechFallbackMessage(event),
+  };
+  for (const listener of fallbackListeners) {
+    try {
+      listener(next);
+    } catch {
+      /* ignore */
+    }
+  }
+  return next;
+}
+
+function ttsFailureCode(error: unknown) {
+  if (typeof error === "object" && error && "code" in error && typeof (error as { code?: unknown }).code === "string") {
+    return String((error as { code: string }).code);
+  }
+  return "";
+}
+
 /** 页面、测试与原生桥共用的唯一说话状态出口。 */
 export function publishSecretarySpeechState(active: boolean, speaker: SecretarySpeaker | string = "yinyue") {
   const next = { active: Boolean(active), speaker: normalizeSecretarySpeaker(speaker) } satisfies SecretarySpeechState;
@@ -517,9 +569,21 @@ async function drainSpeechQueue() {
       }
       if (item.speaker === "yinyue") {
         publishSecretarySpeechState(false, item.speaker);
+        publishSecretarySpeechFallback({
+          speaker: item.speaker,
+          from: "edge",
+          to: "stop",
+          code: ttsFailureCode(error) || "EDGE_TTS_FAILED",
+        });
         playQueue = [];
         break;
       }
+      publishSecretarySpeechFallback({
+        speaker: item.speaker,
+        from: "edge",
+        to: "webspeech",
+        code: ttsFailureCode(error) || "EDGE_TTS_FAILED",
+      });
       speakWithWebSpeech(item.text, item.speaker);
       // Web Speech 无法可靠 await，后面条目等本轮清空后再说会叠音，先停排队
       playQueue = [];

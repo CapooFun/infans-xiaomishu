@@ -138,26 +138,35 @@ function collapseNearDuplicateFlows(flows) {
   return out;
 }
 
-/** 生活向分类：微信 / 支付宝 / PayPay 共用。仍计入个人支出；公司支出单独一类便于以后报销拆出。 */
+/**
+ * 生活向分类：微信 / 支付宝 / PayPay 共用。
+ * 花哪了大类：居住、吃喝、娱乐、订阅、游戏、健康、购物、出行、学习、人情、还款、公司支出。
+ * 不进花哪了：资金划转、代收代付、债权回收。
+ * 认不出的进待确认，不再用其他或当面扫码。
+ */
 export function categorizeWechatRow(row) {
-  const type = safeText(row.type, 80);
-  const blob = `${row.counterparty ?? ""} ${row.product ?? ""} ${type} ${row.note ?? ""}`;
+  const type = safeText(row.type, 80).normalize("NFKC");
+  const blob = `${row.counterparty ?? ""} ${row.product ?? ""} ${type} ${row.note ?? ""}`.normalize("NFKC");
   const channel = safeText(row.channel, 20);
+  const typeAndDirection = `${type} ${row.direction || ""}`;
 
   if (/代买|代付|帮买|帮付|墊付|垫付/.test(blob)) return "代收代付";
-  if (/还款|还我的钱/.test(blob) && /转账|收入/.test(`${type} ${row.direction || ""}`)) {
+  if (/还款|还我的钱/.test(blob) && /转账|收入/.test(typeAndDirection)) {
     return "债权回收";
+  }
+  if (/闪电贷|信用卡还款/.test(blob)) return "还款";
+  if (/提现/.test(type) || /零钱提现|提现/.test(blob)) {
+    return /手续费/.test(blob) ? "手续费" : "资金划转";
   }
 
   if (channel === "alipay" || /支付宝/.test(blob)) {
-    if (/提现/.test(type) || /提现/.test(blob)) return /手续费/.test(blob) ? "手续费" : "资金划转";
     if (/收费|手续费/.test(type) || /手续费/.test(blob)) return "手续费";
     if (/退款/.test(type) || /退款/.test(blob)) return "退款";
     if (/Stripe|Anysphere|Cursor/i.test(blob)) return "公司支出";
     if (/OpenAI|ChatGPT|剪映|CapCut|百度网盘|深度求索|DeepSeek/i.test(blob)) return "订阅";
     if (/转账/.test(type) && /还款/.test(blob)) return "债权回收";
-    if (/转账|红包/.test(type) || /转账红包/.test(blob)) return "转账红包";
-    // 支付宝「交易分类」：先按官方类目归，再落到后面的店名规则（勿把「在线支付」直接打成其他）
+    if (/转账|红包/.test(type) || /转账红包/.test(blob)) return "人情";
+    if (/住房物业|物业费/.test(type)) return "居住";
     if (/日用百货|服饰装扮|数码电器|运动户外|母婴亲子|家居家装/.test(type)) return "购物";
     if (/美容美发|医疗健康/.test(type)) return "健康";
     if (/文化休闲/.test(type)) return "购物";
@@ -166,33 +175,27 @@ export function categorizeWechatRow(row) {
   if (channel === "paypay") {
     if (/ポイント|残高の獲得/.test(type)) return "退款";
     if (/チャージ/.test(type)) return "资金划转";
-    if (/送った金額|受け取った金額/.test(type)) return "转账红包";
-    if (/オクトパス|エナジー|電力|ガス|水道|東京電力|東京ガス/.test(blob)) return "居住";
-    if (/JOYFIT|フィットネス/i.test(blob)) return "健康";
-    if (/クリニック|病院|薬局|ココカラ/.test(blob)) return "健康";
-    if (/Steam|Valve|ゲーム|ニンテンドー|PlayStation|Xbox/i.test(blob)) return "游戏";
-    if (/Netflix|Spotify|Apple|iCloud|PADDLE|LANG REACT|Language Reactor/i.test(blob)) return "订阅";
-    if (/セブン|LAWSON|ローソン|ファミリーマート|MINISTOP|ラーメン|らあめん|寿司|マクドナルド|McDonald|スターバックス|Starbucks|珈琲|カフェ|飲食|バーガー/.test(blob)) {
-      return "吃喝";
-    }
+    if (/送った金額|受け取った金額/.test(type)) return "人情";
   }
 
-  if (/红包|转账|群收款|赞赏码/.test(type) || /红包/.test(blob)) return "转账红包";
+  if (/红包|转账|群收款|赞赏码/.test(type) || /红包/.test(blob)) return "人情";
   if (/退款/.test(type)) return "退款";
   if (/还款/.test(blob)) return "债权回收";
 
   if (/Stripe|Anysphere|Cursor/i.test(blob)) return "公司支出";
   if (/Steam|Valve|ゲーム|游戏|互娱|腾讯计算机|ニンテンドー|PlayStation|Xbox|Epic\s*Games|网易雷火/i.test(blob)) return "游戏";
-  if (/Netflix|Spotify|YouTube|iCloud|OpenAI|ChatGPT|Apple|App Store|哔哩哔哩|Bilibili|bilibili|爱奇艺|腾讯视频|影视|Google\s*One|剪映|CapCut|百度网盘|深度求索|DeepSeek|腾讯公司/i.test(blob)) {
+  if (/Netflix|Spotify|YouTube|iCloud|OpenAI|ChatGPT|Apple|App Store|哔哩哔哩|Bilibili|bilibili|爱奇艺|腾讯视频|Google\s*One|剪映|CapCut|百度网盘|深度求索|DeepSeek|腾讯公司/i.test(blob)) {
     return "订阅";
   }
   if (/PADDLE\.NET|LANG REACT|Language Reactor/i.test(blob)) return "订阅";
-  if (/JOYFIT|フィットネス|发条鸭/i.test(blob)) return "健康";
+
+  if (/バルト|KINEZO|TOHO|シネマ|映画|チケットぴあ|ぴあ|演唱会|演出/i.test(blob)) return "娱乐";
+  if (/JOYFIT|フィットネス|发条鸭|ボルダリング|Bouldering/i.test(blob)) return "健康";
 
   if (/ファミリーマート|FamilyMart|LAWSON|Lawson|ローソン|好德|喜士多|CITYBOX|魔盒|セブン|Seven-Eleven|全家|MINISTOP|ミニストップ|NewDays|NEWDAYS/i.test(blob)) {
     return "吃喝";
   }
-  if (/サミット|Summit|ストア|超市|美团|饿了么|汉堡|咖啡|Coffee|luckin|Cotti|星巴克|Starbucks|麦当劳|McDonald|蜜雪|必胜客|火锅|火鍋|重慶|烧肉|焼|餐饮|点餐|饭堂|鳥貴族|杨二白|湘御|湘遇|烩面|中国物産|独一处|外食|肯德基|KFC|奈雪|喜茶|瑞幸|达美乐|Domino|摩斯|モス|Peet|奥乐齐|ALDI|烧腊|牛肉|酸菜鱼|烧烤|茶坊|熊猫|肥仔|徽州|格瑞思|MO师傅|西池袋|食|餐|锅|面馆|果汁|マクドナルド|珈琲|ラーメン|らあめん|花月嵐|寿司|マルエツ|Maruetsu|ゼッテリア|Zetteria|My\s*Basket|マイバスケット|西友|Seiyu|山崎製パン|松屋|うどん|Manner|霸王茶姬|爱达乐|小杨生煎|生煎|钵钵鸡|板鸭|Burger|\bTEA\b|茶姬|グランパ|Grandpa|熊だ|Gotcha|Ｇｏｔｃｈａ|タピオカ/i.test(blob)) {
+  if (/サミット|Summit|ストア|超市|美团|饿了么|汉堡|咖啡|Coffee|luckin|Cotti|星巴克|Starbucks|麦当劳|McDonald|蜜雪|必胜客|火锅|火鍋|重慶|烧肉|焼|餐饮|点餐|饭堂|鳥貴族|杨二白|湘御|湘遇|烩面|中国物産|独一处|外食|肯德基|KFC|奈雪|喜茶|瑞幸|达美乐|Domino|摩斯|モス|Peet|奥乐齐|ALDI|烧腊|牛肉|酸菜鱼|烧烤|茶坊|熊猫|肥仔|徽州|格瑞思|MO师傅|西池袋|食|餐|锅|面馆|果汁|マクドナルド|珈琲|ラーメン|らあめん|花月嵐|寿司|マルエツ|Maruetsu|ゼッテリア|Zetteria|My\s*Basket|マイバスケット|西友|Seiyu|山崎製パン|松屋|うどん|Manner|霸王茶姬|爱达乐|小杨生煎|生煎|钵钵鸡|板鸭|Burger|\bTEA\b|茶姬|グランパ|Grandpa|熊だ|Gotcha|Ｇｏｔｃｈａ|タピオカ|菜館|菜馆|居酒屋|バー|酒吧|格瓦斯/i.test(blob)) {
     return "吃喝";
   }
   if (/京东|淘宝|天猫|拼多多|小红书|MUJI|無印|无印|UNIQLO|优衣库|ニトリ|Nitori|ルミネ|アニメイト|Animate|迪卡侬|DECATHLON|Amazon|亚马逊|得物|唯品会|苏宁|ダイソー|Daiso|抖音电商|平台商户|顺丰|快递|EMS|德邦|圆通|中通|韵达|新起点|运业|菜鸟|京东物流|パルコ|PARCO|ヨドバシ|Yodobashi|Cando|キャンドゥ|宝岛|万维猫|Ampus|Ａｍｐｕｓ|豆魚雷|TORCH\s*TORCH/i.test(blob)) {
@@ -205,20 +208,16 @@ export function categorizeWechatRow(row) {
   if (/JTEST|检定|考试|教育部|知识星球|出版社|得到|樊登|网课|课程|学堂|培训|JLPT|日本語|日语|ノア|诺亚|語学/i.test(blob)) {
     return "学习";
   }
-  if (/房租|电费|水费|燃气|瓦斯|电信|联通|移动|宽带|软银|au |docomo|Wi-?Fi|ガス|オクトパス|エナジー|SoftBank/i.test(blob)) {
+  if (/房租|电费|水费|水道|スイドウ|瓦斯费|燃气|电信|联通|移动|宽带|软银|au |docomo|Wi-?Fi|ガス|オクトパス|エナジー|SoftBank|住房物业/i.test(blob)) {
     return "居住";
   }
   if (/医院|药店|诊所|歯科|SPA|养生|修脚|金足|保健|ココカラ|药妆|调理|ジム|クリニック|薬局/i.test(blob)) {
     return "健康";
   }
-  if (/闪电贷|信用卡还款/.test(blob)) return "还款";
-  if (type === "扫二维码付款") return "当面扫码";
-  if (type === "支払い" && /クレジット|PayPay残高|PayPayカード/.test(`${row.method || ""} ${row.product || ""}`) && !safeText(row.counterparty, 20)) {
-    return "当面扫码";
-  }
-  if (type === "支払い") return "吃喝";
+
+  if (type === "扫二维码付款" || type === "支払い") return "待确认";
   if (directionKind(row.direction) === "income") return "收入";
-  return "其他";
+  return "待确认";
 }
 
 function alipayDirectionAndKind(type, amount) {
@@ -1084,7 +1083,7 @@ export async function readWechatCashflow(root, options = {}) {
   const key =
     files.map((file) => `${file.location}:${file.name}:${file.mtimeMs}:${file.size}`).join("|")
     + `|dw:${downloadPicks.wechat?.name || ""}:${downloadPicks.paypay?.name || ""}:${downloadPicks.alipay?.name || ""}`
-    + ":v7-category-other-fix";
+    + ":v9-expense-taxonomy";
   if (!options.force && cache?.key === key) return cache.data;
 
   const parsedFiles = [];

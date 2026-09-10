@@ -1,5 +1,9 @@
-import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
-import { AlertTriangle, ArrowLeft, ArrowUpRight, Bookmark, CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDashed, Copy, FileText, Flag, Folder, FolderOpen, HelpCircle, LayoutDashboard, ListTree, Route, Search, Target } from "lucide-react";
+import { useEffect, useMemo, useState, type ComponentPropsWithoutRef, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { AlertTriangle, ArrowLeft, ArrowUpRight, Bookmark, BookOpenText, CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, ChevronUp, CircleDashed, Copy, FileText, Flag, Folder, FolderOpen, HelpCircle, LayoutDashboard, ListTree, Route, Search, Target } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
+import { remarkVaultWikiLinks, stripDisplayFrontmatter, vaultMarkdownUrlTransform } from "../markdown-display.mjs";
 import { CardButton, Empty, Kicker, navigateWithPositionRestore } from "../page-shared";
 import {
   filterDisplayModeProductModules,
@@ -58,6 +62,12 @@ import { navigationHref } from "../shell/page-navigation-model";
 import { withFeaturePresentation } from "../product-feature-presentation";
 import { FeatureWikiSections } from "./FeatureWikiSections";
 import { GovernanceMapView } from "./GovernanceMapView";
+import {
+  collectProjectHubSourceTargets,
+  projectHubSourceBodyMatches,
+  resolveProjectHubSourceHref,
+  type ProjectHubSourceTarget,
+} from "./project-hub-source-reader.ts";
 
 function projectTrailItem(project: RegisteredProjectManagement, onSelect?: () => void): TrailItem {
   return { label: managedProjectDisplayName(project), href: navigationHref("/projects", { project: project.projectId || projectIdFromName(project.name), view: "home" }), onSelect, history: "replace" };
@@ -1615,6 +1625,110 @@ function ExternalSourceNote({ label }: { label: string }) {
   return <p className="project-wb-note"><FolderOpen size={13} /><span>{label} · 项目目录内资料</span></p>;
 }
 
+const PROJECT_HUB_SOURCE_SANITIZE = {
+  ...defaultSchema,
+  protocols: {
+    ...defaultSchema.protocols,
+    href: [...(defaultSchema.protocols?.href ?? ["http", "https", "mailto"]), "infans-doc"],
+  },
+};
+
+type ProjectHubSourceBody = { projectId: string; objectId: string; label: string; path: string; kind: string; text: string };
+
+// 项目主页原件正文的页内只读入口：点击后按稳定 projectId + 对象 ID 打开清单登记的 Markdown 原件。
+// 只发这两个稳定 ID，不提交任何路径；正文渲染复用与规则总览一致的 sanitize 阅读壳。
+function ProjectHubSourceReader({
+  projectId,
+  objectId,
+  label,
+  path,
+  registeredSources,
+  reading,
+  onReadingChange,
+  onOpenRegistered,
+}: {
+  projectId: string;
+  objectId: string;
+  label: string;
+  path: string;
+  registeredSources: ProjectHubSourceTarget[];
+  reading: boolean;
+  onReadingChange: (next: boolean) => void;
+  onOpenRegistered: (targetObjectId: string) => void;
+}) {
+  const [body, setBody] = useState<ProjectHubSourceBody | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
+  const shown = projectHubSourceBodyMatches(body, projectId, objectId) ? body : null;
+  useEffect(() => {
+    if (!reading) return;
+    const controller = new AbortController();
+    setLoading(true);
+    setError("");
+    const query = new URLSearchParams({ project: projectId, object: objectId });
+    void fetch(`/api/project-hub-source?${query}`, { signal: controller.signal })
+      .then(async (response) => {
+        const payload = await response.json() as ProjectHubSourceBody & { error?: string };
+        if (!response.ok) throw new Error(payload?.error || "打不开这份原件");
+        if (controller.signal.aborted) return;
+        if (!projectHubSourceBodyMatches(payload, projectId, objectId)) return;
+        setBody(payload);
+      })
+      .catch((reason) => {
+        if (reason?.name !== "AbortError") setError(reason instanceof Error ? reason.message : "打不开这份原件");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [reading, projectId, objectId, retryNonce]);
+  const markdownComponents = {
+    a: ({ href, children, ...rest }: ComponentPropsWithoutRef<"a">) => {
+      const decision = resolveProjectHubSourceHref(href || "", { sourcePath: shown?.path || path, sources: registeredSources });
+      if (decision.kind === "web" || decision.kind === "hash") return <a href={decision.href} {...rest}>{children}</a>;
+      if (decision.kind === "registered") {
+        if (decision.objectId === objectId) return <span>{children}</span>;
+        return (
+          <a
+            href={navigationHref("/projects", { project: projectId, view: "home", workline: decision.objectId })}
+            onClick={(event) => { event.preventDefault(); onOpenRegistered(decision.objectId); }}
+          >
+            {children}
+          </a>
+        );
+      }
+      return <span title={`未在项目清单登记：${decision.detail}`}>{children}</span>;
+    },
+  };
+  return (
+    <div className={`project-hub-source${reading ? " is-reading" : ""}`}>
+      <div className="project-hub-source-head">
+        <p className="project-wb-note"><FolderOpen size={13} /><span>{label} · 项目目录内资料</span><code>{path}</code></p>
+        <button type="button" className="project-hub-source-action" aria-expanded={reading} onClick={() => onReadingChange(!reading)}>
+          <BookOpenText size={14} aria-hidden />{reading ? "收起正文" : "阅读正文"}
+        </button>
+      </div>
+      {reading ? (
+        <section className="project-hub-source-article development-log-markdown" aria-label={`${label}正文`} aria-busy={loading}>
+          {loading ? <Empty>正在打开正文…</Empty> : null}
+          {error ? (
+            <p className="project-hub-source-error" role="alert">
+              <span>{error}</span>
+              <button type="button" className="project-hub-source-action" onClick={() => { setBody(null); setRetryNonce((nonce) => nonce + 1); }}>再试一次</button>
+            </p>
+          ) : null}
+          {shown?.kind === "markdown" ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm, [remarkVaultWikiLinks, {}]]} rehypePlugins={[[rehypeSanitize, PROJECT_HUB_SOURCE_SANITIZE]]} urlTransform={vaultMarkdownUrlTransform} components={markdownComponents}>
+              {stripDisplayFrontmatter(shown.text)}
+            </ReactMarkdown>
+          ) : null}
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
 function ProjectHubHome({
   displayMode,
   project,
@@ -1641,6 +1755,8 @@ function ProjectHubHome({
     [displayMode, hub.worklines],
   );
   const defaultWorklineId = worklines.find((workline) => workline.view.kind !== "featureTree")?.id || "";
+  const registeredSources = useMemo(() => collectProjectHubSourceTargets(hub), [hub]);
+  const [sourceReading, setSourceReading] = useState(false);
   const [selectedId, setSelectedId] = useState(() => {
     const requested = readProjectWorkbenchQuery().workline;
     return worklines.some((workline) => workline.id === requested && workline.view.kind !== "featureTree") ? requested! : defaultWorklineId;
@@ -1686,7 +1802,11 @@ function ProjectHubHome({
       return;
     }
   };
-
+  const openHubDocument = (worklineId: string) => {
+    setSourceReading(true);
+    setSelectedId(worklineId);
+    writeProjectWorkbenchQuery({ workline: worklineId, tree: null, module: null, feature: null, node: null });
+  };
   return (
     <div className="project-workbench is-project-hub">
       <PageTrail items={[projectTrailItem(project)]} />
@@ -1716,8 +1836,8 @@ function ProjectHubHome({
         />
       </section>
 
-      <div className="project-hub-layout">
-        <section className="project-hub-worklines" aria-label={`${project.name}工作线`}>
+      <div className={`project-hub-layout${sourceReading ? " is-reading" : ""}`}>
+        <section className="project-hub-worklines" aria-label={`${project.name}工作线`} hidden={sourceReading}>
           <div className="project-hub-section-head"><Kicker>工作线</Kicker><small>{worklines.length} 条受控入口</small></div>
           <div className="project-hub-workline-grid">
             {worklines.map((workline) => {
@@ -1732,6 +1852,7 @@ function ProjectHubHome({
                   onClick={() => {
                     if (workline.view.kind === "featureTree") onOpenFeatureTree(workline.view.treeId, workline.id);
                     else {
+                      setSourceReading(false);
                       setSelectedId(workline.id);
                       writeProjectWorkbenchQuery({ workline: workline.id, tree: null, module: null, feature: null, node: null });
                     }
@@ -1764,7 +1885,22 @@ function ProjectHubHome({
             <Kicker>最近完成</Kicker>
             {selectedRecent.length ? <ul className="project-simple-list is-completed">{selectedRecent.map((item) => <li key={item.id || item.text}><CheckCircle2 size={13} /><span>{item.text}</span></li>)}</ul> : <Empty>{selected ? "这条工作线近期暂无关联的完成记录。" : "近期暂无已归档的完成记录。"}</Empty>}
           </div>
-          {!displayMode && selected?.source ? <ExternalSourceNote label={selected.source.label} /> : null}
+          {selected?.source ? (
+            <ProjectHubSourceReader
+              key={`${selected.source.externalProjectId || hub.project.id}:${selected.id}`}
+              projectId={selected.source.externalProjectId || hub.project.id}
+              objectId={selected.id}
+              label={selected.source.label}
+              path={selected.source.path}
+              registeredSources={registeredSources}
+              reading={sourceReading}
+              onReadingChange={setSourceReading}
+              onOpenRegistered={(targetObjectId) => {
+                if (!worklines.some((workline) => workline.id === targetObjectId && workline.view.kind !== "featureTree")) return;
+                openHubDocument(targetObjectId);
+              }}
+            />
+          ) : null}
         </aside>
       </div>
     </div>

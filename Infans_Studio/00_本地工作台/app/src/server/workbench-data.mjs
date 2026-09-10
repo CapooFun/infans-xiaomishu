@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import { parseGrammarChecklist } from "./workbench-grammar.mjs";
-import { LANGUAGE_REACTOR_SOURCE, pickDailySentence, readLanguageReactorData } from "./workbench-language-reactor.mjs";
+import { LANGUAGE_REACTOR_SOURCE, readLanguageReactorData } from "./workbench-language-reactor.mjs";
 import { readAppleHealthData } from "./workbench-apple-health.mjs";
 import { readProjectManagement } from "./workbench-project-management.mjs";
 import { readPaymentGuardSummary } from "./workbench-renewals.mjs";
@@ -173,11 +173,30 @@ const SECTION_SOURCE_KEYS = Object.freeze({
   markets: ["marketBrief"],
 });
 
+/** 首页／日程／事业摘要真正用到的 SOURCES 键。专题列表、项目管理、续约提醒和日语今日练习另有专用读取，不经本表。 */
+export const SUMMARY_SOURCE_KEYS = Object.freeze([
+  "identity",
+  "todo",
+  "projects",
+  "flagship",
+  "coaching",
+  "coachingLog",
+  "body",
+  "training",
+  "trainingPlan",
+  "lifeDesignLog",
+  "japaneseStatus",
+  "japaneseDaily",
+  "marketBrief",
+]);
+
 const SCAN_CACHE_TTL_MS = 60_000;
 let scanCache = null;
+let summaryCache = null;
 
 export function invalidateVaultScanCache() {
   scanCache = null;
+  summaryCache = null;
 }
 
 async function readNamedSources(root, keys, warnings) {
@@ -3833,6 +3852,47 @@ export function parseHealthStatusReport(markdown = "", fallbackKind = "daily") {
   };
 }
 
+/** 周报「作用」栏收成回能／耗能／中性；拿不准就当中性，不替本人打满。 */
+export function leanFromGoodTimeEffect(effect = "") {
+  const text = String(effect || "").trim();
+  if (!text) return null;
+  if (/不确定|暂不判断|未知|不能写成|不能据此|无法判断/.test(text)) return "中性";
+  if (/(?:^|[，、。；\s])耗能|消耗|耗精力|挺耗/.test(text)) return "耗能";
+  if (/(?:^|[，、。；\s])回能|轻松|放松|开心|滋养/.test(text)) return "回能";
+  if (/中性/.test(text)) return "中性";
+  return "中性";
+}
+
+export function datesFromGoodTimeEvidence(evidence = "", periodEnd = "", periodStart = "") {
+  const yearHint = String(periodEnd || periodStart || "").slice(0, 4);
+  const seen = new Set();
+  const dates = [];
+  const push = (iso) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || seen.has(iso)) return;
+    seen.add(iso);
+    dates.push(iso);
+  };
+  for (const match of String(evidence).matchAll(/\b(\d{4}-\d{2}-\d{2})\b/g)) push(match[1]);
+  for (const match of String(evidence).matchAll(/\b(\d{1,2})[./](\d{1,2})\b/g)) {
+    const month = Number(match[1]);
+    const day = Number(match[2]);
+    if (month < 1 || month > 12 || day < 1 || day > 31) continue;
+    push(`${yearHint || "2026"}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+  }
+  return dates;
+}
+
+export function mapWeeklyGoodTimes(report) {
+  if (!report?.goodTimes?.length) return [];
+  return report.goodTimes.map((item) => ({
+    text: item.text,
+    lean: leanFromGoodTimeEffect(item.effect),
+    dates: datesFromGoodTimeEvidence(item.evidence, report.periodEnd, report.periodStart),
+    note: item.effect || "",
+    evidence: item.evidence || "",
+  }));
+}
+
 export function parseHealthReports({ daily = "", weekly = "", monthly = "" } = {}) {
   return {
     daily: parseHealthStatusReport(daily, "daily"),
@@ -4192,6 +4252,7 @@ async function buildHealthFromSources(root, source) {
       monthlySelfAssessment: lifeParsed.monthlySelfAssessment,
       coherence: lifeParsed.coherence,
       toolbox: lifeParsed.toolbox,
+      weeklyGoodTimes: mapWeeklyGoodTimes(reports.weekly),
       recentAssessment: recentWellbeing,
       odyssey,
       overdueWeeks: lifeParsed.overdueWeeks,
@@ -4282,6 +4343,47 @@ async function buildLibrarySection(root, source, warnings) {
     domainResearch: { game: parseGameResearchDomain(source, library.topics), knowledgeNodes: domainKnowledge.nodes },
     items: library.items.map(({ searchableBody: _omit, ...item }) => item),
     sources: [sourceMeta(source.library), sourceMeta(source.weread), sourceMeta(source.bookCovers), sourceMeta(source.dedao), sourceMeta(source.dedaoCovers), sourceMeta(source.writing), sourceMeta(source.learning), sourceMeta(source.steamGames), sourceMeta(source.extraGames), sourceMeta(source.appleGames), sourceMeta(source.cultureOverview), sourceMeta(source.cultureWow), sourceMeta(source.cultureSouls), sourceMeta(source.cultureZelda), sourceMeta(source.screenOverview), sourceMeta(source.screenFanren), sourceMeta(source.screenFma), sourceMeta(source.screenMadoka), sourceMeta(source.screenCodeGeass), sourceMeta(source.screenEagle), sourceMeta(source.screenCinemaParadiso), sourceMeta(source.gameResearch), sourceMeta(source.gameResearchQuestions)],
+  };
+}
+
+function buildHealthSummaryFromSources(source, todoMainlines = []) {
+  const health = parseHealth(source.body?.text || "", source.training?.text || "");
+  const todayPlan = parseTodayTrainingPlan(source.trainingPlan?.text || "");
+  const today = tokyoWeekday();
+  const staleMuscles = staleMusclesFromSessions(health.sessions, today.key);
+  const lifeParsed = parseLifeDesignLog(source.lifeDesignLog?.text || "", todoMainlines, today.key);
+  return {
+    baselineDate: health.baselineDate,
+    weight: health.weight,
+    latestTraining: health.latestTraining,
+    todayPlan,
+    staleMuscles,
+    life: { overdueWeeks: lifeParsed.overdueWeeks },
+  };
+}
+
+async function buildJapaneseSummaryFromSources(root, source) {
+  const japanese = parseJapanese(source.japaneseStatus?.text || "", source.japaneseDaily?.text || "");
+  const { buildJapaneseExploration } = await import("./workbench-japanese-exam.mjs");
+  const { buildJapaneseTodayStudy, hasJapaneseStudyActivity, tokyoTodayKey, tokyoPreviousDateKey } = await import("./workbench-japanese-today.mjs");
+  const today = tokyoTodayKey();
+  const previous = tokyoPreviousDateKey();
+  const exploration = await buildJapaneseExploration(root, japanese);
+  const todayStudy = buildJapaneseTodayStudy({
+    date: today,
+    oralSessions: exploration.courseProgress.oralSessions,
+    ankiActivity: null,
+    examSessions: exploration.studySessions,
+  });
+  const previousStudy = buildJapaneseTodayStudy({
+    date: previous,
+    oralSessions: exploration.courseProgress.oralSessions,
+    ankiActivity: null,
+    examSessions: exploration.studySessions,
+  });
+  return {
+    ...japanese,
+    studySummary: hasJapaneseStudyActivity(todayStudy) ? todayStudy : previousStudy,
   };
 }
 
@@ -4387,8 +4489,7 @@ function summarizeWorldNewsHomeLanes(snapshot) {
 }
 
 export function summarizeWorkbench(snapshot) {
-  const latestWriting = snapshot.library.items.find((item) => item.kind === "writing" && !item.archived) ?? null;
-  const topics = snapshot.library.items
+  const topics = (snapshot.library?.items ?? [])
     .filter((item) => item.kind === "topic")
     .map((item) => ({ id: item.id, topicId: item.topicId, title: item.title, description: item.description, tip: item.tip || "", sourcePath: item.sourcePath }));
   return {
@@ -4398,7 +4499,7 @@ export function summarizeWorkbench(snapshot) {
     todo: snapshot.todo,
     projects: snapshot.projects,
     projectManagement: {
-      ...snapshot.projectManagement,
+      warnings: snapshot.projectManagement.warnings,
       currentTodos: snapshot.projectManagement.currentTodos.map((task) => ({ ...task, details: [] })),
       relationIndex: { edges: [], issues: snapshot.projectManagement.relationIndex.issues },
       projects: snapshot.projectManagement.projects.map((project) => ({
@@ -4439,22 +4540,14 @@ export function summarizeWorkbench(snapshot) {
       newCardPace14: snapshot.japanese.newCardPace14,
       ankiSource: snapshot.japanese.ankiSource,
       studySummary: snapshot.japanese.studySummary,
-      dailySentence: pickDailySentence(snapshot.japanese.languageReactor),
+      dailySentence: null,
     },
     library: {
-      books: snapshot.library.books,
-      completedBooks: snapshot.library.completedBooks,
-      courses: snapshot.library.courses,
-      games: snapshot.library.games,
-      writing: snapshot.library.writing,
-      learning: snapshot.library.learning,
-      latestWriting,
       topics,
     },
     market: {
       status: snapshot.market.status,
       headline: snapshot.market.headline,
-      eventsCount: snapshot.market.events.length,
       topEvents: snapshot.market.events
         .filter((event) => event.category !== "AI热点")
         .slice(0, 3)
@@ -4470,8 +4563,63 @@ export function summarizeWorkbench(snapshot) {
   };
 }
 
+async function scanWorkbenchSummaryUncached(root) {
+  const warnings = [];
+  const source = await readNamedSources(root, SUMMARY_SOURCE_KEYS, warnings);
+  const todo = { ...parseTodo(source.todo.text), source: sourceMeta(source.todo) };
+  const projects = parseProjects(source.projects.text);
+  const [projectManagement, paymentGuard, japanese, topics, market] = await Promise.all([
+    readProjectManagement(root),
+    readPaymentGuardSummary(root),
+    buildJapaneseSummaryFromSources(root, source),
+    parseTopics(root, warnings),
+    buildMarketSection(root, source.marketBrief),
+  ]);
+  return summarizeWorkbench({
+    version: WORKBENCH_VERSION,
+    generatedAt: new Date().toISOString(),
+    identity: { ...parseIdentity(source.identity.text), source: sourceMeta(source.identity) },
+    todo,
+    projects: {
+      items: projects,
+      flagship: parseFlagship(source.flagship.text, warnings),
+      coaching: parseCoaching(source.coaching.text, source.coachingLog.text, warnings),
+      source: sourceMeta(source.projects),
+      flagshipSource: sourceMeta(source.flagship),
+      coachingSource: sourceMeta(source.coaching),
+      coachUrl: "http://127.0.0.1:5174/",
+      coachClientUrl: "https://infans-coach.github.io/life-coach-client/",
+    },
+    projectManagement,
+    paymentGuard,
+    health: buildHealthSummaryFromSources(source, todo.mainlines),
+    japanese,
+    library: { items: topics },
+    market,
+    warnings,
+  });
+}
+
 export async function scanWorkbenchSummary(vaultRoot) {
-  return summarizeWorkbench(await scanVault(vaultRoot));
+  const root = path.resolve(vaultRoot);
+  const now = Date.now();
+  if (summaryCache?.root === root && summaryCache.value && (now - summaryCache.at) < SCAN_CACHE_TTL_MS) {
+    return summaryCache.value;
+  }
+  if (summaryCache?.root === root && summaryCache.promise) {
+    return summaryCache.promise;
+  }
+  const promise = scanWorkbenchSummaryUncached(root).then((value) => {
+    summaryCache = { root, at: Date.now(), value, promise: null };
+    return value;
+  }).catch((error) => {
+    if (summaryCache?.root === root && summaryCache.promise === promise) {
+      summaryCache = summaryCache.value ? { root, at: summaryCache.at, value: summaryCache.value, promise: null } : null;
+    }
+    throw error;
+  });
+  summaryCache = { root, at: now, value: summaryCache?.root === root ? summaryCache.value : null, promise };
+  return promise;
 }
 
 export async function scanWorkbenchSection(vaultRoot, section) {

@@ -213,6 +213,29 @@ struct SecretaryChatModelOption: Codable, Identifiable, Equatable, Sendable {
     let label: String
 }
 
+enum SecretaryOrdinaryChannelSwitch {
+    static let unconfiguredBackend = "unconfigured"
+    static let backends = [unconfiguredBackend]
+    static let listTitle = "一对一模型"
+
+    static func allowedBackends(declared: [String]?) -> [String] {
+        _ = declared
+        return backends
+    }
+
+    static func entryLabel(backend: String, secretaryID: String) -> String {
+        _ = backend
+        _ = secretaryID
+        return "未配置"
+    }
+
+    static func resolvedBackend(_ raw: String?, secretaryID: String) -> String {
+        _ = raw
+        _ = secretaryID
+        return unconfiguredBackend
+    }
+}
+
 struct SecretaryChatUsage: Codable, Equatable, Sendable {
     let openrouter: SecretaryChatProviderUsage
     let cursor: SecretaryChatProviderUsage
@@ -1211,6 +1234,12 @@ struct SecretaryConversationUnreadState: Codable, Equatable, Sendable {
 
     func isUnread(_ summary: SecretaryChatConversationSummary) -> Bool {
         guard let last = summary.lastMessage, last.sender.kind != "user" else { return false }
+        return readMessageIDs[summary.id] != last.id
+    }
+
+    /// 已读记录没有变化时不要重新赋值，否则每次对账都会通知界面重建一次。
+    func needsReadMark(_ summary: SecretaryChatConversationSummary) -> Bool {
+        guard let last = summary.lastMessage else { return false }
         return readMessageIDs[summary.id] != last.id
     }
 

@@ -6,6 +6,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { WorkbenchWriteError } from "./workbench-errors.mjs";
 import { SECRETARY_ATTACHMENTS_DIR } from "./vault-paths.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 
 export const SECRETARY_ATTACHMENTS_DIR_RELATIVE = SECRETARY_ATTACHMENTS_DIR;
 export const MAX_ATTACHMENTS_PER_TURN = 4;
@@ -209,8 +210,12 @@ async function writePlaintextSecretaryAttachmentUnlocked(vaultRoot, input) {
     createdAt: input.meta?.createdAt || new Date().toISOString(),
   }, id, storedName);
   try {
-    await atomicWritePrivate(absolute, data);
-    await atomicWritePrivate(metaPath, Buffer.from(`${JSON.stringify({ ...meta, storedName }, null, 2)}\n`, "utf8"));
+    await withVaultFileWrite(vaultRoot, attachmentVaultPath(id, storedName), async (target) => {
+      await atomicWritePrivate(target, data);
+    });
+    await withVaultFileWrite(vaultRoot, path.posix.join(SECRETARY_ATTACHMENTS_DIR_RELATIVE, `${id}.json`), async (target) => {
+      await atomicWritePrivate(target, Buffer.from(`${JSON.stringify({ ...meta, storedName }, null, 2)}\n`, "utf8"));
+    });
   } catch (error) {
     await fs.rm(absolute, { force: true }).catch(() => undefined);
     await fs.rm(metaPath, { force: true }).catch(() => undefined);

@@ -2292,7 +2292,7 @@ export type CronMonitorSnapshot = {
   error?: string;
 };
 
-export type JapanActivity = {
+export type LocalActivity = {
   id: string;
   name: string;
   filterTag: "ACG" | "历史人文" | "AI 新知";
@@ -2315,14 +2315,14 @@ export type JapanActivity = {
   hasPlaybook: boolean;
 };
 
-export type JapanActivitiesSnapshot = {
+export type LocalActivitiesSnapshot = {
   observedAt: string;
   today: string;
   updatedAt: string;
   scope: string;
-  activities: JapanActivity[];
-  playbooks: Array<JapanActivityGuideSummary & { updatedAt: string; sourcePath: string }>;
-  attended: Array<JapanActivityGuideSummary & { sourcePath: string }>;
+  activities: LocalActivity[];
+  playbooks: Array<LocalActivityGuideSummary & { updatedAt: string; sourcePath: string }>;
+  attended: Array<LocalActivityGuideSummary & { sourcePath: string }>;
   sourcePath: string;
 };
 
@@ -2356,7 +2356,7 @@ export type HostedActivitiesSnapshot = {
   registrations: HostedActivityRegistration[];
 };
 
-export type JapanActivityGuideImage = {
+export type LocalActivityGuideImage = {
   imageUrl: string;
   imageAlt: string;
   imageSourceLabel: string;
@@ -2364,7 +2364,7 @@ export type JapanActivityGuideImage = {
   imageCredit: string;
 };
 
-export type JapanActivityGuideSummary = JapanActivityGuideImage & {
+export type LocalActivityGuideSummary = LocalActivityGuideImage & {
   id: string;
   name: string;
   shareName?: string;
@@ -2372,7 +2372,7 @@ export type JapanActivityGuideSummary = JapanActivityGuideImage & {
   status: string;
 };
 
-export type JapanActivityGuideDocument = JapanActivityGuideSummary & {
+export type LocalActivityGuideDocument = LocalActivityGuideSummary & {
   description: string;
   updatedAt: string;
   markdown: string;
@@ -2861,6 +2861,14 @@ export type WorkbenchSnapshot = {
         } | null;
         stuckNote: string;
       } | null;
+      /** 平衡页好时光：来自当前周报「好时光与回能」，不是校准按线旧表。 */
+      weeklyGoodTimes?: Array<{
+        text: string;
+        lean: "回能" | "耗能" | "中性" | null;
+        dates: string[];
+        note: string;
+        evidence: string;
+      }>;
       /** 与 mind 共用的正式近期收口，供人生平衡页显示。 */
       recentAssessment?: Pick<RecentWellbeingAssessment, "entries">;
       /** H5：奥德赛三方案结构（评分可由人填） */
@@ -2971,12 +2979,10 @@ export type WorkbenchSummary = Pick<WorkbenchSnapshot, "version" | "generatedAt"
       sourceTitle: string;
     } | null;
   };
-  library: Pick<LibrarySectionData, "books" | "completedBooks" | "courses" | "games" | "writing" | "learning"> & {
-    latestWriting: LibraryItem | null;
+  library: {
     topics: Array<{ id: string; topicId?: string; title: string; description: string; tip?: string; sourcePath: string }>;
   };
   market: Pick<MarketsSectionData, "status" | "headline"> & {
-    eventsCount: number;
     topEvents: Array<{ id: string; title: string; category: string; signalTags?: string[] }>;
     aiHotspots: Array<{ id: string; title: string; category: string }>;
     date?: string | null;

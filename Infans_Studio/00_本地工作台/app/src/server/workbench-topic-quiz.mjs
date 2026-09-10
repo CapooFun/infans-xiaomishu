@@ -5,6 +5,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { DIR_TOPICS, WORKBENCH_DERIVED_DIR } from "./vault-paths.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 
 const QUIZ_STATE_RELATIVE = path.posix.join(WORKBENCH_DERIVED_DIR, "topic-daily-quiz.json");
 const TONGJIAN_OVERVIEW = path.posix.join(DIR_TOPICS, "学习中", "资治通鉴", "资治通鉴_总览.md");
@@ -40,11 +41,13 @@ async function readJsonSafe(absolute, fallback) {
   }
 }
 
-async function writeJsonAtomic(absolute, data) {
-  await fs.mkdir(path.dirname(absolute), { recursive: true });
-  const temporary = `${absolute}.infans-tmp`;
-  await fs.writeFile(temporary, `${JSON.stringify(data, null, 2)}\n`, "utf8");
-  await fs.rename(temporary, absolute);
+async function writeJsonAtomic(vaultRoot, relativePath, data) {
+  await withVaultFileWrite(vaultRoot, relativePath, async (absolute) => {
+    await fs.mkdir(path.dirname(absolute), { recursive: true });
+    const temporary = `${absolute}.infans-tmp`;
+    await fs.writeFile(temporary, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+    await fs.rename(temporary, absolute);
+  });
 }
 
 export function parseTongjianProgress(overviewText = "") {
@@ -99,62 +102,11 @@ export function buildExplainSeed(quiz) {
   ].filter(Boolean).join("\n");
 }
 
-export async function getDailyTopicQuiz(vaultRoot, topicId) {
-  const id = String(topicId || "").trim();
-  if (!id || id !== TONGJIAN_TOPIC_ID) {
-    return { available: false, reason: "这个专题还没有今日一问题库" };
-  }
-
-  const overviewAbs = path.resolve(vaultRoot, TONGJIAN_OVERVIEW);
-  const bankAbs = path.resolve(vaultRoot, TONGJIAN_BANK);
-  const stateAbs = path.resolve(vaultRoot, QUIZ_STATE_RELATIVE);
-
-  const [overviewText, bankRaw, stateRaw] = await Promise.all([
-    fs.readFile(overviewAbs, "utf8"),
-    readJsonSafe(bankAbs, null),
-    readJsonSafe(stateAbs, { byTopic: {} }),
-  ]);
-
-  const items = Array.isArray(bankRaw?.items) ? bankRaw.items : [];
-  if (!items.length) return { available: false, reason: "题库是空的" };
-
-  const progress = parseTongjianProgress(overviewText);
-  const dateKey = tokyoDateKey();
-  const topicState = stateRaw.byTopic?.[id] || {};
-  let questionId = topicState.date === dateKey ? topicState.questionId : null;
-  let item = questionId ? items.find((row) => row.id === questionId) : null;
-
-  if (!item) {
-    const recentIds = Array.isArray(topicState.recentIds) ? topicState.recentIds : [];
-    item = selectQuizItem(items, progress, dateKey, recentIds);
-    if (!item) return { available: false, reason: "当前进度附近没有可抽的题" };
-    const nextRecent = [item.id, ...recentIds.filter((x) => x !== item.id)].slice(0, RECENT_KEEP);
-    const nextState = {
-      byTopic: {
-        ...(stateRaw.byTopic || {}),
-        [id]: {
-          date: dateKey,
-          questionId: item.id,
-          recentIds: nextRecent,
-          progress,
-        },
-      },
-    };
-    await writeJsonAtomic(stateAbs, nextState);
-  }
-
+export async function getDailyTopicQuiz(_vaultRoot, topicId) {
   return {
-    available: true,
-    topicId: id,
-    date: dateKey,
-    progress,
-    window: WINDOW,
-    questionId: item.id,
-    season: item.season,
-    lecture: item.lecture,
-    title: item.title,
-    question: item.question,
-    lectureLabel: `第${item.season}季 · 第${String(item.lecture).padStart(3, "0")}讲`,
-    explainSeed: buildExplainSeed(item),
+    available: false,
+    paused: true,
+    topicId: String(topicId || "").trim() || undefined,
+    reason: "今日一问已暂停，不再抽题、不再写派生文件",
   };
 }

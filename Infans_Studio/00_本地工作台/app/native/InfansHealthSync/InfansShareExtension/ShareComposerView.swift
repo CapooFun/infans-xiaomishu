@@ -13,7 +13,7 @@ final class ShareComposerModel: ObservableObject {
         case failed(String)
     }
 
-    @Published private(set) var payload = SharePayload(url: "", title: "", text: "", sourceApp: "", images: [], loadError: nil)
+    @Published private(set) var payload = SharePayload(url: "", title: "", text: "", sourceApp: "", attachments: [], loadError: nil)
     @Published var note = ""
     @Published private(set) var phase: Phase = .loading
     let quickShare = !SecretarySharedConfiguration.usesDetailedSharing
@@ -28,7 +28,14 @@ final class ShareComposerModel: ObservableObject {
     }
 
     var contentSummary: String {
-        if !payload.images.isEmpty { return payload.images.count == 1 ? payload.images[0].attachment.fileName : "\(payload.images.count) 张原图" }
+        if payload.attachments.count == 1 { return payload.attachments[0].attachment.fileName }
+        if !payload.files.isEmpty && payload.images.isEmpty {
+            return "\(payload.files.count) 个文件"
+        }
+        if !payload.images.isEmpty && payload.files.isEmpty {
+            return "\(payload.images.count) 张原图"
+        }
+        if !payload.attachments.isEmpty { return "\(payload.attachments.count) 个附件" }
         if !payload.title.isEmpty { return payload.title }
         if !payload.url.isEmpty { return payload.url }
         return payload.text
@@ -54,7 +61,7 @@ final class ShareComposerModel: ObservableObject {
         guard phase == .loading else { return }
         payload = await SharePayloadLoader.load(from: extensionContext.inputItems)
         if let loadError = payload.loadError { phase = .failed(loadError) }
-        else { phase = payload.hasSupportedContent ? .ready : .failed("这次没有读到可以收下的网址、文字或照片。") }
+        else { phase = payload.hasSupportedContent ? .ready : .failed("这次没有读到可以收下的网址、文字、照片或文件。") }
         if quickShare && canSend { await send() }
     }
 
@@ -75,14 +82,14 @@ final class ShareComposerModel: ObservableObject {
                     text: payload.text,
                     note: note,
                     source: source,
-                    sourceSemantic: payload.images.isEmpty ? .sharedContent : .photoShare,
+                    sourceSemantic: payload.sourceSemantic,
                     sourceApp: payload.sourceApp,
                     deviceID: SecretarySharedConfiguration.deviceID(),
                     deviceName: UIDevice.current.name,
-                    attachments: payload.images.map(\.attachment)
+                    attachments: payload.attachments.map(\.attachment)
                 )
                 guard item.isValid else { throw YingningIntakeError.invalidContent }
-                _ = try await service.enqueue(item, attachmentPayloads: payload.images)
+                _ = try await service.enqueue(item, attachmentPayloads: payload.attachments)
                 queuedItem = item
             }
             let serverURL = SecretarySharedConfiguration.mailboxServerURL()
@@ -349,7 +356,7 @@ struct ShareComposerView: View {
                         .resizable().scaledToFill()
                         .frame(width: 44, height: 44).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 } else {
-                    Image(systemName: model.payload.url.isEmpty ? "text.quote" : "link")
+                    Image(systemName: model.payload.files.isEmpty ? (model.payload.url.isEmpty ? "text.quote" : "link") : "doc.richtext")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color(red: 0.76, green: 0.91, blue: 0.84))
                 .frame(width: 30, height: 30)

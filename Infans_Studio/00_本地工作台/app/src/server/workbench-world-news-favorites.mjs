@@ -9,13 +9,13 @@ import {
   worldNewsHistoryDir,
 } from "./vault-paths.mjs";
 import { WorkbenchWriteError } from "./workbench-errors.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 
 const MAX_FAVORITES = 400;
 const LANES = new Set(["finance", "ai", "games", "japan"]);
 const SIGNALS = new Set(["like", "dislike"]);
 const AS_OF_RE = /^\d{4}-\d{2}-\d{2}$/;
 const EVENT_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/;
-let writeQueue = Promise.resolve();
 
 export function worldNewsFavoriteKey(lane, asOf, eventId) {
   return `${lane}:${asOf}:${eventId}`;
@@ -51,9 +51,9 @@ function emptySnapshot() {
   return { schemaVersion: 1, items: [] };
 }
 
-async function readStored(vaultRoot) {
+async function readStoredFrom(absolute) {
   try {
-    const raw = JSON.parse(await fs.readFile(worldNewsFavoritesPath(vaultRoot), "utf8"));
+    const raw = JSON.parse(await fs.readFile(absolute, "utf8"));
     const seen = new Set();
     const items = [];
     for (const candidate of Array.isArray(raw?.items) ? raw.items : []) {
@@ -70,8 +70,11 @@ async function readStored(vaultRoot) {
   }
 }
 
-async function writeStored(vaultRoot, items) {
-  const absolute = worldNewsFavoritesPath(vaultRoot);
+async function readStored(vaultRoot) {
+  return readStoredFrom(worldNewsFavoritesPath(vaultRoot));
+}
+
+async function writeStoredTo(absolute, items) {
   await fs.mkdir(path.dirname(absolute), { recursive: true });
   const temporary = `${absolute}.${process.pid}.${Date.now()}.infans-tmp`;
   try {
@@ -157,11 +160,11 @@ export async function writeWorldNewsFavorite(vaultRoot, payload = {}) {
     throw new WorkbenchWriteError("只能收藏或不喜欢", 400, "INVALID_WORLD_NEWS_REACTION");
   }
   const key = worldNewsFavoriteKey(lane, asOf, eventId);
-  const operation = writeQueue.then(async () => {
-    const current = await readStored(vaultRoot);
+  return withVaultFileWrite(vaultRoot, WORLD_NEWS_FAVORITES_PATH, async (absolute) => {
+    const current = await readStoredFrom(absolute);
     if (!payload.saved) {
       const next = { schemaVersion: 1, items: current.items.filter((item) => item.key !== key) };
-      if (next.items.length !== current.items.length) await writeStored(vaultRoot, next.items);
+      if (next.items.length !== current.items.length) await writeStoredTo(absolute, next.items);
       return next;
     }
     const found = await findWorldNewsEvent(vaultRoot, { lane, asOf, eventId });
@@ -174,9 +177,7 @@ export async function writeWorldNewsFavorite(vaultRoot, payload = {}) {
       savedAt: existing?.signal === signal ? existing.savedAt : new Date().toISOString(),
     };
     const nextItems = [saved, ...current.items.filter((item) => item.key !== key)].slice(0, MAX_FAVORITES);
-    await writeStored(vaultRoot, nextItems);
+    await writeStoredTo(absolute, nextItems);
     return { schemaVersion: 1, items: nextItems };
   });
-  writeQueue = operation.catch(() => undefined);
-  return operation;
 }

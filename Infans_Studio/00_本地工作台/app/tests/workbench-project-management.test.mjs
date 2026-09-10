@@ -12,6 +12,7 @@ import {
   parseTaskLine,
   readProjectManagement,
   replaceTaskPriority,
+  normalizeTaskLineText,
   isTaskInNearTerm,
   isAiOwnedTask,
   isAiExecutableTask,
@@ -551,6 +552,24 @@ test("SABC 标题隐藏计划和状态尾注，进展时间不冒充排期", () 
   assert.equal(progressing.text.includes("状态：进行中｜进展时间：2026-09-06"), true);
 });
 
+test("计划日期整词尾注不进展示标题，仍能解析排期", () => {
+  const withTime = parseTaskLine(
+    "- [ ] 本人：验收：A：9/10 · 给罗勒浇水｜ID：demo-garden-water-acceptance-20260910｜状态：待开始｜父级：demo-garden-water-20260910｜计划日期：2026-09-10",
+    { sourcePath: PROJECT_PATH, sourceKind: "project", projectId: "garden-demo", todayKey: "2026-09-10" },
+  );
+  assert.equal(withTime.displayText, "给罗勒浇水");
+  assert.equal(/计划日期/u.test(withTime.displayText), false);
+  assert.deepEqual(withTime.date, { start: "2026-09-10", end: "2026-09-10", label: "9/10" });
+
+  const tailOnly = parseTaskLine(
+    "- [ ] 本人：验收：A：给罗勒浇水｜ID：demo-garden-water-acceptance-20260910｜功能：demo-garden｜状态：待开始｜计划日期：2026-09-10",
+    { sourcePath: PROJECT_PATH, sourceKind: "project", projectId: "garden-demo", todayKey: "2026-09-10" },
+  );
+  assert.equal(tailOnly.displayText, "给罗勒浇水");
+  assert.equal(/计划日期/u.test(tailOnly.displayText), false);
+  assert.deepEqual(tailOnly.date, { start: "2026-09-10", end: "2026-09-10", label: "2026-09-10" });
+});
+
 test("中央旧标题可兼容，但长期在推不混入当前任务", () => {
   const parsed = parseCentralTasks(`# 待办\n\n## 今天 / 本周\n\n- [ ] A：无日期兼容\n\n## 长期在推\n\n- [ ] S：里程碑｜ID：milestone`);
   assert.equal(parsed.current.length, 1);
@@ -574,4 +593,42 @@ test("项目通过权威入口读取产品功能树，并把任务关联到功�
   assert.equal(registered.management.doing[0].featureId, "release-feedback");
   assert.deepEqual(registered.management.doing[0].featureIds, ["release-feedback"]);
   assert.equal(result.warnings.some((item) => item.code === "FEATURE_TREE_FILE_MISSING"), false);
+});
+
+test("历史等级尾注和行首错位象限收成现行文法，旧尾巴不进展示标题", () => {
+  assert.equal(
+    normalizeTaskLineText("公司：开发：把游戏发售记进游玩娱乐｜ID：a｜功能：b｜完成时间：2026-09-09｜等级：C"),
+    "公司：开发：把游戏发售记进游玩娱乐｜ID：a｜功能：b｜完成时间：2026-09-09",
+  );
+  assert.equal(
+    normalizeTaskLineText("本人：验收：阅读正文时工作线会收起｜ID：a｜父级：b｜功能：c｜状态：待开始｜计划日期：2026-09-09｜等级：A"),
+    "本人：验收：A：阅读正文时工作线会收起｜ID：a｜父级：b｜功能：c｜状态：待开始｜计划日期：2026-09-09",
+  );
+  assert.equal(
+    normalizeTaskLineText("公司：开发：阳台浇水提醒｜ID：a｜功能：b｜SABC：B｜完成时间：2026-09-02"),
+    "公司：开发：B：阳台浇水提醒｜ID：a｜功能：b｜完成时间：2026-09-02",
+  );
+  assert.equal(
+    normalizeTaskLineText("本人：A：验收：核对示例图许可｜ID：a｜状态：待开始"),
+    "本人：验收：A：核对示例图许可｜ID：a｜状态：待开始",
+  );
+  assert.equal(
+    normalizeTaskLineText("C：记下浇水间隔｜ID：a｜状态：完成", { defaultLane: "生活", defaultType: "待办" }),
+    "生活：待办：记下浇水间隔｜ID：a｜状态：完成",
+  );
+  assert.equal(
+    normalizeTaskLineText("B：准备换盆材料清单｜ID：a｜状态：完成", { defaultLane: "生活", defaultType: "待办" }),
+    "生活：待办：B：准备换盆材料清单｜ID：a｜状态：完成",
+  );
+  const leaked = parseTaskLine(
+    "- [ ] 公司：修复：修示例页闪烁｜SABC：A｜ID：x｜功能：y",
+    { sourcePath: PROJECT_PATH, sourceKind: "project", projectId: "garden-demo" },
+  );
+  assert.equal(leaked.displayText, "修示例页闪烁");
+  assert.equal(/SABC|等级/u.test(leaked.displayText), false);
+  assert.equal(leaked.priority, "A");
+  assert.equal(
+    replaceTaskPriority("公司：修复：标题｜ID：x｜等级：C", "A"),
+    "公司：修复：A：标题｜ID：x",
+  );
 });

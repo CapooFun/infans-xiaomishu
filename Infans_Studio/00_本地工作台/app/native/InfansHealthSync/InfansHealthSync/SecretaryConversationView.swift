@@ -126,6 +126,7 @@ struct SecretaryConversationView: View {
     @ObservedObject private var speech = SecretarySpeechController.shared
     @Environment(\.secretarySpeechImmersion) private var immersiveSpeechActive
     @State private var isNearBottom = true
+    @State private var readingAnchor: String?
     @State private var correctionTarget: SecretaryVoiceCorrectionTarget?
 
     private let bottomAnchorID = "secretary-conversation-bottom"
@@ -199,15 +200,27 @@ struct SecretaryConversationView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 24)
                     .padding(.bottom, 18)
+                    .frame(maxWidth: .infinity, minHeight: viewport.size.height, alignment: .top)
+                    .contentShape(Rectangle())
+                    .background {
+                        SecretaryConversationScrollKeyboardBridge()
+                    }
+                    .simultaneousGesture(
+                        TapGesture().onEnded {
+                            SecretaryKeyboard.resign()
+                        }
+                    )
                 }
                 .coordinateSpace(name: "secretary-conversation-scroll")
-                .scrollPosition(
-                    id: Binding(
-                        get: { store.scrollAnchor },
-                        set: { store.updateScrollAnchor($0) }
-                    )
-                )
+                .scrollPosition(id: $readingAnchor)
+                .task(id: store.currentConversationId) {
+                    readingAnchor = store.restoredScrollAnchor()
+                }
+                .onChange(of: readingAnchor) { _, anchor in
+                    store.recordScrollAnchor(anchor)
+                }
                 .scrollDismissesKeyboard(.interactively)
+                .scrollBounceBehavior(.always)
                 .scrollIndicators(.hidden)
                 .onPreferenceChange(SecretaryConversationBottomOffsetKey.self) { bottomOffset in
                     isNearBottom = bottomOffset <= viewport.size.height + bottomFollowDistance
@@ -361,6 +374,30 @@ struct SecretaryConversationView: View {
     }
 }
 
+/// 拼音键盘没有收起键时，短会话也要能下滑把键盘带走。
+private struct SecretaryConversationScrollKeyboardBridge: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            var current: UIView? = uiView.superview
+            while let view = current {
+                if let scrollView = view as? UIScrollView {
+                    scrollView.alwaysBounceVertical = true
+                    scrollView.keyboardDismissMode = .interactive
+                    return
+                }
+                current = view.superview
+            }
+        }
+    }
+}
+
 private struct SecretaryMessageRow: View {
     @ObservedObject var store: SecretaryChatStore
     @ObservedObject var speech: SecretarySpeechController
@@ -428,7 +465,7 @@ private struct SecretaryMessageRow: View {
                 receiptRow
             }
 
-            if debugMode, let pendingError, deliveryState == .failedRetryPending {
+            if let pendingError, deliveryState == .failedRetryPending, showsPendingError {
                 Text(pendingError)
                     .font(.caption2)
                     .foregroundStyle(Color.secretaryAmber.opacity(0.84))
@@ -522,11 +559,11 @@ private struct SecretaryMessageRow: View {
             } label: {
                 HStack(spacing: 5) {
                     Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
-                    Text("未送达 · 点一下重试")
+                    Text(isVoiceTranscriptionFailure ? "听写没成功 · 点一下重试" : "未送达 · 点一下重试")
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("消息未送达，点一下重试")
+            .accessibilityLabel(isVoiceTranscriptionFailure ? "听写没成功，点一下重试" : "消息未送达，点一下重试")
             .font(.system(size: 10, weight: .medium, design: .rounded))
             .foregroundStyle(Color.secretaryAmber)
         } else if displayedDeliveryState == .replyUnavailable {
@@ -542,6 +579,14 @@ private struct SecretaryMessageRow: View {
 
     private var deliveryState: SecretaryChatLocalDeliveryState? {
         SecretaryChatLocalDeliveryState(rawValue: message.deliveryStage)
+    }
+
+    private var isVoiceTranscriptionFailure: Bool {
+        pendingError?.contains("还没识别好") == true
+    }
+
+    private var showsPendingError: Bool {
+        isVoiceTranscriptionFailure || debugMode
     }
 
     private var displayedDeliveryState: SecretaryChatLocalDeliveryState? {

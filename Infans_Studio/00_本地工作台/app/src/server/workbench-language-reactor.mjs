@@ -5,6 +5,7 @@ import { WorkbenchWriteError } from "./workbench-errors.mjs";
 import { formatFileCreatedAt } from "./workbench-wechat-bills.mjs";
 import { tokyoDateKey, tokyoDay } from "../tokyo-time.mjs";
 import { LANGUAGE_REACTOR_DERIVED, LANGUAGE_REACTOR_SOURCE } from "./vault-paths.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 
 const TARGET_PATH = LANGUAGE_REACTOR_SOURCE;
 const DERIVED_RELATIVE = LANGUAGE_REACTOR_DERIVED;
@@ -152,7 +153,9 @@ export function languageReactorDerivedPath(vaultRoot) {
 
 export async function writeLanguageReactorDerived(vaultRoot, data) {
   const normalized = { ...data, schemaVersion: Number(data?.schemaVersion) || 1 };
-  await atomicWriteFile(languageReactorDerivedPath(vaultRoot), `${JSON.stringify(normalized)}\n`, 0o600);
+  await withVaultFileWrite(vaultRoot, DERIVED_RELATIVE, async (absolute) => {
+    await atomicWriteFile(absolute, `${JSON.stringify(normalized)}\n`, 0o600);
+  });
   return normalized;
 }
 
@@ -284,7 +287,9 @@ export function createLanguageReactorImportService(vaultRoot, options = {}) {
       const target = path.join(root, TARGET_PATH);
       if (await fingerprintFile(target) !== item.expectedHash) throw new WorkbenchWriteError("Language Reactor 收藏已被外部修改，本次导入已停止", 409, "WRITE_CONFLICT");
       await writeLanguageReactorDerived(root, item.data);
-      await atomicWriteFile(target, item.content, 0o600);
+      await withVaultFileWrite(root, TARGET_PATH, async (absolute) => {
+        await atomicWriteFile(absolute, item.content, 0o600);
+      });
       return { ok: true, targetPath: TARGET_PATH, derivedPath: DERIVED_RELATIVE };
     },
   };

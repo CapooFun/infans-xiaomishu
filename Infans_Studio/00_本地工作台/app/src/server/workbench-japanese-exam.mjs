@@ -35,6 +35,7 @@ import {
 import { buildJapaneseCourseProgress } from "./workbench-japanese-course-progress.mjs";
 
 import { JP_EXAM_SKILL, JP_EXPLORATION_PROGRESS, JP_MISTAKES } from "./vault-paths.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 
 export const EXPLORATION_PROGRESS_PATH = JP_EXPLORATION_PROGRESS;
 export const EXPLORATION_MISTAKES_PATH = JP_MISTAKES;
@@ -86,9 +87,10 @@ async function readJson(root, relativePath, fallback) {
 }
 
 async function writeJson(root, relativePath, data) {
-  const absolute = path.join(root, relativePath);
-  await fs.mkdir(path.dirname(absolute), { recursive: true });
-  await fs.writeFile(absolute, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+  await withVaultFileWrite(root, relativePath, async (absolute) => {
+    await fs.mkdir(path.dirname(absolute), { recursive: true });
+    await fs.writeFile(absolute, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+  });
 }
 
 export function parseExplorationProgress(markdown = "") {
@@ -575,21 +577,22 @@ export async function readExamSkill(root) {
 
 async function appendMarkdownSection(root, relativePath, section) {
   if (!section?.trim()) return;
-  const absolute = path.join(root, relativePath);
-  let existing = "";
-  try {
-    existing = await fs.readFile(absolute, "utf8");
-  } catch {
-    existing = "";
-  }
-  // drop empty placeholder
-  existing = existing.replace(/（暂无活跃错题。）\n?/g, "").replace(/（尚无正式全卷或专项摘要。）\n?/g, "");
-  const parts = existing.split(/^##\s+/m);
-  const header = parts[0] || "";
-  const body = parts.slice(1).map((block) => `## ${block}`.trimEnd());
-  const next = `${header.trimEnd()}\n\n${section.trim()}\n\n${body.join("\n\n")}`.trim() + "\n";
-  await fs.mkdir(path.dirname(absolute), { recursive: true });
-  await fs.writeFile(absolute, next, "utf8");
+  await withVaultFileWrite(root, relativePath, async (absolute) => {
+    let existing = "";
+    try {
+      existing = await fs.readFile(absolute, "utf8");
+    } catch {
+      existing = "";
+    }
+    // drop empty placeholder
+    existing = existing.replace(/（暂无活跃错题。）\n?/g, "").replace(/（尚无正式全卷或专项摘要。）\n?/g, "");
+    const parts = existing.split(/^##\s+/m);
+    const header = parts[0] || "";
+    const body = parts.slice(1).map((block) => `## ${block}`.trimEnd());
+    const next = `${header.trimEnd()}\n\n${section.trim()}\n\n${body.join("\n\n")}`.trim() + "\n";
+    await fs.mkdir(path.dirname(absolute), { recursive: true });
+    await fs.writeFile(absolute, next, "utf8");
+  });
 }
 
 export async function commitExamEvidence(root, result) {

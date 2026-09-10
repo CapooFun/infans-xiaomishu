@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { cleanInline, extractSection, invalidateVaultScanCache, parseHealth, parseJapanese, parseMarketBrief, parseMarketEventTopicDocument, flattenSignalTags, parseTodayTrainingPlan, parseWeekTrainingPlan, parseSessionExercises, buildCoachHints, parseTopSetLoad, parseSetVolume, deriveTrainingVolume, deriveStrengthBaselineTable, deriveProgressionAdvice, deriveMuscleBalance, deriveRecoveryLoad, parseStageStartDate, deriveMesocyclePosition, parseDiaryWorkIntensity, parseMindSignals, parseDiaryRecoveryLine, deriveRecoveryPercents, aggregateLineEnergyCandidates, parseLifeDesignLog, parseCompassDocs, parseCompassCoherence, parseOdysseyPlan, parseLifeToolbox, parseMindScales, parseRecentWellbeing, parseHealthStatusReport, parseHealthReports, parseMindDemoSignals, parseInterventionCardLibrary, recommendInterventionCards, parsePlanningItems, parseTrainingExerciseRow, parseRpeRirToken, deriveSessionIntensity, readMarketBriefByDate, readWritingById, scanVault, scanWorkbenchSection, scanWorkbenchSummary, searchVault, SOURCES, splitMarkdownRow, staleMusclesFromSessions, summarizeWorkbench, trimAppleHealthForSection, trimLanguagesForSection, WORKBENCH_VERSION } from "../src/server/workbench-data.mjs";
+import { cleanInline, extractSection, invalidateVaultScanCache, parseHealth, parseJapanese, parseMarketBrief, parseMarketEventTopicDocument, flattenSignalTags, parseTodayTrainingPlan, parseWeekTrainingPlan, parseSessionExercises, buildCoachHints, parseTopSetLoad, parseSetVolume, deriveTrainingVolume, deriveStrengthBaselineTable, deriveProgressionAdvice, deriveMuscleBalance, deriveRecoveryLoad, parseStageStartDate, deriveMesocyclePosition, parseDiaryWorkIntensity, parseMindSignals, parseDiaryRecoveryLine, deriveRecoveryPercents, aggregateLineEnergyCandidates, parseLifeDesignLog, parseCompassDocs, parseCompassCoherence, parseOdysseyPlan, parseLifeToolbox, parseMindScales, parseRecentWellbeing, parseHealthStatusReport, parseHealthReports, mapWeeklyGoodTimes, leanFromGoodTimeEffect, parseMindDemoSignals, parseInterventionCardLibrary, recommendInterventionCards, parsePlanningItems, parseTrainingExerciseRow, parseRpeRirToken, deriveSessionIntensity, readMarketBriefByDate, readWritingById, scanVault, scanWorkbenchSection, scanWorkbenchSummary, searchVault, SOURCES, SUMMARY_SOURCE_KEYS, splitMarkdownRow, staleMusclesFromSessions, summarizeWorkbench, trimAppleHealthForSection, trimLanguagesForSection, WORKBENCH_VERSION } from "../src/server/workbench-data.mjs";
 import { readHomePins, writeHomePins } from "../src/server/workbench-home-pins.mjs";
 import { applyHiddenCalendarEvents, readGanttHidden, writeGanttHidden, todoHideKey } from "../src/server/workbench-gantt-hidden.mjs";
 
@@ -323,7 +323,14 @@ test("summary stays small and excludes route detail payloads", async (t) => {
   assert.equal(summary.japanese.ankiSource, null);
   assert.equal(summary.japanese.dailySentence, null);
   assert.equal(summary.library.items, undefined);
-  assert.equal(summary.library.latestWriting.title, "完整日期文章");
+  assert.equal("latestWriting" in summary.library, false);
+  assert.equal("games" in summary.library, false);
+  assert.equal("learning" in summary.library, false);
+  assert.equal("books" in summary.library, false);
+  assert.equal("completedBooks" in summary.library, false);
+  assert.equal("courses" in summary.library, false);
+  assert.equal("writing" in summary.library, false);
+  assert.equal("eventsCount" in summary.market, false);
   assert.ok(Array.isArray(summary.library.topics));
   assert.ok(summary.library.topics.length >= 1);
   assert.equal(summary.library.topics.find((topic) => topic.title === "形象管理")?.topicId, "image-management");
@@ -1796,6 +1803,75 @@ test("scanVault short TTL cache and invalidate", async (t) => {
   invalidateVaultScanCache();
   const fresh = await scanVault(root, { force: true });
   assert.equal(fresh.todo.today.some((item) => item.text.includes("缓存探测")), true);
+});
+
+test("homepage summary scans only home fields and skips grammar cards and library catalogs", async (t) => {
+  const root = await fixture();
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  for (const key of ["grammarN5", "grammarN4", "grammarN3", "grammarN2", "weread", "languageReactor", "steamGames", "cultureWow"]) {
+    if (SOURCES[key]) await fs.rm(path.join(root, SOURCES[key]), { force: true });
+  }
+  invalidateVaultScanCache();
+  const summary = await scanWorkbenchSummary(root);
+  assert.equal(summary.japanese.progress.learned, 80);
+  assert.ok(summary.library.topics.some((topic) => topic.topicId === "image-management"));
+  assert.equal(summary.health.weight, "75.4 kg");
+  assert.equal("books" in summary.library, false);
+  assert.equal(SUMMARY_SOURCE_KEYS.includes("grammarN5"), false);
+  assert.equal(SUMMARY_SOURCE_KEYS.includes("weread"), false);
+  assert.equal(SUMMARY_SOURCE_KEYS.includes("languageReactor"), false);
+});
+
+test("homepage summary keeps short TTL cache and invalidate", async (t) => {
+  const root = await fixture();
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  invalidateVaultScanCache();
+  const first = await scanWorkbenchSummary(root);
+  const todoPath = path.join(root, SOURCES.todo);
+  const original = await fs.readFile(todoPath, "utf8");
+  await fs.writeFile(todoPath, original.replace("## 最近两天\n", "## 最近两天\n- [ ] 摘要缓存探测项\n"), "utf8");
+  const cached = await scanWorkbenchSummary(root);
+  assert.equal(cached.todo.today.some((item) => item.text.includes("摘要缓存探测")), false);
+  assert.equal(cached.generatedAt, first.generatedAt);
+  invalidateVaultScanCache();
+  const fresh = await scanWorkbenchSummary(root);
+  assert.equal(fresh.todo.today.some((item) => item.text.includes("摘要缓存探测")), true);
+});
+
+test("mapWeeklyGoodTimes turns weekly 好时光 rows into balance cards without inventing recharge", () => {
+  const report = parseHealthStatusReport(`---
+report_kind: weekly
+period_start: 2026-08-31
+period_end: 2026-09-06
+---
+# 当前身心周报
+
+## 一句话状态
+
+本周有局部轻松。
+
+## 好时光与回能
+
+| 内容 | 作用 | 依据 |
+|---|---|---|
+| 傍晚散步 | 提供局部轻松，夜里又回到产品 | 9/2 对话日记与日记 |
+| 未完成的杂事 | 有兴趣性，是否回能仍不确定 | 9/4 对话日记 |
+| 平台活动摘要 | 只能证明平台上有活动，不能写成这周哪天在享受 | 滚动摘要，无逐日精度 |
+| 朋友晚饭 | 回能 | 2026-08-28 日记 |
+`);
+  const cards = mapWeeklyGoodTimes(report);
+  assert.equal(leanFromGoodTimeEffect("提供局部轻松，夜里又回到产品"), "回能");
+  assert.equal(leanFromGoodTimeEffect("是否回能仍不确定"), "中性");
+  assert.equal(leanFromGoodTimeEffect("主线仍耗，挺耗"), "耗能");
+  assert.equal(cards[0]?.text, "傍晚散步");
+  assert.equal(cards[0]?.lean, "回能");
+  assert.deepEqual(cards[0]?.dates, ["2026-09-02"]);
+  assert.equal(cards[1]?.lean, "中性");
+  assert.deepEqual(cards[1]?.dates, ["2026-09-04"]);
+  assert.equal(cards[2]?.lean, "中性");
+  assert.deepEqual(cards[2]?.dates, []);
+  assert.equal(cards[3]?.lean, "回能");
+  assert.deepEqual(cards[3]?.dates, ["2026-08-28"]);
 });
 
 test("summary and snapshot omit activity stream", async (t) => {

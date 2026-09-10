@@ -1,16 +1,19 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
   createFrontendRefreshGate,
+  createFrontendRefreshRouteHandlers,
   frontendBuildIdFromHtml,
   frontendBuildIsStale,
   frontendHandoffTarget,
   isWorkbenchNavigationRequest,
   preservePreviousBuildAssets,
 } from "../src/server/workbench-frontend-refresh.mjs";
+import { createWorkbenchRouter } from "../src/server/workbench-router.mjs";
 
 test("only browser page navigations can trigger a deep refresh", () => {
   const request = (url, accept = "text/html", method = "GET") => ({ method, url, headers: { accept } });
@@ -128,4 +131,46 @@ test("a rebuild keeps exactly the previous manifest assets available for an old 
   assert.equal(await fs.readFile(path.join(next, "assets", "tools-old.js"), "utf8"), "old:tools-old.js");
   assert.equal(await fs.readFile(path.join(next, "assets", "index-old.js.br"), "utf8"), "old:index-old.js.br");
   await assert.rejects(fs.access(path.join(next, "assets", "orphan-older.js")));
+});
+
+function dispatch(router, { method = "GET", url = "/", headers = {} } = {}) {
+  return new Promise((resolve) => {
+    const responseHeaders = {};
+    const response = {
+      statusCode: 200,
+      setHeader(key, value) { responseHeaders[key] = value; },
+      getHeader(key) { return responseHeaders[key]; },
+      end(body) { resolve({ status: this.statusCode, body: String(body ?? ""), headers: responseHeaders }); },
+    };
+    router.handle({ method, url, headers }, response);
+  });
+}
+
+function mountRefreshRoutes(handlerOptions = {}) {
+  const router = createWorkbenchRouter();
+  const { handleFrontendRefresh, handleFrontendHandoff } = createFrontendRefreshRouteHandlers(handlerOptions);
+  router.use("/api/frontend-refresh", handleFrontendRefresh);
+  router.use("/__frontend-handoff", handleFrontendHandoff);
+  return router;
+}
+
+test("refresh and handoff HTTP handlers live in the unique route table", () => {
+  const routes = readFileSync(new URL("../src/server/workbench-routes.mjs", import.meta.url), "utf8");
+  const serve = readFileSync(new URL("../src/server/serve.mjs", import.meta.url), "utf8");
+  const plugin = readFileSync(new URL("../src/server/workbench-data-plugin.mjs", import.meta.url), "utf8");
+  assert.ok(routes.includes("createFrontendRefreshRouteHandlers"));
+  assert.ok(routes.includes('router.use("/api/frontend-refresh", handleFrontendRefresh);'));
+  assert.ok(routes.includes('router.use("/__frontend-handoff", handleFrontendHandoff);'));
+  assert.equal(serve.includes('router.use("/api/frontend-refresh"'), false);
+  assert.equal(serve.includes('router.use("/__frontend-handoff"'), false);
+  assert.equal(plugin.includes("createFrontendRefreshGate"), false);
+});
+
+test("Vite-style refresh POST reports no rebuild and never starts a production build", async () => {
+  const thin = mountRefreshRoutes();
+  const response = await dispatch(thin, { method: "POST", url: "/api/frontend-refresh" });
+  assert.equal(response.status, 200);
+  assert.deepEqual(JSON.parse(response.body), { ok: true, rebuilt: false, buildId: null });
+  const forbidden = await dispatch(thin, { method: "GET", url: "/api/frontend-refresh" });
+  assert.equal(forbidden.status, 405);
 });

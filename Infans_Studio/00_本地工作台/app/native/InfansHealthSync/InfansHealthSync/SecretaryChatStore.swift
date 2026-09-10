@@ -53,7 +53,6 @@ final class SecretaryChatStore: ObservableObject {
     @Published private(set) var presentedActionID: String?
     @Published private(set) var actionDecisionNotice: String?
     @Published private(set) var executionMetricsByConversation: [String: SecretaryConversationExecutionMetrics] = [:]
-    @Published var scrollAnchor: String?
 
     private let client: SecretaryChatClient
     private let voiceClient: SecretaryVoiceTranscriptionClient
@@ -75,6 +74,7 @@ final class SecretaryChatStore: ObservableObject {
     private var pendingTransmissionTask: Task<Void, Never>?
     private let voiceQueueAdmission = SecretaryVoiceQueueAdmission()
     private var voiceRecognitionHintsCache = ["银月"]
+    private var scrollAnchorPersistTask: Task<Void, Never>?
 
     init(
         client: SecretaryChatClient = SecretaryChatClient(),
@@ -198,6 +198,27 @@ final class SecretaryChatStore: ObservableObject {
         )
     }
     var currentControls: SecretaryChatConversationState? { currentConversation?.chatState }
+    var currentOrdinaryBackend: String {
+        SecretaryOrdinaryChannelSwitch.resolvedBackend(
+            currentControls?.ordinaryBackend ?? bootstrap?.modelRuntime?.ordinary.selected,
+            secretaryID: displaySecretaryID
+        )
+    }
+    var ordinaryChannelSwitchBackends: [String] {
+        SecretaryOrdinaryChannelSwitch.allowedBackends(
+            declared: bootstrap?.protocolInfo.conversationMutation?.allowedOrdinaryBackends
+        )
+    }
+
+    func chooseOrdinaryBackend(_ backend: String) async {
+        let allowed = ordinaryChannelSwitchBackends
+        guard allowed.contains(backend) else {
+            managementError = "这个单聊模型通道没有出现在可用名单里。"
+            return
+        }
+        // 开源模型位只留空壳；点「未配置」不改默认，也不写入作者通道。
+    }
+
     var currentExecutionMetrics: SecretaryConversationExecutionMetrics? {
         guard let currentConversationId else { return nil }
         return executionMetricsByConversation[currentConversationId]
@@ -261,7 +282,9 @@ final class SecretaryChatStore: ObservableObject {
         guard chatIsActive, let conversation = currentConversation, conversation.id == currentConversationId,
               let last = conversation.messages.last,
               last.deliveryStage == SecretaryChatLocalDeliveryState.deviceAvailable.rawValue else { return }
-        unreadState.markRead(conversation.summary)
+        let summary = conversation.summary
+        guard unreadState.needsReadMark(summary) else { return }
+        unreadState.markRead(summary)
     }
 
     private func refreshConversationSummaries() async {
@@ -292,7 +315,6 @@ final class SecretaryChatStore: ObservableObject {
         currentConversationId = cached.currentConversationId
         currentConversation = cached.conversation ?? cached.currentConversationId.flatMap { cached.cachedConversations[$0] }
         draft = cached.currentConversationId.flatMap { cached.draftsByConversation[$0] } ?? cached.draft
-        scrollAnchor = cached.currentConversationId.flatMap { cached.scrollAnchorsByConversation[$0] }
         pendingTurns = cached.pendingTurns
         controlledActions = cached.controlledActions
         presentedActionID = nextPendingControlledAction?.actionId
@@ -486,12 +508,29 @@ final class SecretaryChatStore: ObservableObject {
         }
     }
 
-    func updateScrollAnchor(_ messageId: String?) {
-        scrollAnchor = messageId
-        if let currentConversationId {
-            scrollAnchorsByConversation[currentConversationId] = messageId
+    /// 阅读位置只由会话视图自己跟踪，不做成 @Published：滚动一次就通知整个界面重建，
+    /// 会让滚动位置重新对齐顶部那条消息，看起来像第一条气泡在闪。
+    func restoredScrollAnchor() -> String? {
+        currentConversationId.flatMap { scrollAnchorsByConversation[$0] }
+    }
+
+    func recordScrollAnchor(_ messageId: String?) {
+        guard let currentConversationId else { return }
+        // 切会话时视图可能还带着上一场的锚点，别把它记到新会话名下。
+        if let messageId, !messages.contains(where: { $0.id == messageId }) { return }
+        guard scrollAnchorsByConversation[currentConversationId] != messageId else { return }
+        scrollAnchorsByConversation[currentConversationId] = messageId
+        scheduleScrollAnchorPersist()
+    }
+
+    /// 滚动过程中每跨过一条消息都写一次磁盘会拖住主线程，落盘统一延后合并。
+    private func scheduleScrollAnchorPersist() {
+        scrollAnchorPersistTask?.cancel()
+        scrollAnchorPersistTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            self?.persist()
         }
-        persist()
     }
 
     func selectConversation(_ id: String) async {
@@ -658,7 +697,7 @@ final class SecretaryChatStore: ObservableObject {
         }
         if let cursorModel,
            mutation?.allowedCursorModels?.contains(cursorModel) != true {
-            managementError = "这个 Cursor 模型没有出现在 Mac 下发的可用名单里。"
+            managementError = "这个模型没有出现在电脑下发的可用名单里。"
             return
         }
         await updateCurrentConversation(
@@ -1088,6 +1127,7 @@ final class SecretaryChatStore: ObservableObject {
                 .filter { !$0.isFromCapoo && $0.deliveryStage == SecretaryChatLocalDeliveryState.deviceAvailable.rawValue }
                 .map(\.id)
         )
+        let pendingBefore = pendingTurns
         var merged = conversation.messages
 
         for mailboxMessage in snapshot.messages where mailboxMessage.conversationId == conversationId {
@@ -1120,6 +1160,14 @@ final class SecretaryChatStore: ObservableObject {
 
         for index in merged.indices { merged[index].sequence = index + 1 }
         merged = SecretaryChatRecovery.promotingReadReceipts(in: merged)
+
+        // 每三秒一次的信箱对账多数时候什么都没变。这时不能再往界面推一遍同样的消息，
+        // 否则聊天区被反复重建，顶部那条气泡会被重新对齐，看起来像在闪。
+        guard merged != conversation.messages || pendingTurns != pendingBefore else {
+            startPendingTransmissionWorkerIfNeeded()
+            return
+        }
+
         conversation.messages = merged
         conversation.messageCount = merged.count
         currentConversation = conversation
@@ -1612,12 +1660,13 @@ final class SecretaryChatStore: ObservableObject {
         if let currentConversationId, currentConversationId != conversation.id {
             saveCurrentLocalState()
         }
-        currentConversation = conversation
-        currentConversationId = conversation.id
+        if currentConversation != conversation { currentConversation = conversation }
+        if currentConversationId != conversation.id { currentConversationId = conversation.id }
         restoreLocalState(for: conversation.id)
         cachedConversations[conversation.id] = conversation
         upsertSummary(conversation.summary)
-        messages = conversation.messages.sorted { $0.sequence < $1.sequence }
+        let sorted = conversation.messages.sorted { $0.sequence < $1.sequence }
+        if messages != sorted { messages = sorted }
         if switchedConversation {
             presentedActionID = nil
             actionDecisionNotice = nil
@@ -1626,8 +1675,11 @@ final class SecretaryChatStore: ObservableObject {
     }
 
     private func upsertSummary(_ summary: SecretaryChatConversationSummary) {
-        conversationSummaries.removeAll { $0.id == summary.id }
-        conversationSummaries.insert(summary, at: 0)
+        // 摘要没变就别重排列表：每次对账都重排会连带整个界面重建一次。
+        if conversationSummaries.first != summary {
+            conversationSummaries.removeAll { $0.id == summary.id }
+            conversationSummaries.insert(summary, at: 0)
+        }
         if summary.id == currentConversationId { markVisibleConversationRead() }
     }
 
@@ -1658,10 +1710,11 @@ final class SecretaryChatStore: ObservableObject {
             }
         }
         conversation.messages = SecretaryChatRecovery.promotingReadReceipts(in: conversation.messages)
-        currentConversation = conversation
+        if currentConversation != conversation { currentConversation = conversation }
         cachedConversations[conversation.id] = conversation
         let before = pendingTurns
-        pendingTurns = SecretaryChatRecovery.reconciled(pending: pendingTurns, with: conversation)
+        let reconciledTurns = SecretaryChatRecovery.reconciled(pending: pendingTurns, with: conversation)
+        if pendingTurns != reconciledTurns { pendingTurns = reconciledTurns }
         let retainedIDs = Set(pendingTurns.map(\.messageId))
         cleanupLocalAttachments(
             before
@@ -1691,7 +1744,8 @@ final class SecretaryChatStore: ObservableObject {
                 merged.append(.localUserMessage(from: turn, sequence: (merged.map(\.sequence).max() ?? 0) + 1))
             }
         }
-        messages = SecretaryChatRecovery.promotingReadReceipts(in: merged.sorted { $0.sequence < $1.sequence })
+        let next = SecretaryChatRecovery.promotingReadReceipts(in: merged.sorted { $0.sequence < $1.sequence })
+        if messages != next { messages = next }
         markVisibleConversationRead()
     }
 
@@ -1855,17 +1909,14 @@ final class SecretaryChatStore: ObservableObject {
     private func saveCurrentLocalState() {
         guard let currentConversationId else { return }
         draftsByConversation[currentConversationId] = draft
-        scrollAnchorsByConversation[currentConversationId] = scrollAnchor
     }
 
     private func restoreLocalState(for conversationId: String?) {
         guard let conversationId else {
             draft = ""
-            scrollAnchor = nil
             return
         }
         draft = draftsByConversation[conversationId] ?? ""
-        scrollAnchor = scrollAnchorsByConversation[conversationId]
     }
 
     private var supportsControlledActions: Bool {

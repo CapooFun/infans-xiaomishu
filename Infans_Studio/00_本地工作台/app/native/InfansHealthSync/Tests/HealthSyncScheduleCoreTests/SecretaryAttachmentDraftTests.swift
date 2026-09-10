@@ -45,7 +45,7 @@ final class SecretaryAttachmentDraftTests: XCTestCase {
             XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer attachment-token")
             XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "application/pdf")
             XCTAssertEqual(request.value(forHTTPHeaderField: "X-Infans-Attachment-Id"), draft.id)
-            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Infans-Filename"), "%E7%BC%A8%E5%AE%81%20%E7%AC%94%E8%AE%B0.pdf")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Infans-Filename"), "%E9%93%B6%E6%9C%88%20%E7%AC%94%E8%AE%B0.pdf")
             XCTAssertEqual(request.httpBody, bytes)
         }
     }

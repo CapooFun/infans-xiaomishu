@@ -109,11 +109,17 @@ function releaseTimelineLabel(item: ReleaseWatchItem) {
   return { eyebrow: "尚未定档", primary: "待定", note: "等待官方公布" };
 }
 
-function ReleaseCard({ item }: { item: ReleaseWatchItem }) {
+function releaseFocusMatch(item: ReleaseWatchItem, query: string) {
+  const needle = query.toLowerCase().replace(/[\s　《》「」『』]/g, "");
+  const hay = item.title.toLowerCase().replace(/[\s　《》「」『』]/g, "");
+  return Boolean(needle && hay && (hay.includes(needle) || needle.includes(hay)));
+}
+
+function ReleaseCard({ item, focused = false }: { item: ReleaseWatchItem; focused?: boolean }) {
   const Icon = releaseKindIcon(item.release.kind);
   const timeline = releaseTimelineLabel(item);
   return (
-    <li className={`release-watch-entry is-${item.release.kind}`}>
+    <li className={`release-watch-entry is-${item.release.kind}${focused ? " is-focus" : ""}`} id={`release-${item.id}`} data-release-focus={focused ? "true" : undefined}>
       <div className="release-watch-time" aria-label={`${item.release.label}，${timeline.note}`}>
         <small>{timeline.eyebrow}</small>
         <strong>{timeline.primary}</strong>
@@ -160,7 +166,7 @@ function ReleaseCard({ item }: { item: ReleaseWatchItem }) {
   );
 }
 
-export default function ReleaseWatchView({ active }: { active: boolean }) {
+export default function ReleaseWatchView({ active, focusQuery = "" }: { active: boolean; focusQuery?: string }) {
   const { data, loading, error } = useSyncExternalStore(
     subscribeReleaseWatch,
     () => releaseWatchCacheState,
@@ -177,6 +183,18 @@ export default function ReleaseWatchView({ active }: { active: boolean }) {
     () => data?.items.filter((item) => filter === "all" || item.release.kind === filter) ?? [],
     [data?.items, filter],
   );
+  const focusId = useMemo(
+    () => (focusQuery && data ? data.items.find((item) => releaseFocusMatch(item, focusQuery))?.id || "" : ""),
+    [data, focusQuery],
+  );
+
+  useEffect(() => {
+    if (!active || !focusId) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>("[data-release-focus='true']")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [active, focusId]);
   const countFor = (id: ReleaseFilter) => id === "all"
     ? (data?.items.length ?? 0)
     : (data?.items.filter((item) => item.release.kind === id).length ?? 0);
@@ -222,7 +240,7 @@ export default function ReleaseWatchView({ active }: { active: boolean }) {
 
           {visibleItems.length ? (
             <ol className="release-watch-timeline" aria-label="按发售时间排列的新品">
-              {visibleItems.map((item) => <ReleaseCard key={item.id} item={item} />)}
+              {visibleItems.map((item) => <ReleaseCard key={item.id} item={item} focused={item.id === focusId} />)}
             </ol>
           ) : <Empty>当前分类暂无关注的发售计划。</Empty>}
 

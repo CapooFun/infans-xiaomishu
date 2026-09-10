@@ -163,6 +163,8 @@ export const CANONICAL_LANE_DEFS: LaneDef[] = [
 const LANE_PREFIX_STRIP_RE = /^(公司|游戏|经营|日语|健康|专题|生活|教练|求职|公众号|小红书|抖音|内容|自媒体|工作台|治理)\s*[：:]\s*/u;
 const KIND_LABEL_RE = /^(战略主线下的项目进度\s*·\s*发行里程碑|项目进度\s*·\s*(?:目标上线里程碑|关键里程碑|发行里程碑|里程碑|检查点)|日程（有空可去）|日程区间|日程|事件|节点|截止|区间|阶段|决策|细节|常驻|意向|例行)\s*[：:]\s*/u;
 const TASK_META_RE = /[｜|]\s*(ID|父级|依赖)\s*[：:]\s*([^｜|]+)/gu;
+/** 展示剥尾注。`计划日期` 必须写在 `计划`/`日期` 前面。 */
+const DISPLAY_TASK_META_RE = /[｜|]\s*(?:ID|父级|关联任务|依赖|功能|模块|工作线|执行器|计划日期|计划|日期|状态|进展时间|完成时间|复验时间|SABC|等级)\s*[：:]\s*([^｜|]+)/gu;
 /** 展示用：尚无具体日时的占位，如 `待排 ·`。 */
 const PENDING_DATE_LABEL_RE = /^待排\s*[·•.]\s*/u;
 /** 展示用：时段备注，如 `白天 ·` / `晚 ·`（真正排期仍用 M/D ·）。 */
@@ -358,6 +360,7 @@ export function formatHomeTodoSummary(text: string) {
 /** 剥离泳道前缀、类型标记、钟点备注与全部日期后的展示文案。标题应已说人话；这里只清残留杂质。 */
 export function stripTaskDecorators(text: string) {
   const cleaned = stripTodoMetaPrefixes(text)
+    .replace(new RegExp(DISPLAY_TASK_META_RE.source, "gu"), " ")
     .replace(new RegExp(TASK_META_RE.source, "gu"), " ")
     .replace(PENDING_DATE_LABEL_RE, "")
     .replace(SINCE_DATE_LABEL_RE, "")
@@ -564,11 +567,26 @@ export function buildWeekColumns(weekStarts: string[]): WeekColumn[] {
       index,
       start,
       end,
-      label: `W${index + 1}`,
+      label: weekOfMonthLabel(start),
       monthLabel,
       days,
     };
   });
+}
+
+/** 按该周周一所在月份计第几周，例如 8 月最后一个周一是第 5 周，9 月第一个周一从第 1 周重新计。 */
+function weekOfMonthLabel(weekStart: string) {
+  const { year, month } = parseYmd(weekStart);
+  const first = padDate(year, month, 1);
+  let cursor = startOfWeekMonday(first);
+  if (parseYmd(cursor).month !== month) cursor = addCalendarDays(cursor, 7);
+  let week = 1;
+  while (compareDateKeys(cursor, weekStart) < 0) {
+    week += 1;
+    cursor = addCalendarDays(cursor, 7);
+    if (week > 6) break;
+  }
+  return `第${week}周`;
 }
 
 export function buildGanttModel(input: {

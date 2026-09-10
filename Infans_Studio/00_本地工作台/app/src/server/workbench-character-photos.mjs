@@ -7,6 +7,7 @@ import { secretaryProfileById } from '../secretary-identity.mjs';
 import { SECRETARY_CHARACTER_PHOTOS_DIR } from './vault-paths.mjs';
 import { WorkbenchWriteError } from './workbench-errors.mjs';
 import { withSecretaryArchiveMutation } from './workbench-secretary-attachments.mjs';
+import { toVaultRelativePath, withVaultFileWrite } from './workbench-file-write-guard.mjs';
 
 const slots = ['avatar', 'background', 'shareBackground'];
 const subjectPattern = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -41,11 +42,14 @@ export function createCharacterPhotoService(root) {
   }
   async function persist(catalog) {
     await fs.mkdir(directory, { recursive: true, mode: 0o700 });
-    const temporary = path.join(directory, `.catalog-${crypto.randomUUID()}.tmp`);
-    try {
-      await fs.writeFile(temporary, JSON.stringify(catalog), { mode: 0o600, flag: 'wx' });
-      await fs.rename(temporary, catalogPath);
-    } finally { await fs.rm(temporary, { force: true }); }
+    const relative = toVaultRelativePath(root, catalogPath);
+    await withVaultFileWrite(root, relative, async (target) => {
+      const temporary = path.join(path.dirname(target), `.catalog-${crypto.randomUUID()}.tmp`);
+      try {
+        await fs.writeFile(temporary, JSON.stringify(catalog), { mode: 0o600, flag: 'wx' });
+        await fs.rename(temporary, target);
+      } finally { await fs.rm(temporary, { force: true }); }
+    });
     return publicView(await read());
   }
   async function mutate(body, operation) {
@@ -86,11 +90,14 @@ export function createCharacterPhotoService(root) {
         const file = `${body.assetId}.original`;
         // Immutable content-address-checked retry handles interruption between original and catalog writes.
         const destination = path.join(directory, file);
-        try { await fs.writeFile(destination, data, { flag: 'wx', mode: 0o600 }); }
-        catch (error) {
-          if (error.code !== 'EEXIST') throw error;
-          if (crypto.createHash('sha256').update(await fs.readFile(destination)).digest('hex') !== hash) fail('原件冲突，请重新选择', 409);
-        }
+        const destRelative = toVaultRelativePath(root, destination);
+        await withVaultFileWrite(root, destRelative, async (target) => {
+          try { await fs.writeFile(target, data, { flag: 'wx', mode: 0o600 }); }
+          catch (error) {
+            if (error.code !== 'EEXIST') throw error;
+            if (crypto.createHash('sha256').update(await fs.readFile(target)).digest('hex') !== hash) fail('原件冲突，请重新选择', 409);
+          }
+        });
         const key = selectionKey(body.subject, body.slot);
         const previous = catalog.selections[key] || (body.subject === 'yinyue' ? catalog.selections[body.slot] : undefined);
         delete catalog.selections[body.slot];

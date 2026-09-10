@@ -14,10 +14,10 @@ import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createWorkbenchRouter } from "./workbench-router.mjs";
-import { assertTrustedOrigin, registerWorkbenchRoutes, vaultRoot } from "./workbench-routes.mjs";
+import { registerWorkbenchRoutes, vaultRoot } from "./workbench-routes.mjs";
 import { WORKBENCH_VERSION } from "./workbench-data.mjs";
 import { createStaticHandler } from "./workbench-static.mjs";
-import { createFrontendRefreshGate, frontendHandoffTarget, readFrontendBuildId } from "./workbench-frontend-refresh.mjs";
+import { createFrontendRefreshGate } from "./workbench-frontend-refresh.mjs";
 import { instanceIdFor, resolveListenPort } from "../workbench-instance.mjs";
 
 const appDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -59,36 +59,8 @@ const routes = registerWorkbenchRoutes(router, {
   publicDir: path.join(appDir, "public"),
   instanceId: instanceIdFor(appDir, vault),
   vaultRoot: vault,
-});
-router.use("/api/frontend-refresh", async (request, response) => {
-  if (request.method !== "POST") {
-    response.statusCode = 405;
-    response.setHeader("Content-Type", "application/json; charset=utf-8");
-    response.setHeader("Cache-Control", "no-store");
-    return response.end(JSON.stringify({ error: "只允许刷新请求" }));
-  }
-  assertTrustedOrigin(request);
-  const rebuilt = await prepareNavigation.refreshIfStale();
-  const buildId = await readFrontendBuildId(distDir);
-  const body = Buffer.from(JSON.stringify({ ok: true, rebuilt, buildId }));
-  response.statusCode = 200;
-  response.setHeader("Content-Type", "application/json; charset=utf-8");
-  response.setHeader("Cache-Control", "no-store");
-  response.setHeader("Content-Length", body.length);
-  response.end(body);
-});
-router.use("/__frontend-handoff", (request, response) => {
-  if (request.method !== "GET") {
-    response.statusCode = 405;
-    response.setHeader("Cache-Control", "no-store");
-    return response.end();
-  }
-  const url = new URL(request.url || "/", "http://workbench.local");
-  response.statusCode = 302;
-  response.setHeader("Location", frontendHandoffTarget(url.searchParams.get("to"), url.searchParams.get("v")));
-  response.setHeader("Cache-Control", "no-store");
-  response.setHeader("Content-Length", "0");
-  response.end();
+  frontendRefresh: prepareNavigation,
+  frontendDistDir: distDir,
 });
 router.use(createStaticHandler({ distDir, prepareNavigation }));
 

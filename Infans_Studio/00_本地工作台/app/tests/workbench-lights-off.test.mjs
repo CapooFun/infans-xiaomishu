@@ -134,9 +134,16 @@ test("系统设置用关灯和常亮两个小开关，不含展示", () => {
   assert.ok(lightsRoute.includes("assertPrivateAssetAccess(request)"));
   assert.ok(lightsRoute.includes("body?.toggle === true"));
   assert.ok(routes.includes("lightsOff.dispose()"));
+  assert.match(helper, /CGSConfigureDisplayEnabled/u);
+  assert.match(helper, /disabledDisplays/u);
+  assert.match(helper, /forSession/u);
   assert.match(helper, /CGShieldingWindowLevel/u);
   assert.match(helper, /builtinTarget: Float = 0\.07/u);
-  assert.match(helper, /addLocalMonitorForEvents/u);
+  assert.match(helper, /makeSignalSource\(signal: SIGTERM/u);
+  assert.equal(helper.includes("addLocalMonitorForEvents"), false);
+  assert.equal(helper.includes("addGlobalMonitorForEvents"), false);
+  assert.equal(helper.includes("listenForToggleKey"), false);
+  assert.equal(helper.includes("matchesToggle"), false);
   assert.match(helper, /class ShieldWindow/u);
   assert.match(helper, /builtinCanDim/u);
   assert.match(helper, /handleInterrupt/u);

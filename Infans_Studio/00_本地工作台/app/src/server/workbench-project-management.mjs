@@ -31,7 +31,13 @@ const FOCUS_BATTLE_REVIEW_STATUS = Object.freeze({
 const CENTRAL_CURRENT_HEADINGS = Object.freeze(["最近两天", "今天 / 本周", "当前任务"]);
 const TASK_LINE_RE = /^(\s*-\s+\[)([ xX])(\]\s+)(.+?)\s*$/u;
 const META_RE = /[｜|]\s*(ID|父级|关联任务|依赖|功能|工作线|执行器|完成时间|复验时间)\s*[：:]\s*([^｜|]+)/gu;
-const DISPLAY_META_RE = /[｜|]\s*(?:ID|父级|关联任务|依赖|功能|模块|工作线|执行器|计划|日期|状态|进展时间|完成时间|复验时间)\s*[：:]\s*([^｜|]+)/gu;
+/** 展示剥尾注。`计划日期` 必须写在 `计划`/`日期` 前面，否则 `｜计划日期：` 两半都对不上。 */
+const DISPLAY_META_RE = /[｜|]\s*(?:ID|父级|关联任务|依赖|功能|模块|工作线|执行器|计划日期|计划|日期|状态|进展时间|完成时间|复验时间|SABC|等级)\s*[：:]\s*([^｜|]+)/gu;
+const CONTEXT_ASSOCIATION_RE = /[｜|]\s*(ID|父级|关联任务|工作线|模块|功能)\s*[：:]\s*([^｜|]+)/gu;
+const CONTEXT_GRADE_TAIL_RE = /[｜|]\s*(?:SABC|等级)\s*[：:]\s*([^｜|]+)/gu;
+const GRADE_TAIL_RE = /[｜|]\s*(?:SABC|等级)\s*[：:]\s*([SABCsabc])\b/gu;
+const TASK_LANES = "公司|游戏|经营|日语|专题|健康|生活|教练|求职|公众号|小红书|抖音|本人|治理";
+const TASK_TYPES = "修复|开发|优化|整理|接入|功能|治理|验收|待办|事件|节点|截止|区间|阶段|决策|细节|常驻|例行|清理|运维|跟进|待体验|设计";
 const NON_SCHEDULE_META_RE = /[｜|]\s*(?:ID|父级|关联任务|依赖|功能|模块|工作线|执行器|状态|进展时间|完成时间|复验时间)\s*[：:]\s*([^｜|]+)/gu;
 const PRIORITY_NAMED_RE = /象限\s*[：:]\s*(重要且紧急|重要不紧急|紧急不重要|不重要且不紧急|[SABC])\s*[：:]?/iu;
 const PRIORITY_TOKEN_RE = /(^|[：:]\s*)([SABC])\s*[：:]/iu;
@@ -200,7 +206,89 @@ export function parseTaskPriority(text = "") {
   const named = String(text).match(PRIORITY_NAMED_RE);
   if (named) return PRIORITY_NAMES[named[1]] || named[1].toUpperCase();
   const token = String(text).match(PRIORITY_TOKEN_RE);
-  return token ? token[2].toUpperCase() : null;
+  if (token) return token[2].toUpperCase();
+  GRADE_TAIL_RE.lastIndex = 0;
+  const tail = GRADE_TAIL_RE.exec(String(text));
+  return tail ? tail[1].toUpperCase() : null;
+}
+
+function collapseTaskPipes(text = "") {
+  return String(text)
+    .replace(/[｜|]{2,}/gu, "｜")
+    .replace(/\s*[｜|]\s*$/u, "")
+    .replace(/^[｜|]\s*/u, "")
+    .replace(/\s{2,}/gu, " ")
+    .trim();
+}
+
+function extractGradeTails(text = "") {
+  const grades = [];
+  const next = String(text).replace(GRADE_TAIL_RE, (_match, grade) => {
+    grades.push(String(grade).toUpperCase());
+    return "｜";
+  });
+  return { text: collapseTaskPipes(next), grades };
+}
+
+function preferredExplicitGrade(grades = []) {
+  const unique = [...new Set(grades.filter((item) => TASK_PRIORITIES.includes(item)))];
+  const named = unique.filter((item) => item !== "C");
+  if (named.length) return named[named.length - 1];
+  return null;
+}
+
+function insertQuadrantAfterType(head, grade) {
+  if (!grade || grade === "C") return head;
+  const typeHasGrade = new RegExp(`(?:${TASK_TYPES})[：:][SABC][：:]`, "u");
+  if (typeHasGrade.test(head)) return head;
+  const misordered = head.match(new RegExp(`^(${TASK_LANES})[：:]([SABC])[：:](${TASK_TYPES})[：:]`, "u"));
+  if (misordered) return `${misordered[1]}：${misordered[3]}：${grade}：${head.slice(misordered[0].length)}`;
+  const two = head.match(new RegExp(`^(${TASK_LANES})[：:](${TASK_TYPES})[：:]`, "u"));
+  if (two) return `${two[1]}：${two[2]}：${grade}：${head.slice(two[0].length)}`;
+  return head;
+}
+
+function liftLeadingGrade(head, options = {}) {
+  const lead = String(head).match(/^([SABC])[：:](.*)$/u);
+  if (!lead) return { head: String(head), grade: null };
+  const rest = lead[2];
+  const laneType = new RegExp(`^(?:${TASK_LANES}|${TASK_TYPES})[：:]`, "u");
+  if (laneType.test(rest)) return { head: rest, grade: lead[1] === "C" ? null : lead[1] };
+  const lane = options.defaultLane;
+  const type = options.defaultType;
+  if (lane && type) return { head: `${lane}：${type}：${rest}`, grade: lead[1] === "C" ? null : lead[1] };
+  return { head: rest, grade: lead[1] === "C" ? null : lead[1] };
+}
+
+/** 把历史 `｜SABC：` / `｜等级：` 和行首错位象限收成现行任务行文法。C 缺省不写。 */
+export function normalizeTaskLineText(text = "", options = {}) {
+  const raw = String(text);
+  const pipe = raw.search(/[｜|]/u);
+  const headRaw = pipe < 0 ? raw : raw.slice(0, pipe);
+  const metaRaw = pipe < 0 ? "" : raw.slice(pipe);
+  const tails = extractGradeTails(metaRaw);
+  let head = headRaw.trim();
+  const misordered = head.match(new RegExp(`^(${TASK_LANES})[：:]([SABC])[：:](${TASK_TYPES})[：:]`, "u"));
+  let liftedGrade = null;
+  if (misordered) {
+    liftedGrade = misordered[2] === "C" ? null : misordered[2];
+    head = `${misordered[1]}：${misordered[3]}：${head.slice(misordered[0].length)}`;
+  } else {
+    const lifted = liftLeadingGrade(head, options);
+    head = lifted.head;
+    liftedGrade = lifted.grade;
+  }
+  if (options.defaultLane && options.defaultType && !new RegExp(`^(${TASK_LANES})[：:]`, "u").test(head)) {
+    const inferredType = /^接入/u.test(head) ? "接入" : options.defaultType;
+    head = `${options.defaultLane}：${inferredType}：${head}`;
+  }
+  const grade = preferredExplicitGrade([
+    ...tails.grades,
+    liftedGrade,
+  ].filter(Boolean));
+  head = insertQuadrantAfterType(head, grade);
+  const meta = tails.text ? (tails.text.startsWith("｜") || tails.text.startsWith("|") ? tails.text : `｜${tails.text}`) : "";
+  return collapseTaskPipes(`${head}${meta}`);
 }
 
 function parseTaskMeta(text = "") {
@@ -448,11 +536,11 @@ export function parseProjectContextItems(section, limit = 20, options = {}) {
     const bullet = line.replace(/^-\s+/u, "");
     const isTask = /^\[[ xX]\]\s+/u.test(bullet);
     if (isTask && !includeCompleted && /^\[[xX]\]\s+/u.test(bullet)) continue;
-    const cleaned = cleanInline(bullet.replace(/^\[[ xX]\]\s+/u, ""));
+    const cleaned = cleanInline(bullet.replace(/^\[[ xX]\]\s+/u, "").replace(new RegExp(CONTEXT_GRADE_TAIL_RE.source, "gu"), ""));
     if (!cleaned || cleaned === "无") continue;
     const metadata = new Map();
-    for (const match of cleaned.matchAll(/[｜|]\s*(ID|父级|关联任务|工作线|模块|功能)\s*[：:]\s*([^｜|]+)/gu)) metadata.set(match[1], match[2].trim());
-    const rawText = cleaned.replace(/[｜|]\s*(ID|父级|关联任务|工作线|模块|功能)\s*[：:]\s*([^｜|]+)/gu, "").trim();
+    for (const match of cleaned.matchAll(new RegExp(CONTEXT_ASSOCIATION_RE.source, "gu"))) metadata.set(match[1], match[2].trim());
+    const rawText = cleaned.replace(new RegExp(CONTEXT_ASSOCIATION_RE.source, "gu"), "").trim();
     const taskIds = [...new Set([
       ...splitAssociationIds(metadata.get("父级")),
       ...splitAssociationIds(metadata.get("关联任务")),
@@ -1083,17 +1171,18 @@ export function findTaskLine(content, action) {
 export function replaceTaskPriority(rawText, priority) {
   const nextPriority = priority == null ? null : String(priority).toUpperCase();
   if (nextPriority != null && !TASK_PRIORITIES.includes(nextPriority)) throw new Error("待办等级不受支持");
-  const named = String(rawText).match(PRIORITY_NAMED_RE);
-  if (named) return nextPriority == null ? String(rawText).replace(PRIORITY_NAMED_RE, "") : String(rawText).replace(PRIORITY_NAMED_RE, `${nextPriority}：`);
-  const token = String(rawText).match(PRIORITY_TOKEN_RE);
+  const stripped = extractGradeTails(String(rawText)).text;
+  const named = stripped.match(PRIORITY_NAMED_RE);
+  if (named) return nextPriority == null ? stripped.replace(PRIORITY_NAMED_RE, "") : stripped.replace(PRIORITY_NAMED_RE, `${nextPriority}：`);
+  const token = stripped.match(PRIORITY_TOKEN_RE);
   if (token) {
-    if (nextPriority == null) return String(rawText).replace(PRIORITY_TOKEN_RE, token[1]);
-    return String(rawText).replace(PRIORITY_TOKEN_RE, `${token[1]}${nextPriority}：`);
+    if (nextPriority == null) return stripped.replace(PRIORITY_TOKEN_RE, token[1]);
+    return stripped.replace(PRIORITY_TOKEN_RE, `${token[1]}${nextPriority}：`);
   }
-  if (nextPriority == null) return String(rawText);
-  const dateIndex = String(rawText).search(/(?:(?:20\d{2}\s*[\/\u5e74.-]\s*)?\d{1,2}\s*[\/\u6708.-]\s*\d{1,2}|待排|无日期)/u);
-  if (dateIndex >= 0) return `${String(rawText).slice(0, dateIndex)}${nextPriority}：${String(rawText).slice(dateIndex)}`;
-  const typedPrefix = String(rawText).match(/^((?:[^：:\n]{1,16}[：:]){2})/u);
-  if (typedPrefix) return `${typedPrefix[1]}${nextPriority}：${String(rawText).slice(typedPrefix[1].length)}`;
-  return `${nextPriority}：${rawText}`;
+  if (nextPriority == null) return stripped;
+  const dateIndex = stripped.search(/(?:(?:20\d{2}\s*[\/\u5e74.-]\s*)?\d{1,2}\s*[\/\u6708.-]\s*\d{1,2}|待排|无日期)/u);
+  if (dateIndex >= 0) return `${stripped.slice(0, dateIndex)}${nextPriority}：${stripped.slice(dateIndex)}`;
+  const typedPrefix = stripped.match(/^((?:[^：:\n]{1,16}[：:]){2})/u);
+  if (typedPrefix) return `${typedPrefix[1]}${nextPriority}：${stripped.slice(typedPrefix[1].length)}`;
+  return `${nextPriority}：${stripped}`;
 }

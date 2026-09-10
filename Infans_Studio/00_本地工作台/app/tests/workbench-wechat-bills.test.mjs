@@ -39,7 +39,31 @@ test("wechat category heuristics cover common life spend", () => {
   );
   assert.equal(
     categorizeWechatRow({ type: "微信红包", counterparty: "朋友", product: "/", direction: "收入" }),
-    "转账红包",
+    "人情",
+  );
+  assert.equal(
+    categorizeWechatRow({ type: "支払い", counterparty: "TOHOシネマズ", product: "/", direction: "支出", channel: "paypay" }),
+    "娱乐",
+  );
+  assert.equal(
+    categorizeWechatRow({ type: "支払い", counterparty: "チケットぴあ", product: "/", direction: "支出", channel: "paypay" }),
+    "娱乐",
+  );
+  assert.equal(
+    categorizeWechatRow({ type: "零钱提现", counterparty: "示例银行", product: "/", direction: "/" }),
+    "资金划转",
+  );
+  assert.equal(
+    categorizeWechatRow({ type: "商户消费", counterparty: "示例菜馆", product: "/", direction: "支出" }),
+    "吃喝",
+  );
+  assert.equal(
+    categorizeWechatRow({ type: "扫二维码付款", counterparty: "示例店甲", product: "/", direction: "支出" }),
+    "待确认",
+  );
+  assert.equal(
+    categorizeWechatRow({ type: "支払い", counterparty: "示例店乙", product: "/", direction: "支出", channel: "paypay" }),
+    "待确认",
   );
   assert.equal(
     categorizeWechatRow({ type: "商户消费", counterparty: "Apple", product: "apple.com/bill", direction: "支出" }),

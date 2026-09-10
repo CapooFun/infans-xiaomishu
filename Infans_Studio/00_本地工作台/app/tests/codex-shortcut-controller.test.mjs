@@ -23,6 +23,9 @@ test("秘书朗读用句号，听写用逗号，并读取本机快捷键接口",
   assert.match(shortcut, /agentScreenshot/u);
   assert.match(shortcut, /consumeDualCommand\(flags: bothWithShift\) == true/u);
   assert.match(shortcut, /attachScreenshotToCursor/u);
+  assert.match(shortcut, /NSEvent\.mouseLocation/u);
+  assert.match(shortcut, /copyMouseDisplayToPasteboard/u);
+  assert.doesNotMatch(shortcut, /right-screen-handoff|rightScreenHandoff/u);
   assert.match(shortcut, /\/api\/secretary/u);
   assert.match(shortcut, /activeSecretaryId/u);
   assert.match(shortcut, /cachedReadAloudSpeaker/u);

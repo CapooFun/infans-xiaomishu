@@ -52,6 +52,20 @@ import UniformTypeIdentifiers
         crowded.attachments = Array(repeating: imageProvider, count: 5)
         let limit = await SharePayloadLoader.load(from: [crowded])
         check(limit.loadError != nil, "pure image count limit is retained")
-        print("PASS: 7 real NSItemProvider sharing regressions")
+        let pdfBytes = Data("%PDF-1.4 test".utf8)
+        let pdfFile = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".pdf")
+        try! pdfBytes.write(to: pdfFile)
+        defer { try? FileManager.default.removeItem(at: pdfFile) }
+        let pdfProvider = NSItemProvider()
+        pdfProvider.suggestedName = "notes.pdf"
+        pdfProvider.registerFileRepresentation(forTypeIdentifier: UTType.pdf.identifier, fileOptions: [], visibility: .all) { completion in
+            completion(pdfFile, false, nil)
+            return nil
+        }
+        let pdfCard = NSExtensionItem()
+        pdfCard.attachments = [pdfProvider]
+        let pdf = await SharePayloadLoader.load(from: [pdfCard])
+        check(pdf.files.count == 1 && pdf.files[0].data == pdfBytes && pdf.files[0].attachment.contentType == "application/pdf" && pdf.sourceSemantic == .fileShare && pdf.loadError == nil, "PDF file share keeps original bytes")
+        print("PASS: 8 real NSItemProvider sharing regressions")
     }
 }

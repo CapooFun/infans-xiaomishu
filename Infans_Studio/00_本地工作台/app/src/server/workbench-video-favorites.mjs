@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { VIDEO_FAVORITES_PATH } from "./vault-paths.mjs";
+import { withVaultFileWrite } from "./workbench-file-write-guard.mjs";
 import { normalizeVideoPath, readVideoFileMetadata } from "./workbench-video.mjs";
 
 const MAX_FAVORITES = 500;
@@ -24,9 +25,9 @@ function normalizeStoredItem(item) {
   }
 }
 
-async function readStoredFavorites(vaultRoot) {
+async function readStoredFavoritesFrom(absolute) {
   try {
-    const raw = JSON.parse(await fs.readFile(videoFavoritesPath(vaultRoot), "utf8"));
+    const raw = JSON.parse(await fs.readFile(absolute, "utf8"));
     const seen = new Set();
     const items = [];
     for (const candidate of Array.isArray(raw?.items) ? raw.items : []) {
@@ -43,8 +44,11 @@ async function readStoredFavorites(vaultRoot) {
   }
 }
 
-async function writeStoredFavorites(vaultRoot, items) {
-  const absolute = videoFavoritesPath(vaultRoot);
+async function readStoredFavorites(vaultRoot) {
+  return readStoredFavoritesFrom(videoFavoritesPath(vaultRoot));
+}
+
+async function writeStoredFavoritesTo(absolute, items) {
   await fs.mkdir(path.dirname(absolute), { recursive: true });
   const temporary = `${absolute}.infans-tmp`;
   await fs.writeFile(temporary, `${JSON.stringify({ version: 1, items }, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
@@ -71,22 +75,26 @@ export async function readVideoFavorites(vaultRoot, libraryDir) {
 
 export async function addVideoFavorite(vaultRoot, libraryDir, relativeFile) {
   const video = await readVideoFileMetadata(libraryDir, relativeFile);
-  const current = await readStoredFavorites(vaultRoot);
-  const existing = current.find((item) => item.path === video.path);
-  const addedAt = existing?.addedAt || new Date().toISOString();
-  const next = [
-    { path: video.path, name: video.name, folder: video.folder, addedAt },
-    ...current.filter((item) => item.path !== video.path),
-  ].slice(0, MAX_FAVORITES);
-  await writeStoredFavorites(vaultRoot, next);
-  return snapshot(vaultRoot, libraryDir, next);
+  return withVaultFileWrite(vaultRoot, VIDEO_FAVORITES_PATH, async (absolute) => {
+    const current = await readStoredFavoritesFrom(absolute);
+    const existing = current.find((item) => item.path === video.path);
+    const addedAt = existing?.addedAt || new Date().toISOString();
+    const next = [
+      { path: video.path, name: video.name, folder: video.folder, addedAt },
+      ...current.filter((item) => item.path !== video.path),
+    ].slice(0, MAX_FAVORITES);
+    await writeStoredFavoritesTo(absolute, next);
+    return snapshot(vaultRoot, libraryDir, next);
+  });
 }
 
 export async function removeVideoFavorite(vaultRoot, libraryDir, relativeFile) {
   const normalized = normalizeVideoPath(relativeFile);
   if (!normalized) throw new Error("视频路径不合法");
-  const current = await readStoredFavorites(vaultRoot);
-  const next = current.filter((item) => item.path !== normalized);
-  await writeStoredFavorites(vaultRoot, next);
-  return snapshot(vaultRoot, libraryDir, next);
+  return withVaultFileWrite(vaultRoot, VIDEO_FAVORITES_PATH, async (absolute) => {
+    const current = await readStoredFavoritesFrom(absolute);
+    const next = current.filter((item) => item.path !== normalized);
+    await writeStoredFavoritesTo(absolute, next);
+    return snapshot(vaultRoot, libraryDir, next);
+  });
 }

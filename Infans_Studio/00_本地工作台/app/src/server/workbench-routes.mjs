@@ -8,6 +8,7 @@ import { buildWorldLaneSection, readWorldLaneByDate, readWorldReadingAudio } fro
 import { readWorldNewsFavorites, writeWorldNewsFavorite } from "./workbench-world-news-favorites.mjs";
 import { createWriteService } from "./workbench-write.mjs";
 import { readProjectManagement } from "./workbench-project-management.mjs";
+import { readExternalProjectHubSource } from "./workbench-project-hubs.mjs";
 import { readWorkbenchGovernance } from "./workbench-governance.mjs";
 import { WorkbenchWriteError } from "./workbench-errors.mjs";
 import { createCalendarWriteService, readAppleCalendar, instanceCalendarCacheDir, osCalendarEnabled } from "./workbench-calendar.mjs";
@@ -16,7 +17,6 @@ import { readAnkiDayReviews, readAnkiStatus, tokyoYesterday } from "./workbench-
 import { readSecretaryAiRuntimeStatus, streamCursor } from "./workbench-ai.mjs";
 import { openRouterStatus } from "./workbench-openrouter.mjs";
 import { createOpenAIRealtimeCall, openAIRealtimeStatus } from "./workbench-openai-realtime.mjs";
-import { enqueueAskSelection, takePendingAskSelection } from "./workbench-ai-selection.mjs";
 import { createAppleHealthImportService } from "./workbench-apple-health.mjs";
 import { createAppleHealthDeviceSyncService, healthSyncTokenMatches } from "./workbench-apple-health-sync.mjs";
 import { assertCodexCommandDeviceAccess, assertExcludedWatchCommand, createCodexCommandInboxService } from "./workbench-codex-command-inbox.mjs";
@@ -35,10 +35,11 @@ import { ASSET_SESSION_TTL_MS, createAssetAccessService } from "./workbench-asse
 import { createDisplayModeAccessService } from "./workbench-display-mode.mjs";
 import { createResidentModeService } from "./workbench-resident-mode.mjs";
 import { createLightsOffService } from "./workbench-lights-off.mjs";
+import { createFrontendRefreshRouteHandlers } from "./workbench-frontend-refresh.mjs";
 import { createDeviceDutyMonitor } from "./workbench-device-duty.mjs";
 import { createCodexCleanupService } from "./workbench-codex-cleanup.mjs";
 import { readCronMonitor, runCronTasks } from "./workbench-cron-monitor.mjs";
-import { readJapanActivities, readJapanActivityGuideImage, readJapanActivityPlaybook, writeJapanActivityInterest } from "./workbench-japan-activities.mjs";
+import { readLocalActivities, readLocalActivityGuideImage, readLocalActivityPlaybook, writeLocalActivityInterest } from "./workbench-local-activities.mjs";
 import { readSteamWishlistReleases } from "./workbench-steam.mjs";
 import { readPaymentAuthorization, readRenewalExpiry } from "./workbench-renewals.mjs";
 import { readDevelopmentLog } from "./workbench-development-log.mjs";
@@ -193,28 +194,6 @@ export function assertTrustedOrigin(request) {
   }
 }
 
-/** 选区入队：仅本机 Host；允许同源或 chrome-extension:// Origin（右键扩展）。 */
-export function assertAskSelectionOrigin(request) {
-  const host = String(request.headers.host || "");
-  if (!isLoopbackHost(host)) {
-    throw new WorkbenchWriteError("选区提问仅允许本机工作台接收", 403, "ORIGIN_REJECTED");
-  }
-  const origin = request.headers.origin;
-  if (!origin || originMatchesHost(origin, host)) return;
-  if (/^chrome-extension:\/\//i.test(String(origin))) return;
-  throw new WorkbenchWriteError("选区提问来源不被信任", 403, "ORIGIN_REJECTED");
-}
-
-function writeAskSelectionCors(request, response) {
-  const origin = String(request.headers.origin || "");
-  if (/^chrome-extension:\/\//i.test(origin) || originMatchesHost(origin, String(request.headers.host || ""))) {
-    response.setHeader("Access-Control-Allow-Origin", origin);
-    response.setHeader("Vary", "Origin");
-    response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    response.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  }
-}
-
 function writeYingningIntakeCors(request, response) {
   const origin = String(request.headers.origin || "");
   if (/^chrome-extension:\/\/[a-p]{32}$/u.test(origin)) {
@@ -232,6 +211,11 @@ export function assertLoopbackOnly(request) {
   if (!isLoopbackHost(host) || !isLoopbackPeer(request) || (origin && origin !== `http://${host}`)) {
     throw new WorkbenchWriteError("这个操作仅支持在 Mac 本机执行", 403, "ORIGIN_REJECTED");
   }
+}
+
+/** Apple Health ZIP／主导出 XML 恢复：只允许 Mac 本机回环，不接受远程普通身份。 */
+export function assertAppleHealthZipOps(request) {
+  assertLoopbackOnly(request);
 }
 
 function isLoopbackPeer(request) {
@@ -578,6 +562,14 @@ export function registerWorkbenchRoutes(router, options = {}) {
     });
   });
 
+  const { handleFrontendRefresh, handleFrontendHandoff } = createFrontendRefreshRouteHandlers({
+    refreshIfStale: options.frontendRefresh?.refreshIfStale,
+    distDir: options.frontendDistDir,
+    assertTrustedOrigin,
+  });
+  router.use("/api/frontend-refresh", handleFrontendRefresh);
+  router.use("/__frontend-handoff", handleFrontendHandoff);
+
   router.use("/api/avatar", async (request, response) => {
     if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
     try {
@@ -667,6 +659,16 @@ export function registerWorkbenchRoutes(router, options = {}) {
   router.use("/api/project-management", async (request, response) => {
     if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
     try { return send(response, await readProjectManagement(root)); } catch (error) { return sendError(response, error); }
+  });
+
+  // 外部项目主页的原件正文只读入口：按稳定 projectId + 对象 ID 打开清单登记的 Markdown 原件，
+  // 不接受任意绝对路径或用户自定义路径，安全边界与主页解析共用同一套校验。
+  router.use("/api/project-hub-source", async (request, response) => {
+    if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
+    try {
+      const params = new URL(request.url || "/", "http://127.0.0.1").searchParams;
+      return send(response, await readExternalProjectHubSource(params.get("project") || "", params.get("object") || ""));
+    } catch (error) { return sendError(response, error); }
   });
 
   router.use("/api/workbench-governance", async (request, response) => {
@@ -1485,7 +1487,12 @@ export function registerWorkbenchRoutes(router, options = {}) {
           response.end(attachment.data);
           return;
         }
-        return send(response, await yingningInbox.list(query.get("limit")));
+        return send(response, await yingningInbox.list({
+          limit: query.get("limit"),
+          offset: query.get("offset"),
+          projectId: query.get("projectId"),
+          checkpointId: query.get("checkpointId"),
+        }));
       }
       if (request.method === "DELETE") {
         assertPersistentWrite(request);
@@ -1497,9 +1504,10 @@ export function registerWorkbenchRoutes(router, options = {}) {
         const body = await readJson(request, 4096);
         if (body?.action === "restore") return send(response, await yingningInbox.restore(body?.intakeId));
         if (body?.action === "empty-trash") return send(response, await yingningInbox.emptyTrash());
+        if (body?.action === "copy-to-pasteboard") return send(response, await yingningInbox.copyToPasteboard(body?.intakeId, body?.attachmentId));
         throw new WorkbenchWriteError("不支持的收件箱操作", 400, "YINGNING_INBOX_ACTION_INVALID");
       }
-      return send(response, { error: "只允许读取、删除到回收站、复原或清空回收站" }, 405);
+      return send(response, { error: "只允许读取、删除到回收站、复原、清空回收站或复制文件" }, 405);
     } catch (error) {
       return sendError(response, error);
     }
@@ -1571,7 +1579,6 @@ export function registerWorkbenchRoutes(router, options = {}) {
     }
   };
   router.use("/api/tools/dialogue-diaries", handleDialogueDiaries);
-  router.use("/api/tools/dialogue-logs", handleDialogueDiaries);
 
   router.use("/api/tools/meeting-minutes", async (request, response) => {
     if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
@@ -1960,22 +1967,24 @@ export function registerWorkbenchRoutes(router, options = {}) {
     }
   });
 
-  router.use("/api/tools/japan-activities", async (request, response) => {
+  const handleLocalActivities = async (request, response) => {
     try {
       if (request.method === "GET") {
         assertTrustedOrigin(request);
-        return send(response, await readJapanActivities(root));
+        return send(response, await readLocalActivities(root));
       }
       if (request.method === "PATCH") {
         // 感兴趣只写入活动 ID 的布尔状态，但仍是持久化写入；远程必须命中 Serve 身份白名单。
         assertPersistentWrite(request);
-        return send(response, await writeJapanActivityInterest(root, await readJson(request, 4096)));
+        return send(response, await writeLocalActivityInterest(root, await readJson(request, 4096)));
       }
       return send(response, { error: "只允许读取或标记感兴趣" }, 405);
     } catch (error) {
       return sendError(response, error);
     }
-  });
+  };
+  router.use("/api/tools/local-activities", handleLocalActivities);
+  router.use("/api/tools/japan-activities", handleLocalActivities);
 
   router.use("/api/schedule/releases", async (request, response) => {
     if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
@@ -1989,23 +1998,25 @@ export function registerWorkbenchRoutes(router, options = {}) {
     }
   });
 
-  router.use("/api/tools/japan-activity-guide", async (request, response) => {
+  const handleLocalActivityGuide = async (request, response) => {
     if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
     try {
       assertTrustedOrigin(request);
       const id = new URL(request.url || "/", "http://127.0.0.1").searchParams.get("id") || "";
-      return send(response, await readJapanActivityPlaybook(root, id));
+      return send(response, await readLocalActivityPlaybook(root, id));
     } catch (error) {
       return sendError(response, error);
     }
-  });
+  };
+  router.use("/api/tools/local-activity-guide", handleLocalActivityGuide);
+  router.use("/api/tools/japan-activity-guide", handleLocalActivityGuide);
 
-  router.use("/api/tools/japan-guide-image", async (request, response) => {
+  const handleLocalGuideImage = async (request, response) => {
     if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
     try {
       assertTrustedOrigin(request);
       const id = new URL(request.url || "/", "http://127.0.0.1").searchParams.get("id") || "";
-      const result = await readJapanActivityGuideImage(root, id);
+      const result = await readLocalActivityGuideImage(root, id);
       response.statusCode = 200;
       response.setHeader("Content-Type", result.contentType);
       response.setHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
@@ -2014,7 +2025,9 @@ export function registerWorkbenchRoutes(router, options = {}) {
     } catch (error) {
       return sendError(response, error);
     }
-  });
+  };
+  router.use("/api/tools/local-guide-image", handleLocalGuideImage);
+  router.use("/api/tools/japan-guide-image", handleLocalGuideImage);
 
   router.use("/api/tools/renewals", async (request, response) => {
     if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
@@ -2276,10 +2289,11 @@ export function registerWorkbenchRoutes(router, options = {}) {
     return send(response, await readAnkiStatus(root));
   });
 
+  /** ZIP／主导出 XML 恢复只走本机回环闸；日常同步是 `/api/apple-health/device-sync`。 */
   router.use("/api/apple-health/preview", async (request, response) => {
     if (request.method !== "POST") return send(response, { error: "只允许预览导入" }, 405);
     try {
-      assertTrustedOrigin(request);
+      assertAppleHealthZipOps(request);
       const contentType = String(request.headers["content-type"] || "");
       if (!/^(application\/(zip|xml|octet-stream)|text\/xml)/i.test(contentType)) throw new WorkbenchWriteError("请选择 Apple Health 导出的 ZIP 或 export.xml", 415, "CONTENT_TYPE_REQUIRED");
       return send(response, await appleHealthImports.preview(request));
@@ -2399,11 +2413,12 @@ export function registerWorkbenchRoutes(router, options = {}) {
   });
   router.use("/api/apple-health/preview-local", async (request, response) => {
     if (request.method !== "POST") return send(response, { error: "只允许预览导入" }, 405);
-    try { assertLoopbackOnly(request); return send(response, await appleHealthImports.previewFromDownloads()); } catch (error) { return sendError(response, error); }
+    try { assertAppleHealthZipOps(request); return send(response, await appleHealthImports.previewFromDownloads()); } catch (error) { return sendError(response, error); }
   });
   router.use("/api/apple-health/commit", async (request, response) => {
     if (request.method !== "POST") return send(response, { error: "只允许确认导入" }, 405);
     try {
+      assertAppleHealthZipOps(request);
       assertPersistentWrite(request);
       const { token } = await readJson(request);
       const result = await appleHealthImports.commit(token);
@@ -2523,38 +2538,6 @@ export function registerWorkbenchRoutes(router, options = {}) {
   router.use("/api/ai/status", async (request, response) => {
     if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
     return send(response, await readSecretaryAiRuntimeStatus(root));
-  });
-  router.use("/api/ai/ask-selection", async (request, response) => {
-    writeAskSelectionCors(request, response);
-    if (request.method === "OPTIONS") {
-      response.writeHead(204);
-      return response.end();
-    }
-    if (request.method !== "POST") return send(response, { error: "只允许投递选区" }, 405);
-    try {
-      assertAskSelectionOrigin(request);
-      if (!String(request.headers["content-type"] || "").startsWith("application/json")) {
-        throw new WorkbenchWriteError("请求必须使用 JSON", 415, "CONTENT_TYPE_REQUIRED");
-      }
-      return send(response, { ok: true, ...enqueueAskSelection(await readJson(request)) });
-    } catch (error) {
-      return sendError(response, error);
-    }
-  });
-  router.use("/api/ai/pending-selection", async (request, response) => {
-    writeAskSelectionCors(request, response);
-    if (request.method === "OPTIONS") {
-      response.writeHead(204);
-      return response.end();
-    }
-    if (request.method !== "GET") return send(response, { error: "只允许读取" }, 405);
-    try {
-      assertAskSelectionOrigin(request);
-      const item = takePendingAskSelection();
-      return send(response, { pending: item });
-    } catch (error) {
-      return sendError(response, error);
-    }
   });
   router.use("/api/ai/query", async (request, response) => {
     if (request.method !== "POST") return send(response, { error: "只允许问答" }, 405);

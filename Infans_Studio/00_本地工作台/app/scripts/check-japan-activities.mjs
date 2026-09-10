@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import path from "node:path";
 
-import { readJapanActivities } from "../src/server/workbench-japan-activities.mjs";
+import { readLocalActivities } from "../src/server/workbench-local-activities.mjs";
 
 const vaultRoot = path.resolve(process.env.INFANS_VAULT_ROOT || path.join(import.meta.dirname, "../../.."));
 const expectedDay = process.argv[2] || "";
 
 try {
-  const snapshot = await readJapanActivities(vaultRoot, { today: expectedDay || undefined });
+  const snapshot = await readLocalActivities(vaultRoot, { today: expectedDay || undefined });
   if (!snapshot.activities.length) throw new Error("未来活动列表为空");
   if (expectedDay && !snapshot.updatedAt.startsWith(expectedDay)) throw new Error("updatedAt 不是今天");
   if (expectedDay && snapshot.activities.some((item) => !item.verifiedAt.startsWith(expectedDay))) {

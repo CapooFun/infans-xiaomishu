@@ -36,6 +36,8 @@ test("截屏动作承接快捷指令上一动作的图片并在后台直接入�
   assert.match(quickPhoto, /SaveScreenshotToInboxIntent[\s\S]*?sourceSemantic:\s*\.quickPhotoInbox/u);
   assert.match(quickPhoto, /service\.enqueue[\s\S]*?service\.deliver/u);
   assert.match(models, /iOSQuickPhoto\s*=\s*"ios_quick_photo"/u);
+  assert.match(models, /fileShare\s*=\s*"file_share"/u);
+  assert.match(models, /allowedFileTypes/u);
   assert.doesNotMatch(models, /quickScreenshotInbox|ios_quick_screenshot/u);
   assert.doesNotMatch(quickPhoto, /PHPhotoLibrary|PhotosPicker/u);
   assert.doesNotMatch(appInfo, /NSPhotoLibraryUsageDescription/u);
@@ -64,7 +66,13 @@ test("照片分享保留宿主交付的文件字节，文字和网址入口仍�
   ]);
   assert.match(loader, /loadFileRepresentation[\s\S]*?Data\(contentsOf: fileURL\)/u);
   assert.doesNotMatch(loader, /jpegData|heicData|UIImageJPEGRepresentation/u);
-  assert.match(composer, /sourceSemantic: payload\.images\.isEmpty \? \.sharedContent : \.photoShare/u);
+  assert.match(loader, /looksLikeDocument/u);
+  assert.match(loader, /UTType\.pdf/u);
+  assert.match(loader, /documentLoadTypes/u);
+  assert.match(loader, /return provider.hasItemConformingToTypeIdentifier\(UTType\.fileURL\.identifier\)/u);
+  assert.match(loader, /!provider\.hasItemConformingToTypeIdentifier\(UTType\.fileURL\.identifier\)/u);
+  assert.match(composer, /sourceSemantic: payload\.sourceSemantic/u);
+  assert.match(extensionInfo, /NSExtensionActivationSupportsFileWithMaxCount[\s\S]*?<integer>4<\/integer>/u);
   assert.match(extensionInfo, /NSExtensionActivationSupportsImageWithMaxCount[\s\S]*?<integer>4<\/integer>/u);
   assert.match(extensionInfo, /NSExtensionActivationSupportsText/u);
   assert.match(extensionInfo, /NSExtensionActivationSupportsWebURLWithMaxCount/u);

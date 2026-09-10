@@ -45,7 +45,8 @@ test("同一进程的并发关注不会互相覆盖", async (t) => {
     writeProjectTaskFollow(root, { taskKey: "game-a:task-a", followed: true }),
     writeProjectTaskFollow(root, { taskKey: "game-b:task-b", followed: true }),
   ]);
-  assert.deepEqual(await readProjectTaskFollows(root), { taskKeys: ["game-a:task-a", "game-b:task-b"] });
+  const { taskKeys } = await readProjectTaskFollows(root);
+  assert.deepEqual(new Set(taskKeys), new Set(["game-a:task-a", "game-b:task-b"]));
 });
 
 test("全部待办按注册项目和原件区块顺序过滤，缺稳定 ID 只能展示", () => {
@@ -200,7 +201,8 @@ test("日程页提供内联全部待办、可访问星标与自然文档流", as
   assert.match(allTodosRule, /overflow:\s*visible;/u);
   assert.doesNotMatch(allTodosRule, /max-height|overflow-y|scrollbar-gutter/u);
   assert.match(css, /\.schedule-quadrant\.is-focused \.schedule-todo-rows\s*\{[\s\S]*?max-height:\s*none;[\s\S]*?overflow:\s*visible;/u);
-  assert.match(css, /\.schedule-quadrant\s*\{[\s\S]*?min-height:\s*160px;/u);
+  assert.match(css, /\.schedule-quadrant\s*\{[\s\S]*?min-height:\s*188px;/u);
+  assert.match(css, /\.schedule-quadrant \.schedule-todo-rows\s*\{[\s\S]*?align-self:\s*start;[\s\S]*?align-items:\s*start;[\s\S]*?grid-auto-rows:\s*min-content;[\s\S]*?min-height:\s*0;[\s\S]*?max-height:\s*148px;/u);
   assert.doesNotMatch(css, /schedule-all-todos-preview/u);
   assert.match(css, /\.gantt-corner-actions \.gantt-fold-all span,[\s\S]*?display:\s*none;/u);
 });

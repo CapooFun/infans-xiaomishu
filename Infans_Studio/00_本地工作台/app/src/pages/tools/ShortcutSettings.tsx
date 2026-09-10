@@ -144,7 +144,7 @@ export function ShortcutSettings({
             onClick={() => {
               if (fixedChord) {
                 setRecording(null);
-                setFeedback({ command: id, text: "这项固定为 Shift 加左右 Command。任意软件前台都会把当前焦点那块屏交给 Cursor。不加 Shift 的左右 Command 留给 Codex。", error: false });
+                setFeedback({ command: id, text: "这项固定为 Shift 加左右 Command。任意软件前台都会把鼠标所在那块屏交给 Cursor 当前对话。不加 Shift 的左右 Command 留给 Codex。", error: false });
                 return;
               }
               setRecording(active ? null : id);
@@ -190,7 +190,7 @@ export function ShortcutSettings({
     {COMPUTER_GROUPS.map((group) => (
       <div className="shortcut-settings-group" key={group}>
         <h4>{group === "电脑" ? "这台电脑 · 关灯" : group === "截屏" ? "这台电脑 · 截屏" : "这台电脑 · 对话"}</h4>
-        <p>{group === "电脑" ? "副屏熄掉，Mac 只留一点光。再按一次恢复。系统强制退出是 Option+Command+Esc。" : group === "截屏" ? "全屏和框选对整台 Mac 生效。截进 Cursor 对话随时可用：截当前焦点那块屏，贴进 Cursor。Codex 自己用左右 Command。" : "只在 Codex 或 Cursor 位于前台时拦截。"}</p>
+        <p>{group === "电脑" ? "副屏切掉，Mac 只留一点光。再按一次恢复。系统强制退出是 Option+Command+Esc。" : group === "截屏" ? "全屏和框选对整台 Mac 生效。截进 Cursor 当前对话随时可用：截鼠标所在那块屏，贴进当前对话。Codex 自己用左右 Command。" : "只在 Codex 或 Cursor 位于前台时拦截。"}</p>
         <div className="shortcut-settings-list">
           {computerPresented.filter((command) => command.group === group).map((command) => {
             const id = command.id as ComputerShortcutCommandId;
